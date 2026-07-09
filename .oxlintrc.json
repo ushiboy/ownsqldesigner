@@ -1,0 +1,47 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": [
+    "react",
+    "typescript",
+    "oxc",
+    "jsx-a11y",
+    "react-perf",
+    "import",
+    "promise",
+    "unicorn"
+  ],
+  "categories": {
+    "correctness": "error",
+    "suspicious": "warn",
+    "perf": "warn"
+  },
+  "rules": {
+    "react/rules-of-hooks": "error",
+    "react/exhaustive-deps": "warn",
+    "react/react-compiler": "warn",
+    "react/only-export-components": ["warn", { "allowConstantExport": true }],
+    "react/react-in-jsx-scope": "off",
+    "react-perf/jsx-no-jsx-as-prop": "off",
+    "react-perf/jsx-no-new-function-as-prop": "off",
+    "import/no-unassigned-import": [
+      "warn",
+      { "allow": ["**/*.css", "@testing-library/jest-dom/vitest"] }
+    ]
+  },
+  "overrides": [
+    {
+      "files": ["**/*.stories.tsx"],
+      "rules": {
+        "react/only-export-components": "off"
+      }
+    },
+    {
+      "files": ["**/*.test.{ts,tsx}"],
+      "plugins": ["vitest"],
+      "rules": {
+        "react-perf/jsx-no-new-array-as-prop": "off",
+        "react-perf/jsx-no-new-object-as-prop": "off"
+      }
+    }
+  ]
+}

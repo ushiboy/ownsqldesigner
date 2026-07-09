@@ -1,0 +1,6 @@
+{
+  "sortTailwindcss": {
+    "stylesheet": "./src/index.css",
+    "functions": ["tv"]
+  }
+}
