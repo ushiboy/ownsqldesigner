@@ -31,17 +31,17 @@ pnpm dev
 
 ## Commands
 
-| Task       | Command                |
-| ---------- | ---------------------- |
-| Dev server | `pnpm dev`             |
-| Build      | `pnpm build`           |
-| Preview    | `pnpm preview`         |
-| Test       | `pnpm test`            |
-| Test (watch) | `pnpm test:watch`    |
-| Typecheck  | `pnpm typecheck`       |
-| Lint       | `pnpm lint`            |
-| Format     | `pnpm format`          |
-| Storybook  | `pnpm storybook`       |
+| Task         | Command           |
+| ------------ | ----------------- |
+| Dev server   | `pnpm dev`        |
+| Build        | `pnpm build`      |
+| Preview      | `pnpm preview`    |
+| Test         | `pnpm test`       |
+| Test (watch) | `pnpm test:watch` |
+| Typecheck    | `pnpm typecheck`  |
+| Lint         | `pnpm lint`       |
+| Format       | `pnpm format`     |
+| Storybook    | `pnpm storybook`  |
 
 ## Documentation
 

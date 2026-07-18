@@ -21,7 +21,7 @@ The Phase column gives a rough implementation order: Phase 1 = core MVP, Phase 2
 | ID      | Requirement                                              | Phase |
 | ------- | -------------------------------------------------------- | ----- |
 | REQ-001 | Place, drag, and delete table nodes on the canvas        | 1     |
-| REQ-002 | Pannable canvas                                          | 1     |
+| REQ-002 | Pannable canvas ([0001](design/0001-main-screen.md))     | 1     |
 | REQ-003 | Canvas zoom (in/out)                                     | 2     |
 | REQ-004 | Multi-select (Shift+click / rubber-band) with group move | 2     |
 | REQ-005 | Undo / redo                                              | 2     |
@@ -57,7 +57,7 @@ The Phase column gives a rough implementation order: Phase 1 = core MVP, Phase 2
 | REQ-020 | A foreign key may only reference a PRIMARY KEY or UNIQUE column                                                                  | 1     |
 | REQ-021 | Deleting a table or column never leaves dangling relations or key members                                                        | 1     |
 | REQ-022 | A table has at most one PRIMARY KEY; a key has at least one column                                                               | 1     |
-| REQ-023 | When an edit violates an integrity rule, the UI shows why it was rejected                                                        | 1     |
+| REQ-023 | When an edit violates an integrity rule, the UI shows why it was rejected ([0001](design/0001-main-screen.md))                   | 1     |
 | REQ-033 | Auto-increment is allowed only where the dialect permits it (SQLite: a single INTEGER PRIMARY KEY column)                        | 1     |
 | REQ-034 | Validation warnings (e.g. a table without a primary key) are visible before SQL export                                           | 2     |
 
