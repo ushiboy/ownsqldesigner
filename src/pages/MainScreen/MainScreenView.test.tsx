@@ -2,7 +2,7 @@ import { screen } from "@testing-library/react";
 import { composeStories } from "@storybook/react-vite";
 import * as stories from "./MainScreenView.stories";
 
-const { Default, WithNotification } = composeStories(stories);
+const { Default, WithNotification, CreateSchemaDialogOpen } = composeStories(stories);
 
 describe("MainScreenView", () => {
   it("renders the toolbar, canvas, and side panel regions", async () => {
@@ -20,5 +20,15 @@ describe("MainScreenView", () => {
   it("shows the notification bar when a notification message is set", async () => {
     await WithNotification.run();
     expect(screen.getByRole("alert")).toBeInTheDocument();
+  });
+
+  it("does not show the schema name dialog by default", async () => {
+    await Default.run();
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+
+  it("shows the schema name dialog while isSchemaNameDialogOpen is set", async () => {
+    await CreateSchemaDialogOpen.run();
+    expect(screen.getByRole("dialog", { name: "New Schema" })).toBeInTheDocument();
   });
 });

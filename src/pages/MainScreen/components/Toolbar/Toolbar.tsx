@@ -1,5 +1,8 @@
 import { LuChevronDown, LuPanelRight, LuPencil, LuPlus, LuTrash2 } from "react-icons/lu";
 import { tv } from "tailwind-variants";
+import type { SchemaSummary } from "../../../../domain/schema";
+import { SchemaMenu } from "./SchemaMenu";
+import { useToolbarMenu } from "./useToolbarMenu";
 
 const toolbar = tv({
   base: "flex shrink-0 items-center gap-1 border-b border-edge bg-surface px-3 py-2",
@@ -15,21 +18,45 @@ const toolButton = tv({
 });
 
 type ToolbarProps = {
-  schemaName?: string;
+  schemaName: string;
+  savedSchemas: SchemaSummary[];
+  onRequestCreateSchema: () => void;
   isSidePanelOpen: boolean;
   onToggleSidePanel: () => void;
 };
 
 export function Toolbar({
-  schemaName = "New Schema",
+  schemaName,
+  savedSchemas,
+  onRequestCreateSchema,
   isSidePanelOpen,
   onToggleSidePanel,
 }: ToolbarProps) {
+  const { isOpen: isMenuOpen, wrapperRef: menuWrapperRef, toggle, close } = useToolbarMenu();
+
   return (
     <header className={toolbar()}>
-      <button type="button" className={toolButton()}>
-        {schemaName} <LuChevronDown aria-hidden="true" className="size-4" />
-      </button>
+      <div ref={menuWrapperRef} className="relative">
+        <button
+          type="button"
+          aria-haspopup="menu"
+          aria-expanded={isMenuOpen}
+          onClick={toggle}
+          className={toolButton()}
+        >
+          {schemaName} <LuChevronDown aria-hidden="true" className="size-4" />
+        </button>
+        {isMenuOpen && (
+          <SchemaMenu
+            savedSchemas={savedSchemas}
+            onRequestCreateSchema={() => {
+              close();
+              onRequestCreateSchema();
+            }}
+            onClose={close}
+          />
+        )}
+      </div>
       <button type="button" aria-label="Rename schema" className={toolButton()}>
         <LuPencil aria-hidden="true" className="size-4" />
       </button>

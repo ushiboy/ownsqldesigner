@@ -12,9 +12,13 @@ const panel = tv({
 
 type SidePanelProps = {
   isOpen: boolean;
+  schemaName: string;
+  tableCount: number;
+  /** Pre-formatted display date (e.g. "2026-07-01"); "—" while nothing is loaded. */
+  createdDate: string;
 };
 
-export function SidePanel({ isOpen }: SidePanelProps) {
+export function SidePanel({ isOpen, schemaName, tableCount, createdDate }: SidePanelProps) {
   return (
     <aside
       aria-label="Side panel"
@@ -27,11 +31,11 @@ export function SidePanel({ isOpen }: SidePanelProps) {
         <h2 className="text-[16px]">Schema</h2>
         <dl className="mt-4 grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-[14px]">
           <dt>Name</dt>
-          <dd className="text-heading">New Schema</dd>
+          <dd className="text-heading">{schemaName}</dd>
           <dt>Tables</dt>
-          <dd className="text-heading">0</dd>
+          <dd className="text-heading">{tableCount}</dd>
           <dt>Created</dt>
-          <dd className="text-heading">—</dd>
+          <dd className="text-heading">{createdDate}</dd>
         </dl>
       </div>
     </aside>

@@ -19,5 +19,8 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   args: {
     isOpen: true,
+    schemaName: "Blog Schema",
+    tableCount: 0,
+    createdDate: "2026-07-01",
   },
 };
