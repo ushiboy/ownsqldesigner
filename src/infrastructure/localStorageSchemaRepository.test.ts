@@ -78,6 +78,43 @@ describe("createLocalStorageSchemaRepository", () => {
     ]);
   });
 
+  it("removes a saved schema from load and list", async () => {
+    const repository = createLocalStorageSchemaRepository();
+    const schema = createSchema("Blog Schema");
+    await repository.save(schema);
+
+    await repository.remove(schema.id);
+
+    await expect(repository.load(schema.id)).resolves.toBeNull();
+    await expect(repository.list()).resolves.toEqual([]);
+  });
+
+  it("leaves other schemas and the last schema id untouched when removing", async () => {
+    const repository = createLocalStorageSchemaRepository();
+    const blog = createSchema("Blog Schema");
+    const shop = createSchema("Shop Schema");
+    await repository.save(blog);
+    await repository.save(shop);
+    await repository.saveLastSchemaId(blog.id);
+
+    await repository.remove(blog.id);
+
+    await expect(repository.load(shop.id)).resolves.toEqual(shop);
+    await expect(repository.loadLastSchemaId()).resolves.toBe(blog.id);
+  });
+
+  it("removing an unknown id is a no-op", async () => {
+    const repository = createLocalStorageSchemaRepository();
+    const schema = createSchema("Blog Schema");
+    await repository.save(schema);
+
+    await repository.remove("missing-id");
+
+    await expect(repository.list()).resolves.toEqual([
+      { id: schema.id, name: "Blog Schema", updatedAt: schema.updatedAt },
+    ]);
+  });
+
   it("round-trips the last schema id", async () => {
     const repository = createLocalStorageSchemaRepository();
 

@@ -2,7 +2,9 @@ import { useState } from "react";
 import { format } from "date-fns";
 import type { SchemaRepository } from "../../domain/schemaRepository";
 import { createLocalStorageSchemaRepository } from "../../infrastructure/localStorageSchemaRepository";
+import { ActiveDialogProvider } from "./ActiveDialogContext";
 import { MainScreenView } from "./MainScreenView";
+import { NotificationProvider } from "./NotificationContext";
 import { useSchemaWorkspace } from "./useSchemaWorkspace";
 
 const defaultRepository = createLocalStorageSchemaRepository();
@@ -13,28 +15,47 @@ type MainScreenProps = {
 };
 
 function MainScreen({ repository = defaultRepository }: MainScreenProps) {
+  return (
+    <NotificationProvider>
+      <ActiveDialogProvider>
+        <MainScreenContent repository={repository} />
+      </ActiveDialogProvider>
+    </NotificationProvider>
+  );
+}
+
+export default MainScreen;
+
+type MainScreenContentProps = {
+  repository: SchemaRepository;
+};
+
+// Rendered inside the providers so useSchemaWorkspace can reach the
+// notification context.
+function MainScreenContent({ repository }: MainScreenContentProps) {
   const [isSidePanelOpen, setIsSidePanelOpen] = useState(true);
-  const [isSchemaNameDialogOpen, setIsSchemaNameDialogOpen] = useState(false);
-  const { currentSchema, savedSchemas, createSchema } = useSchemaWorkspace(repository);
+  const {
+    currentSchema,
+    savedSchemas,
+    createSchema,
+    selectSchema,
+    renameSchema,
+    deleteCurrentSchema,
+  } = useSchemaWorkspace(repository);
 
   return (
     <MainScreenView
       schemaName={currentSchema?.name ?? "—"}
       savedSchemas={savedSchemas}
+      currentSchemaId={currentSchema?.id ?? null}
       tableCount={currentSchema?.tables.length ?? 0}
       createdDate={currentSchema === null ? "—" : format(currentSchema.createdAt, "yyyy-MM-dd")}
-      notificationMessage={null}
       isSidePanelOpen={isSidePanelOpen}
-      isSchemaNameDialogOpen={isSchemaNameDialogOpen}
       onToggleSidePanel={() => setIsSidePanelOpen((prev) => !prev)}
-      onRequestCreateSchema={() => setIsSchemaNameDialogOpen(true)}
-      onSubmitCreateSchema={(name) => {
-        createSchema(name);
-        setIsSchemaNameDialogOpen(false);
-      }}
-      onCancelCreateSchema={() => setIsSchemaNameDialogOpen(false)}
+      onSelectSchema={selectSchema}
+      onCreateSchema={createSchema}
+      onRenameSchema={renameSchema}
+      onDeleteSchema={deleteCurrentSchema}
     />
   );
 }
-
-export default MainScreen;

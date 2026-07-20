@@ -1,99 +1,85 @@
+import { useState } from "react";
 import { tv } from "tailwind-variants";
-import { useSchemaNameDialog } from "./useSchemaNameDialog";
-
-const overlay = tv({
-  base: "fixed inset-0 z-50 flex items-center justify-center bg-black/40",
-});
-
-const dialogBox = tv({
-  // `static m-0` neutralizes the browser's default centered-absolute dialog
-  // styles so the overlay's flexbox does the centering instead.
-  base: "static m-0 w-96 rounded-lg border border-edge bg-surface p-6 text-body shadow-card",
-});
+import { Dialog, dialogActionButton } from "../../../../components/parts/Dialog";
 
 const nameInput = tv({
   base: "mt-1 w-full rounded-md border border-edge bg-surface px-2.5 py-1.5 text-[14px] text-heading focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
 });
 
-const actionButton = tv({
-  base: "rounded-md px-3 py-1.5 text-[14px] transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
-  variants: {
-    variant: {
-      primary: "bg-accent-bg text-accent hover:brightness-95 disabled:opacity-40",
-      secondary: "text-heading hover:bg-accent-bg",
-    },
-  },
-});
-
 type SchemaNameDialogProps = {
   open: boolean;
+  title: string;
+  submitLabel: string;
+  initialName?: string;
   onSubmit: (name: string) => void;
   onCancel: () => void;
 };
 
-export function SchemaNameDialog({ open, onSubmit, onCancel }: SchemaNameDialogProps) {
-  if (!open) {
-    return null;
-  }
-  return <SchemaNameDialogPanel onSubmit={onSubmit} onCancel={onCancel} />;
+export function SchemaNameDialog({
+  open,
+  title,
+  submitLabel,
+  initialName,
+  onSubmit,
+  onCancel,
+}: SchemaNameDialogProps) {
+  return (
+    <Dialog open={open} title={title} onClose={onCancel}>
+      <SchemaNameForm
+        submitLabel={submitLabel}
+        initialName={initialName ?? ""}
+        onSubmit={onSubmit}
+        onCancel={onCancel}
+      />
+    </Dialog>
+  );
 }
 
-type SchemaNameDialogPanelProps = {
+type SchemaNameFormProps = {
+  submitLabel: string;
+  initialName: string;
   onSubmit: (name: string) => void;
   onCancel: () => void;
 };
 
 // Mounted only while the dialog is open, so the input state resets each time.
-function SchemaNameDialogPanel({ onSubmit, onCancel }: SchemaNameDialogPanelProps) {
-  const { name, trimmedName, setName } = useSchemaNameDialog({ onCancel });
+function SchemaNameForm({ submitLabel, initialName, onSubmit, onCancel }: SchemaNameFormProps) {
+  const [name, setName] = useState(initialName);
+  const trimmedName = name.trim();
 
   return (
-    <div className={overlay()}>
-      {/* Statically-open <dialog> (no showModal(): jsdom doesn't implement
-          it); the overlay supplies the backdrop and centering instead. */}
-      <dialog
-        open
-        aria-modal="true"
-        aria-labelledby="schema-name-dialog-title"
-        className={dialogBox()}
-      >
-        <form
-          onSubmit={(event) => {
-            event.preventDefault();
-            onSubmit(trimmedName);
-          }}
+    <form
+      onSubmit={(event) => {
+        event.preventDefault();
+        onSubmit(trimmedName);
+      }}
+    >
+      <label className="mt-4 block text-[14px]">
+        Schema name
+        <input
+          type="text"
+          value={name}
+          onChange={(event) => setName(event.target.value)}
+          data-autofocus
+          className={nameInput()}
+        />
+      </label>
+      <div className="mt-6 flex justify-end gap-2">
+        <button
+          type="button"
+          onClick={onCancel}
+          className={dialogActionButton({ variant: "secondary" })}
         >
-          <h2 id="schema-name-dialog-title" className="text-[16px]">
-            New Schema
-          </h2>
-          <label className="mt-4 block text-[14px]">
-            Schema name
-            <input
-              type="text"
-              value={name}
-              onChange={(event) => setName(event.target.value)}
-              autoFocus
-              className={nameInput()}
-            />
-          </label>
-          <div className="mt-6 flex justify-end gap-2">
-            <button
-              type="button"
-              onClick={onCancel}
-              className={actionButton({ variant: "secondary" })}
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={trimmedName === ""}
-              className={actionButton({ variant: "primary" })}
-            >
-              Create
-            </button>
-          </div>
-        </form>
-      </dialog>
-    </div>
+          Cancel
+        </button>
+        <button
+          type="submit"
+          disabled={trimmedName === ""}
+          className={dialogActionButton({ variant: "primary" })}
+        >
+          {submitLabel}
+        </button>
+      </div>
+    </form>
   );
 }

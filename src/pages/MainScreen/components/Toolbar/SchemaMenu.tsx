@@ -1,22 +1,32 @@
 import { useEffect } from "react";
+import { LuCheck } from "react-icons/lu";
 import { tv } from "tailwind-variants";
 import type { SchemaSummary } from "../../../../domain/schema";
+import { useActiveDialog } from "../../ActiveDialogContext";
 
 const menuBox = tv({
   base: "absolute top-full left-0 z-50 mt-1 w-56 rounded-md border border-edge bg-surface py-1 shadow-card",
 });
 
 const menuItem = tv({
-  base: "block w-full px-3 py-1.5 text-left text-[14px] text-heading transition-colors hover:bg-accent-bg disabled:text-body disabled:hover:bg-transparent",
+  base: "flex w-full items-center gap-2 px-3 py-1.5 text-left text-[14px] text-heading transition-colors hover:bg-accent-bg",
 });
 
 type SchemaMenuProps = {
   savedSchemas: SchemaSummary[];
-  onRequestCreateSchema: () => void;
+  currentSchemaId: string | null;
+  onSelectSchema: (id: string) => void;
   onClose: () => void;
 };
 
-export function SchemaMenu({ savedSchemas, onRequestCreateSchema, onClose }: SchemaMenuProps) {
+export function SchemaMenu({
+  savedSchemas,
+  currentSchemaId,
+  onSelectSchema,
+  onClose,
+}: SchemaMenuProps) {
+  const { openDialog } = useActiveDialog();
+
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
@@ -29,15 +39,40 @@ export function SchemaMenu({ savedSchemas, onRequestCreateSchema, onClose }: Sch
 
   return (
     <div role="menu" aria-label="Schemas" className={menuBox()}>
-      {savedSchemas.map((schema) => (
-        // Selection (REQ-025) is out of scope; list items stay inert for now.
-        <button key={schema.id} type="button" role="menuitem" disabled className={menuItem()}>
-          {schema.name}
-        </button>
-      ))}
+      {savedSchemas.map((schema) => {
+        const isCurrent = schema.id === currentSchemaId;
+        return (
+          <button
+            key={schema.id}
+            type="button"
+            role="menuitem"
+            aria-current={isCurrent || undefined}
+            onClick={() => {
+              onClose();
+              onSelectSchema(schema.id);
+            }}
+            className={menuItem()}
+          >
+            {isCurrent ? (
+              <LuCheck aria-hidden="true" className="size-4 shrink-0 text-accent" />
+            ) : (
+              <span aria-hidden="true" className="size-4 shrink-0" />
+            )}
+            {schema.name}
+          </button>
+        );
+      })}
       {savedSchemas.length > 0 && <hr className="my-1 border-edge" />}
-      <button type="button" role="menuitem" onClick={onRequestCreateSchema} className={menuItem()}>
-        + New Schema
+      <button
+        type="button"
+        role="menuitem"
+        onClick={() => {
+          onClose();
+          openDialog("createSchema");
+        }}
+        className={menuItem()}
+      >
+        <span aria-hidden="true" className="size-4 shrink-0" />+ New Schema
       </button>
     </div>
   );

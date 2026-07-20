@@ -2,7 +2,13 @@ import { screen } from "@testing-library/react";
 import { composeStories } from "@storybook/react-vite";
 import * as stories from "./MainScreenView.stories";
 
-const { Default, WithNotification, CreateSchemaDialogOpen } = composeStories(stories);
+const {
+  Default,
+  WithNotification,
+  CreateSchemaDialogOpen,
+  RenameSchemaDialogOpen,
+  DeleteSchemaDialogOpen,
+} = composeStories(stories);
 
 describe("MainScreenView", () => {
   it("renders the toolbar, canvas, and side panel regions", async () => {
@@ -27,8 +33,20 @@ describe("MainScreenView", () => {
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 
-  it("shows the schema name dialog while isSchemaNameDialogOpen is set", async () => {
+  it("shows the create dialog while activeDialog is createSchema", async () => {
     await CreateSchemaDialogOpen.run();
     expect(screen.getByRole("dialog", { name: "New Schema" })).toBeInTheDocument();
+  });
+
+  it("shows the rename dialog prefilled with the current schema name", async () => {
+    await RenameSchemaDialogOpen.run();
+    expect(screen.getByRole("dialog", { name: "Rename Schema" })).toBeInTheDocument();
+    expect(screen.getByLabelText("Schema name")).toHaveValue("Blog Schema");
+  });
+
+  it("shows the delete confirmation naming the current schema", async () => {
+    await DeleteSchemaDialogOpen.run();
+    expect(screen.getByRole("dialog", { name: "Delete Schema" })).toBeInTheDocument();
+    expect(screen.getByText('Delete "Blog Schema"? This cannot be undone.')).toBeInTheDocument();
   });
 });

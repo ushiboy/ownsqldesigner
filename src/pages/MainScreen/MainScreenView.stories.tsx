@@ -1,6 +1,17 @@
-import type { Meta, StoryObj } from "@storybook/react-vite";
+import type { Decorator, Meta, StoryObj } from "@storybook/react-vite";
 import { fn } from "storybook/test";
+import { ActiveDialogProvider } from "./ActiveDialogContext";
 import { MainScreenView } from "./MainScreenView";
+import { NotificationProvider } from "./NotificationContext";
+
+// Context state is seeded per story via `parameters.notification` / `parameters.dialog`.
+const withProviders: Decorator = (Story, { parameters }) => (
+  <NotificationProvider initialNotification={parameters.notification ?? null}>
+    <ActiveDialogProvider initialDialog={parameters.dialog ?? null}>
+      <Story />
+    </ActiveDialogProvider>
+  </NotificationProvider>
+);
 
 const savedSchemas = [
   {
@@ -24,14 +35,16 @@ const meta = {
   args: {
     schemaName: "Blog Schema",
     savedSchemas,
+    currentSchemaId: savedSchemas[0].id,
     tableCount: 0,
     createdDate: "2026-07-01",
-    isSchemaNameDialogOpen: false,
     onToggleSidePanel: fn(),
-    onRequestCreateSchema: fn(),
-    onSubmitCreateSchema: fn(),
-    onCancelCreateSchema: fn(),
+    onSelectSchema: fn(),
+    onCreateSchema: fn(),
+    onRenameSchema: fn(),
+    onDeleteSchema: fn(),
   },
+  decorators: [withProviders],
 } satisfies Meta<typeof MainScreenView>;
 
 export default meta;
@@ -39,29 +52,48 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
-    notificationMessage: null,
     isSidePanelOpen: true,
   },
 };
 
 export const SidePanelClosed: Story = {
   args: {
-    notificationMessage: null,
     isSidePanelOpen: false,
   },
 };
 
 export const WithNotification: Story = {
   args: {
-    notificationMessage: "Cannot delete column: referenced by a foreign key",
     isSidePanelOpen: true,
+  },
+  parameters: {
+    notification: "Cannot delete column: referenced by a foreign key",
   },
 };
 
 export const CreateSchemaDialogOpen: Story = {
   args: {
-    notificationMessage: null,
     isSidePanelOpen: true,
-    isSchemaNameDialogOpen: true,
+  },
+  parameters: {
+    dialog: "createSchema",
+  },
+};
+
+export const RenameSchemaDialogOpen: Story = {
+  args: {
+    isSidePanelOpen: true,
+  },
+  parameters: {
+    dialog: "renameSchema",
+  },
+};
+
+export const DeleteSchemaDialogOpen: Story = {
+  args: {
+    isSidePanelOpen: true,
+  },
+  parameters: {
+    dialog: "deleteSchema",
   },
 };

@@ -1,6 +1,7 @@
 import { LuChevronDown, LuPanelRight, LuPencil, LuPlus, LuTrash2 } from "react-icons/lu";
 import { tv } from "tailwind-variants";
 import type { SchemaSummary } from "../../../../domain/schema";
+import { useActiveDialog } from "../../ActiveDialogContext";
 import { SchemaMenu } from "./SchemaMenu";
 import { useToolbarMenu } from "./useToolbarMenu";
 
@@ -20,7 +21,8 @@ const toolButton = tv({
 type ToolbarProps = {
   schemaName: string;
   savedSchemas: SchemaSummary[];
-  onRequestCreateSchema: () => void;
+  currentSchemaId: string | null;
+  onSelectSchema: (id: string) => void;
   isSidePanelOpen: boolean;
   onToggleSidePanel: () => void;
 };
@@ -28,11 +30,13 @@ type ToolbarProps = {
 export function Toolbar({
   schemaName,
   savedSchemas,
-  onRequestCreateSchema,
+  currentSchemaId,
+  onSelectSchema,
   isSidePanelOpen,
   onToggleSidePanel,
 }: ToolbarProps) {
   const { isOpen: isMenuOpen, wrapperRef: menuWrapperRef, toggle, close } = useToolbarMenu();
+  const { openDialog } = useActiveDialog();
 
   return (
     <header className={toolbar()}>
@@ -49,18 +53,26 @@ export function Toolbar({
         {isMenuOpen && (
           <SchemaMenu
             savedSchemas={savedSchemas}
-            onRequestCreateSchema={() => {
-              close();
-              onRequestCreateSchema();
-            }}
+            currentSchemaId={currentSchemaId}
+            onSelectSchema={onSelectSchema}
             onClose={close}
           />
         )}
       </div>
-      <button type="button" aria-label="Rename schema" className={toolButton()}>
+      <button
+        type="button"
+        aria-label="Rename schema"
+        onClick={() => openDialog("renameSchema")}
+        className={toolButton()}
+      >
         <LuPencil aria-hidden="true" className="size-4" />
       </button>
-      <button type="button" aria-label="Delete schema" className={toolButton()}>
+      <button
+        type="button"
+        aria-label="Delete schema"
+        onClick={() => openDialog("deleteSchema")}
+        className={toolButton()}
+      >
         <LuTrash2 aria-hidden="true" className="size-4" />
       </button>
       <div className="ml-auto flex items-center gap-1">

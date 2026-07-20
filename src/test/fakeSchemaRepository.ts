@@ -23,6 +23,9 @@ export function createFakeSchemaRepository(seed: FakeSchemaRepositorySeed = {}):
     async save(schema) {
       documents.set(schema.id, schema);
     },
+    async remove(id) {
+      documents.delete(id);
+    },
     async loadLastSchemaId() {
       return lastSchemaId;
     },

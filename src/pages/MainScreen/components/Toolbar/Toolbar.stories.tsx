@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { fn } from "storybook/test";
+import { ActiveDialogProvider } from "../../ActiveDialogContext";
 import { Toolbar } from "./Toolbar";
 
 const savedSchemas = [
@@ -20,9 +21,17 @@ const meta = {
   component: Toolbar,
   args: {
     savedSchemas,
-    onRequestCreateSchema: fn(),
+    currentSchemaId: savedSchemas[0].id,
+    onSelectSchema: fn(),
     onToggleSidePanel: fn(),
   },
+  decorators: [
+    (Story) => (
+      <ActiveDialogProvider>
+        <Story />
+      </ActiveDialogProvider>
+    ),
+  ],
 } satisfies Meta<typeof Toolbar>;
 
 export default meta;

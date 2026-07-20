@@ -34,22 +34,41 @@ describe("Toolbar", () => {
     expect(screen.queryByRole("menu")).not.toBeInTheDocument();
   });
 
-  it("opens the schema menu listing saved schemas as inert items", async () => {
+  it("opens the schema menu listing saved schemas as selectable items", async () => {
     await openMenu();
     expect(screen.getByRole("menu", { name: "Schemas" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Blog Schema" })).toHaveAttribute(
       "aria-expanded",
       "true",
     );
-    expect(screen.getByRole("menuitem", { name: "Blog Schema" })).toBeDisabled();
-    expect(screen.getByRole("menuitem", { name: "Shop Schema" })).toBeDisabled();
+    expect(screen.getByRole("menuitem", { name: "Blog Schema" })).toBeEnabled();
+    expect(screen.getByRole("menuitem", { name: "Shop Schema" })).toBeEnabled();
     expect(screen.getByRole("menuitem", { name: "+ New Schema" })).toBeEnabled();
   });
 
-  it("calls onRequestCreateSchema and closes the menu when + New Schema is clicked", async () => {
+  it("marks only the current schema in the menu", async () => {
+    await openMenu();
+    expect(screen.getByRole("menuitem", { name: "Blog Schema" })).toHaveAttribute(
+      "aria-current",
+      "true",
+    );
+    expect(screen.getByRole("menuitem", { name: "Shop Schema" })).not.toHaveAttribute(
+      "aria-current",
+    );
+  });
+
+  it("calls onSelectSchema with the id and closes the menu when a schema is clicked", async () => {
+    const user = await openMenu();
+    await user.click(screen.getByRole("menuitem", { name: "Shop Schema" }));
+    expect(Default.args.onSelectSchema).toHaveBeenCalledExactlyOnceWith(
+      "3f2b5c0a-88d1-4f4a-9ce6-64f19f0f9be3",
+    );
+    expect(screen.queryByRole("menu")).not.toBeInTheDocument();
+  });
+
+  it("closes the menu when + New Schema is clicked", async () => {
     const user = await openMenu();
     await user.click(screen.getByRole("menuitem", { name: "+ New Schema" }));
-    expect(Default.args.onRequestCreateSchema).toHaveBeenCalledOnce();
     expect(screen.queryByRole("menu")).not.toBeInTheDocument();
   });
 

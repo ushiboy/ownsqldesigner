@@ -17,5 +17,16 @@ type Story = StoryObj<typeof meta>;
 export const Open: Story = {
   args: {
     open: true,
+    title: "New Schema",
+    submitLabel: "Create",
+  },
+};
+
+export const Rename: Story = {
+  args: {
+    open: true,
+    title: "Rename Schema",
+    submitLabel: "Rename",
+    initialName: "Blog Schema",
   },
 };

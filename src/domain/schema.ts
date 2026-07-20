@@ -30,3 +30,21 @@ export function createSchema(name: string, options: CreateSchemaOptions = {}): S
     updatedAt: now,
   };
 }
+
+type RenameSchemaOptions = {
+  now?: Date;
+};
+
+// Unlike selection, a rename is a content edit, so updatedAt is bumped.
+export function renameSchema(
+  schema: Schema,
+  name: string,
+  options: RenameSchemaOptions = {},
+): Schema {
+  const { now = new Date() } = options;
+  return {
+    ...schema,
+    name,
+    updatedAt: now,
+  };
+}

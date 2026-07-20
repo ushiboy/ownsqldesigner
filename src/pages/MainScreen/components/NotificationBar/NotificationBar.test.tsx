@@ -1,20 +1,32 @@
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { composeStories } from "@storybook/react-vite";
+import { NotificationProvider } from "../../NotificationContext";
 import * as stories from "./NotificationBar.stories";
 import { NotificationBar } from "./NotificationBar";
 
 const { Default } = composeStories(stories);
 
 describe("NotificationBar", () => {
-  it("shows the message as an alert when a message is set", async () => {
+  it("shows the notification as an alert", async () => {
     await Default.run();
     expect(screen.getByRole("alert")).toHaveTextContent(
       "Cannot delete column: referenced by a foreign key",
     );
   });
 
-  it("renders nothing when the message is null", () => {
-    const { container } = render(<NotificationBar message={null} />);
+  it("hides the notification when the dismiss button is clicked", async () => {
+    await Default.run();
+    await userEvent.click(screen.getByRole("button", { name: "Dismiss notification" }));
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+  });
+
+  it("renders nothing while there is no notification", () => {
+    const { container } = render(
+      <NotificationProvider>
+        <NotificationBar />
+      </NotificationProvider>,
+    );
     expect(container).toBeEmptyDOMElement();
   });
 });

@@ -36,6 +36,12 @@
       }
     },
     {
+      "files": ["**/*Context.tsx"],
+      "rules": {
+        "react/only-export-components": "off"
+      }
+    },
+    {
       "files": ["**/*.test.{ts,tsx}"],
       "plugins": ["vitest"],
       "rules": {

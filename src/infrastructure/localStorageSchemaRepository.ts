@@ -39,6 +39,9 @@ export function createLocalStorageSchemaRepository(
         JSON.stringify({ version: STORAGE_VERSION, schema }),
       );
     },
+    async remove(id) {
+      storage.removeItem(SCHEMA_KEY_PREFIX + id);
+    },
     async loadLastSchemaId() {
       return storage.getItem(LAST_SCHEMA_ID_KEY);
     },

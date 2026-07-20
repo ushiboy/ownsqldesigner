@@ -9,6 +9,7 @@ export type SchemaRepository = {
   list(): Promise<SchemaSummary[]>;
   load(id: string): Promise<Schema | null>;
   save(schema: Schema): Promise<void>;
+  remove(id: string): Promise<void>;
   loadLastSchemaId(): Promise<string | null>;
   saveLastSchemaId(id: string): Promise<void>;
 };

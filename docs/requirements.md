@@ -63,16 +63,16 @@ The Phase column gives a rough implementation order: Phase 1 = core MVP, Phase 2
 
 ### Input / output and persistence (browser-only)
 
-| ID      | Requirement                                                                                                    | Phase |
-| ------- | -------------------------------------------------------------------------------------------------------------- | ----- |
-| REQ-024 | Save and load the entire schema losslessly (diagram layout included)                                           | 1     |
-| REQ-025 | Save, list, and load named schemas in browser storage ([0002](design/0002-schema-persistence-and-creation.md)) | 1     |
-| REQ-026 | Export SQL (DDL): CREATE TABLE with keys and foreign-key constraints (SQLite dialect)                          | 1     |
-| REQ-027 | Download the schema as a file / load from a local file                                                         | 2     |
-| REQ-028 | Warn before leaving the page with unsaved changes                                                              | 2     |
-| REQ-035 | Create a new blank schema ([0002](design/0002-schema-persistence-and-creation.md))                             | 1     |
-| REQ-036 | Delete saved schemas from browser storage                                                                      | 1     |
-| REQ-037 | Rename saved schemas in browser storage                                                                        | 2     |
+| ID      | Requirement                                                                                                                                                           | Phase |
+| ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----- |
+| REQ-024 | Save and load the entire schema losslessly (diagram layout included)                                                                                                  | 1     |
+| REQ-025 | Save, list, and load named schemas in browser storage ([0002](design/0002-schema-persistence-and-creation.md), [0003](design/0003-schema-selection-rename-delete.md)) | 1     |
+| REQ-026 | Export SQL (DDL): CREATE TABLE with keys and foreign-key constraints (SQLite dialect)                                                                                 | 1     |
+| REQ-027 | Download the schema as a file / load from a local file                                                                                                                | 2     |
+| REQ-028 | Warn before leaving the page with unsaved changes                                                                                                                     | 2     |
+| REQ-035 | Create a new blank schema ([0002](design/0002-schema-persistence-and-creation.md))                                                                                    | 1     |
+| REQ-036 | Delete saved schemas from browser storage ([0003](design/0003-schema-selection-rename-delete.md))                                                                     | 1     |
+| REQ-037 | Rename saved schemas in browser storage ([0003](design/0003-schema-selection-rename-delete.md))                                                                       | 2     |
 
 ### UI / UX
 
