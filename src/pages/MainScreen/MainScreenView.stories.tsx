@@ -26,6 +26,15 @@ const savedSchemas = [
   },
 ];
 
+const tables = [
+  {
+    id: "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12",
+    name: "users",
+    comment: "Registered users",
+    position: { x: 0, y: 0 },
+  },
+];
+
 const meta = {
   title: "pages/MainScreen/MainScreenView",
   component: MainScreenView,
@@ -36,13 +45,21 @@ const meta = {
     schemaName: "Blog Schema",
     savedSchemas,
     currentSchemaId: savedSchemas[0].id,
+    tables: [],
     tableCount: 0,
     createdDate: "2026-07-01",
+    selectedTableId: null,
+    selectedTable: null,
     onToggleSidePanel: fn(),
     onSelectSchema: fn(),
     onCreateSchema: fn(),
     onRenameSchema: fn(),
     onDeleteSchema: fn(),
+    onSelectTable: fn(),
+    onCreateTable: fn(),
+    onUpdateTableName: fn(),
+    onUpdateTableComment: fn(),
+    onMoveTable: fn(),
   },
   decorators: [withProviders],
 } satisfies Meta<typeof MainScreenView>;
@@ -95,5 +112,24 @@ export const DeleteSchemaDialogOpen: Story = {
   },
   parameters: {
     dialog: "deleteSchema",
+  },
+};
+
+export const CreateTableDialogOpen: Story = {
+  args: {
+    isSidePanelOpen: true,
+  },
+  parameters: {
+    dialog: "createTable",
+  },
+};
+
+export const TableSelected: Story = {
+  args: {
+    isSidePanelOpen: true,
+    tables,
+    tableCount: tables.length,
+    selectedTableId: tables[0]?.id ?? null,
+    selectedTable: tables[0] ?? null,
   },
 };

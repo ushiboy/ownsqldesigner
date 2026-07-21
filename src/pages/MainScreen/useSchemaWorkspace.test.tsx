@@ -1,6 +1,6 @@
 import { act, renderHook, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
-import { createSchema } from "../../domain/schema";
+import { createSchema, createTable } from "../../domain/schema";
 import type { SchemaRepository } from "../../domain/schemaRepository";
 import { createFakeSchemaRepository } from "../../test/fakeSchemaRepository";
 import { NotificationProvider, useNotification } from "./NotificationContext";
@@ -278,5 +278,150 @@ describe("useSchemaWorkspace", () => {
     await waitFor(async () => {
       expect(await repository.load(created?.id ?? "")).toEqual(created);
     });
+  });
+
+  it("creates and persists a table on the current schema via createTable", async () => {
+    const blog = createSchema("Blog Schema", { now: new Date("2026-07-01T09:00:00.000Z") });
+    const repository = createFakeSchemaRepository({ schemas: [blog], lastSchemaId: blog.id });
+    const { result } = renderWorkspace(repository);
+    await waitFor(() => {
+      expect(result.current.workspace.currentSchema).not.toBeNull();
+    });
+
+    act(() => {
+      result.current.workspace.createTable("posts");
+    });
+
+    await waitFor(() => {
+      expect(result.current.workspace.currentSchema?.tables.map((table) => table.name)).toEqual([
+        "posts",
+      ]);
+    });
+    const persisted = await repository.load(blog.id);
+    expect(persisted?.tables).toEqual(result.current.workspace.currentSchema?.tables);
+    expect(persisted?.updatedAt.getTime()).toBeGreaterThan(blog.updatedAt.getTime());
+  });
+
+  it("renames a table, bumps updatedAt, and persists it", async () => {
+    const blog = createTable(
+      createSchema("Blog Schema", { now: new Date("2026-07-01T09:00:00.000Z") }),
+      "posts",
+      { id: "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12", now: new Date("2026-07-01T09:00:00.000Z") },
+    );
+    const repository = createFakeSchemaRepository({ schemas: [blog], lastSchemaId: blog.id });
+    const { result } = renderWorkspace(repository);
+    await waitFor(() => {
+      expect(result.current.workspace.currentSchema).not.toBeNull();
+    });
+
+    act(() => {
+      result.current.workspace.renameTable("d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12", "articles");
+    });
+
+    await waitFor(() => {
+      expect(result.current.workspace.currentSchema?.tables[0]?.name).toBe("articles");
+    });
+    const persisted = await repository.load(blog.id);
+    expect(persisted?.tables[0]?.name).toBe("articles");
+    expect(persisted?.updatedAt.getTime()).toBeGreaterThan(blog.updatedAt.getTime());
+  });
+
+  it("treats renaming a table to the unchanged name as a no-op", async () => {
+    const blog = createTable(
+      createSchema("Blog Schema", { now: new Date("2026-07-01T09:00:00.000Z") }),
+      "posts",
+      { id: "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12", now: new Date("2026-07-01T09:00:00.000Z") },
+    );
+    const repository = createFakeSchemaRepository({ schemas: [blog], lastSchemaId: blog.id });
+    const { result } = renderWorkspace(repository);
+    await waitFor(() => {
+      expect(result.current.workspace.currentSchema).not.toBeNull();
+    });
+
+    act(() => {
+      result.current.workspace.renameTable("d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12", "posts");
+    });
+
+    expect(result.current.workspace.currentSchema?.updatedAt).toEqual(blog.updatedAt);
+  });
+
+  it("updates a table's comment, bumps updatedAt, and persists it", async () => {
+    const blog = createTable(
+      createSchema("Blog Schema", { now: new Date("2026-07-01T09:00:00.000Z") }),
+      "posts",
+      { id: "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12", now: new Date("2026-07-01T09:00:00.000Z") },
+    );
+    const repository = createFakeSchemaRepository({ schemas: [blog], lastSchemaId: blog.id });
+    const { result } = renderWorkspace(repository);
+    await waitFor(() => {
+      expect(result.current.workspace.currentSchema).not.toBeNull();
+    });
+
+    act(() => {
+      result.current.workspace.updateTableComment(
+        "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12",
+        "Blog posts",
+      );
+    });
+
+    await waitFor(() => {
+      expect(result.current.workspace.currentSchema?.tables[0]?.comment).toBe("Blog posts");
+    });
+    const persisted = await repository.load(blog.id);
+    expect(persisted?.tables[0]?.comment).toBe("Blog posts");
+    expect(persisted?.updatedAt.getTime()).toBeGreaterThan(blog.updatedAt.getTime());
+  });
+
+  it("moves a table, bumps updatedAt, and persists it", async () => {
+    const blog = createTable(
+      createSchema("Blog Schema", { now: new Date("2026-07-01T09:00:00.000Z") }),
+      "posts",
+      { id: "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12", now: new Date("2026-07-01T09:00:00.000Z") },
+    );
+    const repository = createFakeSchemaRepository({ schemas: [blog], lastSchemaId: blog.id });
+    const { result } = renderWorkspace(repository);
+    await waitFor(() => {
+      expect(result.current.workspace.currentSchema).not.toBeNull();
+    });
+
+    act(() => {
+      result.current.workspace.moveTable("d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12", {
+        x: 400,
+        y: 300,
+      });
+    });
+
+    await waitFor(() => {
+      expect(result.current.workspace.currentSchema?.tables[0]?.position).toEqual({
+        x: 400,
+        y: 300,
+      });
+    });
+    const persisted = await repository.load(blog.id);
+    expect(persisted?.tables[0]?.position).toEqual({ x: 400, y: 300 });
+    expect(persisted?.updatedAt.getTime()).toBeGreaterThan(blog.updatedAt.getTime());
+  });
+
+  it("treats moving a table to its unchanged position as a no-op", async () => {
+    const blog = createTable(
+      createSchema("Blog Schema", { now: new Date("2026-07-01T09:00:00.000Z") }),
+      "posts",
+      { id: "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12", now: new Date("2026-07-01T09:00:00.000Z") },
+    );
+    const repository = createFakeSchemaRepository({ schemas: [blog], lastSchemaId: blog.id });
+    const { result } = renderWorkspace(repository);
+    await waitFor(() => {
+      expect(result.current.workspace.currentSchema).not.toBeNull();
+    });
+    const originalPosition = result.current.workspace.currentSchema?.tables[0]?.position;
+
+    act(() => {
+      result.current.workspace.moveTable(
+        "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12",
+        originalPosition ?? { x: 0, y: 0 },
+      );
+    });
+
+    expect(result.current.workspace.currentSchema?.updatedAt).toEqual(blog.updatedAt);
   });
 });

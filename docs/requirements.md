@@ -18,22 +18,22 @@ The Phase column gives a rough implementation order: Phase 1 = core MVP, Phase 2
 
 ### Diagram editing (canvas)
 
-| ID      | Requirement                                              | Phase |
-| ------- | -------------------------------------------------------- | ----- |
-| REQ-001 | Place, drag, and delete table nodes on the canvas        | 1     |
-| REQ-002 | Pannable canvas ([0001](design/0001-main-screen.md))     | 1     |
-| REQ-003 | Canvas zoom (in/out)                                     | 2     |
-| REQ-004 | Multi-select (Shift+click / rubber-band) with group move | 2     |
-| REQ-005 | Undo / redo                                              | 2     |
-| REQ-006 | Snap to grid                                             | 3     |
-| REQ-007 | Minimap (overview with draggable viewport)               | 3     |
-| REQ-008 | Auto-align tables                                        | 3     |
+| ID      | Requirement                                                                                                                                                         | Phase |
+| ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----- |
+| REQ-001 | Place, drag, and delete table nodes on the canvas ([0004](design/0004-table-creation-and-placement.md), [0005](design/0005-table-drag-and-position-persistence.md)) | 1     |
+| REQ-002 | Pannable canvas ([0001](design/0001-main-screen.md))                                                                                                                | 1     |
+| REQ-003 | Canvas zoom (in/out)                                                                                                                                                | 2     |
+| REQ-004 | Multi-select (Shift+click / rubber-band) with group move                                                                                                            | 2     |
+| REQ-005 | Undo / redo                                                                                                                                                         | 2     |
+| REQ-006 | Snap to grid                                                                                                                                                        | 3     |
+| REQ-007 | Minimap (overview with draggable viewport)                                                                                                                          | 3     |
+| REQ-008 | Auto-align tables                                                                                                                                                   | 3     |
 
 ### Table / column definition
 
 | ID      | Requirement                                                                                                       | Phase |
 | ------- | ----------------------------------------------------------------------------------------------------------------- | ----- |
-| REQ-009 | Create, rename, and comment tables                                                                                | 1     |
+| REQ-009 | Create, rename, and comment tables ([0004](design/0004-table-creation-and-placement.md))                          | 1     |
 | REQ-010 | Add, edit, remove, and reorder columns (name / type / size / default value / nullable / auto-increment / comment) | 1     |
 | REQ-011 | Column type selection from a per-dialect datatype set (SQLite initially)                                          | 1     |
 | REQ-012 | Toggle display of column type / size on the canvas                                                                | 3     |

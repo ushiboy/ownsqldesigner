@@ -76,7 +76,7 @@ export function Toolbar({
         <LuTrash2 aria-hidden="true" className="size-4" />
       </button>
       <div className="ml-auto flex items-center gap-1">
-        <button type="button" className={toolButton()}>
+        <button type="button" onClick={() => openDialog("createTable")} className={toolButton()}>
           <LuPlus aria-hidden="true" className="size-4" />
           Add Table
         </button>

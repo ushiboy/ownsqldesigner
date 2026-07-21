@@ -1,10 +1,16 @@
 import { useEffect, useState } from "react";
 import {
   DEFAULT_SCHEMA_NAME,
+  type Position,
   type Schema,
   type SchemaSummary,
+  type Table,
   createSchema,
+  createTable,
+  moveTable,
   renameSchema,
+  renameTable,
+  updateTableComment,
 } from "../../domain/schema";
 import type { SchemaRepository } from "../../domain/schemaRepository";
 import { useNotification } from "./NotificationContext";
@@ -17,6 +23,10 @@ type SchemaWorkspace = {
   selectSchema: (id: string) => void;
   renameSchema: (name: string) => void;
   deleteCurrentSchema: () => void;
+  createTable: (name: string) => void;
+  renameTable: (tableId: string, name: string) => void;
+  updateTableComment: (tableId: string, comment: string) => void;
+  moveTable: (tableId: string, position: Position) => void;
 };
 
 export function useSchemaWorkspace(repository: SchemaRepository): SchemaWorkspace {
@@ -111,6 +121,44 @@ export function useSchemaWorkspace(repository: SchemaRepository): SchemaWorkspac
         setCurrentSchema(await loadSuccessor(repository, summaries));
       })();
     },
+    createTable: (name) => {
+      dismissNotification();
+      setCurrentSchema((prev) => (prev === null ? prev : createTable(prev, name)));
+    },
+    renameTable: (tableId, name) => {
+      dismissNotification();
+      setCurrentSchema((prev) => {
+        if (prev === null) {
+          return prev;
+        }
+        const table = prev.tables.find((t) => t.id === tableId);
+        return isTableNameUnchanged(table, name) ? prev : renameTable(prev, tableId, name);
+      });
+    },
+    updateTableComment: (tableId, comment) => {
+      dismissNotification();
+      setCurrentSchema((prev) => {
+        if (prev === null) {
+          return prev;
+        }
+        const table = prev.tables.find((t) => t.id === tableId);
+        return isTableCommentUnchanged(table, comment)
+          ? prev
+          : updateTableComment(prev, tableId, comment);
+      });
+    },
+    moveTable: (tableId, position) => {
+      dismissNotification();
+      setCurrentSchema((prev) => {
+        if (prev === null) {
+          return prev;
+        }
+        const table = prev.tables.find((t) => t.id === tableId);
+        return isTablePositionUnchanged(table, position)
+          ? prev
+          : moveTable(prev, tableId, position);
+      });
+    },
   };
 }
 
@@ -126,4 +174,18 @@ async function loadSuccessor(
     return createSchema(DEFAULT_SCHEMA_NAME);
   }
   return (await repository.load(successor.id)) ?? createSchema(DEFAULT_SCHEMA_NAME);
+}
+
+function isTableNameUnchanged(table: Table | undefined, name: string): boolean {
+  return table === undefined || table.name === name;
+}
+
+function isTableCommentUnchanged(table: Table | undefined, comment: string): boolean {
+  return table === undefined || table.comment === comment;
+}
+
+function isTablePositionUnchanged(table: Table | undefined, position: Position): boolean {
+  return (
+    table === undefined || (table.position.x === position.x && table.position.y === position.y)
+  );
 }

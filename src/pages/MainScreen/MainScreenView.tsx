@@ -1,38 +1,55 @@
-import type { SchemaSummary } from "../../domain/schema";
+import type { Position, SchemaSummary, Table } from "../../domain/schema";
 import { useActiveDialog } from "./ActiveDialogContext";
 import { Canvas } from "./components/Canvas";
 import { ConfirmDialog } from "./components/ConfirmDialog";
 import { NotificationBar } from "./components/NotificationBar";
 import { SchemaNameDialog } from "./components/SchemaNameDialog";
 import { SidePanel } from "./components/SidePanel";
+import { TableNameDialog } from "./components/TableNameDialog";
 import { Toolbar } from "./components/Toolbar";
 
 type MainScreenViewProps = {
   schemaName: string;
   savedSchemas: SchemaSummary[];
   currentSchemaId: string | null;
+  tables: Table[];
   tableCount: number;
   createdDate: string;
+  selectedTableId: string | null;
+  selectedTable: Table | null;
   isSidePanelOpen: boolean;
   onToggleSidePanel: () => void;
   onSelectSchema: (id: string) => void;
   onCreateSchema: (name: string) => void;
   onRenameSchema: (name: string) => void;
   onDeleteSchema: () => void;
+  onSelectTable: (id: string | null) => void;
+  onCreateTable: (name: string) => void;
+  onUpdateTableName: (tableId: string, name: string) => void;
+  onUpdateTableComment: (tableId: string, comment: string) => void;
+  onMoveTable: (tableId: string, position: Position) => void;
 };
 
 export function MainScreenView({
   schemaName,
   savedSchemas,
   currentSchemaId,
+  tables,
   tableCount,
   createdDate,
+  selectedTableId,
+  selectedTable,
   isSidePanelOpen,
   onToggleSidePanel,
   onSelectSchema,
   onCreateSchema,
   onRenameSchema,
   onDeleteSchema,
+  onSelectTable,
+  onCreateTable,
+  onUpdateTableName,
+  onUpdateTableComment,
+  onMoveTable,
 }: MainScreenViewProps) {
   const { activeDialog, closeDialog } = useActiveDialog();
 
@@ -49,13 +66,21 @@ export function MainScreenView({
       <div className="flex min-h-0 flex-1">
         <main aria-label="Canvas" className="relative min-w-0 flex-1">
           <NotificationBar />
-          <Canvas />
+          <Canvas
+            tables={tables}
+            selectedTableId={selectedTableId}
+            onSelectTable={onSelectTable}
+            onMoveTable={onMoveTable}
+          />
         </main>
         <SidePanel
           isOpen={isSidePanelOpen}
           schemaName={schemaName}
           tableCount={tableCount}
           createdDate={createdDate}
+          selectedTable={selectedTable}
+          onUpdateTableName={onUpdateTableName}
+          onUpdateTableComment={onUpdateTableComment}
         />
       </div>
       <SchemaNameDialog
@@ -86,6 +111,16 @@ export function MainScreenView({
         confirmLabel="Delete"
         onConfirm={() => {
           onDeleteSchema();
+          closeDialog();
+        }}
+        onCancel={closeDialog}
+      />
+      <TableNameDialog
+        open={activeDialog === "createTable"}
+        title="New Table"
+        submitLabel="Create"
+        onSubmit={(name) => {
+          onCreateTable(name);
           closeDialog();
         }}
         onCancel={closeDialog}

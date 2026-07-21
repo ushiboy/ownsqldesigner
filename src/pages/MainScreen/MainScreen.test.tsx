@@ -211,4 +211,30 @@ describe("MainScreen", () => {
       expect(screen.getByRole("menuitem", { name: "Blog Schema" })).toBeInTheDocument(),
     );
   });
+
+  it("creates a table through the toolbar and edits it from the side panel", async () => {
+    await runRestored();
+
+    await userEvent.click(screen.getByRole("button", { name: "Add Table" }));
+    const dialog = screen.getByRole("dialog", { name: "New Table" });
+    await userEvent.type(within(dialog).getByLabelText("Table name"), "users");
+    await userEvent.click(within(dialog).getByRole("button", { name: "Create" }));
+
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    const node = await screen.findByRole("button", { name: "Table users" });
+    const sidePanel = screen.getByRole("complementary", { name: "Side panel" });
+    expect(within(sidePanel).getByText("1")).toBeInTheDocument();
+
+    await userEvent.click(node);
+    expect(within(sidePanel).getByRole("heading", { name: "Table" })).toBeInTheDocument();
+    const nameInput = within(sidePanel).getByLabelText("Name");
+    await userEvent.clear(nameInput);
+    await userEvent.type(nameInput, "accounts");
+    await userEvent.type(within(sidePanel).getByLabelText("Comment"), "Registered users");
+
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: "Table accounts" })).toBeInTheDocument();
+    });
+    expect(within(sidePanel).getByLabelText("Comment")).toHaveValue("Registered users");
+  });
 });

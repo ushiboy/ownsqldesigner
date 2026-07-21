@@ -8,6 +8,8 @@ const {
   CreateSchemaDialogOpen,
   RenameSchemaDialogOpen,
   DeleteSchemaDialogOpen,
+  CreateTableDialogOpen,
+  TableSelected,
 } = composeStories(stories);
 
 describe("MainScreenView", () => {
@@ -48,5 +50,16 @@ describe("MainScreenView", () => {
     await DeleteSchemaDialogOpen.run();
     expect(screen.getByRole("dialog", { name: "Delete Schema" })).toBeInTheDocument();
     expect(screen.getByText('Delete "Blog Schema"? This cannot be undone.')).toBeInTheDocument();
+  });
+
+  it("shows the create table dialog while activeDialog is createTable", async () => {
+    await CreateTableDialogOpen.run();
+    expect(screen.getByRole("dialog", { name: "New Table" })).toBeInTheDocument();
+  });
+
+  it("shows the selected table's properties in the side panel", async () => {
+    await TableSelected.run();
+    expect(screen.getByRole("heading", { name: "Table" })).toBeInTheDocument();
+    expect(screen.getByLabelText("Name")).toHaveValue("users");
   });
 });
