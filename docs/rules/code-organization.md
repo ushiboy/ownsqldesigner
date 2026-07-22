@@ -18,6 +18,7 @@ Order the contents of a file as follows:
 - Exported functions and React components MUST appear at the top of the file, immediately after imports, constants, and type definitions.
 - Constants and type definitions MUST be declared before the exported functions/components that use them.
 - Private helper functions and components MUST be placed after the exported ones, ordered so that each helper appears below the code that depends on it.
+- Extract a conditional expression that combines multiple `||` / `&&` / `!` operators into a named private helper function instead of inlining it. A named predicate (e.g. `hasColumn(table, columnId)`) reads and reuses better than a compound boolean written out at the call site.
 
 ## Example
 

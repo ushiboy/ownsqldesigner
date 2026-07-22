@@ -43,6 +43,7 @@ Choose the testing style by the kind of code:
 - Prefer role-based queries (`getByRole("button", { name: ... })`) over test IDs or text queries.
 - Assert with jest-dom matchers (`toBeInTheDocument`, `toHaveTextContent`, `toBeVisible`, ...).
 - Simulate user interaction with `@testing-library/user-event`: `userEvent.setup()` + `await user.click(...)`.
+- When a rendered tree can contain more than one element with the same accessible name at once (e.g. a "Name" field open in both a dialog and an inline form elsewhere on the page), scope the query with `within(container)` instead of querying from `screen` — a page-level `getByLabelText`/`getByRole` call throws on multiple matches.
 
 ## Example
 
