@@ -1,6 +1,13 @@
 import { type ReactNode, createContext, useContext, useMemo, useState } from "react";
 
-export type DialogKind = "createSchema" | "renameSchema" | "deleteSchema" | "createTable";
+export type DialogKind =
+  | "createSchema"
+  | "renameSchema"
+  | "deleteSchema"
+  | "createTable"
+  | "addColumn"
+  | "editColumn"
+  | "deleteColumn";
 
 type ActiveDialogContextValue = {
   /** null while no dialog is open; overlapping dialogs are unrepresentable. */

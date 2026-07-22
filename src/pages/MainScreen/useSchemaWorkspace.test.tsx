@@ -1,6 +1,6 @@
 import { act, renderHook, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
-import { createSchema, createTable } from "../../domain/schema";
+import { addColumn, createSchema, createTable } from "../../domain/schema";
 import type { SchemaRepository } from "../../domain/schemaRepository";
 import { createFakeSchemaRepository } from "../../test/fakeSchemaRepository";
 import { NotificationProvider, useNotification } from "./NotificationContext";
@@ -423,5 +423,108 @@ describe("useSchemaWorkspace", () => {
     });
 
     expect(result.current.workspace.currentSchema?.updatedAt).toEqual(blog.updatedAt);
+  });
+
+  const columnFields = {
+    name: "title",
+    type: "TEXT" as const,
+    size: "",
+    defaultValue: "",
+    nullable: true,
+    comment: "",
+  };
+
+  it("adds a column to a table, bumps updatedAt, and persists it", async () => {
+    const blog = createTable(
+      createSchema("Blog Schema", { now: new Date("2026-07-01T09:00:00.000Z") }),
+      "posts",
+      { id: "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12", now: new Date("2026-07-01T09:00:00.000Z") },
+    );
+    const repository = createFakeSchemaRepository({ schemas: [blog], lastSchemaId: blog.id });
+    const { result } = renderWorkspace(repository);
+    await waitFor(() => {
+      expect(result.current.workspace.currentSchema).not.toBeNull();
+    });
+
+    act(() => {
+      result.current.workspace.addColumn("d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12", columnFields);
+    });
+
+    await waitFor(() => {
+      expect(
+        result.current.workspace.currentSchema?.tables[0]?.columns.map((column) => column.name),
+      ).toEqual(["title"]);
+    });
+    const persisted = await repository.load(blog.id);
+    expect(persisted?.tables[0]?.columns).toEqual(
+      result.current.workspace.currentSchema?.tables[0]?.columns,
+    );
+    expect(persisted?.updatedAt.getTime()).toBeGreaterThan(blog.updatedAt.getTime());
+  });
+
+  it("updates a column's fields, bumps updatedAt, and persists it", async () => {
+    const blog = addColumn(
+      createTable(
+        createSchema("Blog Schema", { now: new Date("2026-07-01T09:00:00.000Z") }),
+        "posts",
+        { id: "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12", now: new Date("2026-07-01T09:00:00.000Z") },
+      ),
+      "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12",
+      columnFields,
+      { id: "f1a2b3c4-5d6e-4f7a-8b9c-0d1e2f3a4b5c", now: new Date("2026-07-01T09:00:00.000Z") },
+    );
+    const repository = createFakeSchemaRepository({ schemas: [blog], lastSchemaId: blog.id });
+    const { result } = renderWorkspace(repository);
+    await waitFor(() => {
+      expect(result.current.workspace.currentSchema).not.toBeNull();
+    });
+
+    act(() => {
+      result.current.workspace.updateColumn(
+        "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12",
+        "f1a2b3c4-5d6e-4f7a-8b9c-0d1e2f3a4b5c",
+        { ...columnFields, name: "heading", nullable: false },
+      );
+    });
+
+    await waitFor(() => {
+      expect(result.current.workspace.currentSchema?.tables[0]?.columns[0]?.name).toBe("heading");
+    });
+    const persisted = await repository.load(blog.id);
+    expect(persisted?.tables[0]?.columns[0]?.name).toBe("heading");
+    expect(persisted?.tables[0]?.columns[0]?.nullable).toBe(false);
+    expect(persisted?.updatedAt.getTime()).toBeGreaterThan(blog.updatedAt.getTime());
+  });
+
+  it("removes a column from a table, bumps updatedAt, and persists it", async () => {
+    const blog = addColumn(
+      createTable(
+        createSchema("Blog Schema", { now: new Date("2026-07-01T09:00:00.000Z") }),
+        "posts",
+        { id: "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12", now: new Date("2026-07-01T09:00:00.000Z") },
+      ),
+      "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12",
+      columnFields,
+      { id: "f1a2b3c4-5d6e-4f7a-8b9c-0d1e2f3a4b5c", now: new Date("2026-07-01T09:00:00.000Z") },
+    );
+    const repository = createFakeSchemaRepository({ schemas: [blog], lastSchemaId: blog.id });
+    const { result } = renderWorkspace(repository);
+    await waitFor(() => {
+      expect(result.current.workspace.currentSchema).not.toBeNull();
+    });
+
+    act(() => {
+      result.current.workspace.removeColumn(
+        "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12",
+        "f1a2b3c4-5d6e-4f7a-8b9c-0d1e2f3a4b5c",
+      );
+    });
+
+    await waitFor(() => {
+      expect(result.current.workspace.currentSchema?.tables[0]?.columns).toEqual([]);
+    });
+    const persisted = await repository.load(blog.id);
+    expect(persisted?.tables[0]?.columns).toEqual([]);
+    expect(persisted?.updatedAt.getTime()).toBeGreaterThan(blog.updatedAt.getTime());
   });
 });

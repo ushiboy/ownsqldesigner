@@ -7,7 +7,7 @@ import { composeStories } from "@storybook/react-vite";
 import * as stories from "./SidePanel.stories";
 import { SidePanel } from "./SidePanel";
 
-const { Default, TableSelected } = composeStories(stories);
+const { Default, TableSelected, TableWithColumns } = composeStories(stories);
 
 const closedProps = {
   isOpen: false,
@@ -17,6 +17,9 @@ const closedProps = {
   selectedTable: null,
   onUpdateTableName: () => {},
   onUpdateTableComment: () => {},
+  onAddColumn: () => {},
+  onEditColumn: () => {},
+  onDeleteColumn: () => {},
 };
 
 describe("SidePanel", () => {
@@ -93,5 +96,41 @@ describe("SidePanel", () => {
     await userEvent.tab();
 
     expect(input).toHaveValue("users");
+  });
+
+  it("shows no columns for a table without any", async () => {
+    await TableSelected.run();
+    expect(screen.getByRole("heading", { name: "Columns" })).toBeInTheDocument();
+    expect(screen.queryByRole("listitem")).not.toBeInTheDocument();
+  });
+
+  it("lists a table's columns with their type", async () => {
+    await TableWithColumns.run();
+    expect(screen.getByText("id")).toBeInTheDocument();
+    expect(screen.getByText("INTEGER")).toBeInTheDocument();
+    expect(screen.getByText("email")).toBeInTheDocument();
+    expect(screen.getByText("TEXT")).toBeInTheDocument();
+  });
+
+  it("calls onAddColumn when the Add Column button is clicked", async () => {
+    await TableSelected.run();
+    await userEvent.click(screen.getByRole("button", { name: "Add Column" }));
+    expect(TableSelected.args.onAddColumn).toHaveBeenCalledOnce();
+  });
+
+  it("calls onEditColumn with the clicked column's id", async () => {
+    await TableWithColumns.run();
+    await userEvent.click(screen.getByRole("button", { name: "Edit column id" }));
+    expect(TableWithColumns.args.onEditColumn).toHaveBeenCalledExactlyOnceWith(
+      "f1a2b3c4-5d6e-4f7a-8b9c-0d1e2f3a4b5c",
+    );
+  });
+
+  it("calls onDeleteColumn with the clicked column's id", async () => {
+    await TableWithColumns.run();
+    await userEvent.click(screen.getByRole("button", { name: "Delete column email" }));
+    expect(TableWithColumns.args.onDeleteColumn).toHaveBeenCalledExactlyOnceWith(
+      "a2b3c4d5-6e7f-4a8b-9c0d-1e2f3a4b5c6d",
+    );
   });
 });

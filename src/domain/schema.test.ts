@@ -1,10 +1,13 @@
 import {
+  addColumn,
   createSchema,
   createTable,
   moveTable,
+  removeColumn,
   renameSchema,
   renameTable,
   schemaSchema,
+  updateColumn,
   updateTableComment,
 } from "./schema";
 
@@ -97,6 +100,7 @@ describe("createTable", () => {
         name: "posts",
         comment: "",
         position: { x: 0, y: 0 },
+        columns: [],
       },
     ]);
     expect(updated.updatedAt).toEqual(new Date("2026-07-19T09:00:00.000Z"));
@@ -118,12 +122,14 @@ describe("createTable", () => {
         name: "posts",
         comment: "",
         position: { x: 0, y: 0 },
+        columns: [],
       },
       {
         id: "e5c3fb8c-9c97-4f5e-d2cf-5f8f3d8c7b23",
         name: "comments",
         comment: "",
         position: { x: 260, y: 0 },
+        columns: [],
       },
     ]);
   });
@@ -162,6 +168,7 @@ describe("renameTable", () => {
         name: "articles",
         comment: "",
         position: { x: 0, y: 0 },
+        columns: [],
       },
     ]);
     expect(renamed.updatedAt).toEqual(new Date("2026-07-19T09:00:00.000Z"));
@@ -182,6 +189,7 @@ describe("renameTable", () => {
       name: "comments",
       comment: "",
       position: { x: 260, y: 0 },
+      columns: [],
     });
   });
 
@@ -226,6 +234,7 @@ describe("updateTableComment", () => {
         name: "posts",
         comment: "Blog posts",
         position: { x: 0, y: 0 },
+        columns: [],
       },
     ]);
     expect(updated.updatedAt).toEqual(new Date("2026-07-19T09:00:00.000Z"));
@@ -272,6 +281,7 @@ describe("moveTable", () => {
         name: "posts",
         comment: "",
         position: { x: 400, y: 300 },
+        columns: [],
       },
     ]);
     expect(moved.updatedAt).toEqual(new Date("2026-07-19T09:00:00.000Z"));
@@ -295,6 +305,7 @@ describe("moveTable", () => {
       name: "comments",
       comment: "",
       position: { x: 260, y: 0 },
+      columns: [],
     });
   });
 
@@ -322,5 +333,245 @@ describe("moveTable", () => {
     );
 
     expect(original.tables[0]?.position).toEqual({ x: 0, y: 0 });
+  });
+});
+
+const columnFields = {
+  name: "title",
+  type: "TEXT" as const,
+  size: "",
+  defaultValue: "",
+  nullable: true,
+  comment: "",
+};
+
+describe("addColumn", () => {
+  const original = createTable(
+    createSchema("Blog Schema", {
+      id: "c3a1e96a-9a75-4d3c-b0ad-3d6e1b6a5f01",
+      now: new Date("2026-07-18T09:00:00.000Z"),
+    }),
+    "posts",
+    { id: "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12", now: new Date("2026-07-18T09:00:00.000Z") },
+  );
+
+  it("appends a column to the matching table and bumps updatedAt", () => {
+    const updated = addColumn(original, "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12", columnFields, {
+      id: "f1a2b3c4-5d6e-4f7a-8b9c-0d1e2f3a4b5c",
+      now: new Date("2026-07-19T09:00:00.000Z"),
+    });
+
+    expect(updated.tables[0]?.columns).toEqual([
+      { id: "f1a2b3c4-5d6e-4f7a-8b9c-0d1e2f3a4b5c", ...columnFields },
+    ]);
+    expect(updated.updatedAt).toEqual(new Date("2026-07-19T09:00:00.000Z"));
+  });
+
+  it("appends to existing columns without touching them", () => {
+    const withFirst = addColumn(original, "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12", columnFields, {
+      id: "f1a2b3c4-5d6e-4f7a-8b9c-0d1e2f3a4b5c",
+      now: new Date("2026-07-19T09:00:00.000Z"),
+    });
+    const withSecond = addColumn(
+      withFirst,
+      "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12",
+      { ...columnFields, name: "body", type: "TEXT" },
+      { id: "a2b3c4d5-6e7f-4a8b-9c0d-1e2f3a4b5c6d", now: new Date("2026-07-20T09:00:00.000Z") },
+    );
+
+    expect(withSecond.tables[0]?.columns).toEqual([
+      { id: "f1a2b3c4-5d6e-4f7a-8b9c-0d1e2f3a4b5c", ...columnFields },
+      { id: "a2b3c4d5-6e7f-4a8b-9c0d-1e2f3a4b5c6d", ...columnFields, name: "body" },
+    ]);
+  });
+
+  it("is a no-op when the table id is unknown", () => {
+    const updated = addColumn(original, "unknown-id", columnFields, {
+      now: new Date("2026-07-19T09:00:00.000Z"),
+    });
+
+    expect(updated).toBe(original);
+  });
+
+  it("does not mutate the input schema", () => {
+    addColumn(original, "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12", columnFields, {
+      now: new Date("2026-07-19T09:00:00.000Z"),
+    });
+
+    expect(original.tables[0]?.columns).toEqual([]);
+  });
+
+  it("produces a document that passes runtime validation", () => {
+    const table = createTable(createSchema("Blog Schema"), "posts");
+    const tableId = table.tables[0]?.id ?? "";
+
+    const updated = addColumn(table, tableId, columnFields);
+
+    expect(schemaSchema.safeParse(updated).success).toBe(true);
+  });
+});
+
+describe("updateColumn", () => {
+  const original = addColumn(
+    createTable(
+      createSchema("Blog Schema", {
+        id: "c3a1e96a-9a75-4d3c-b0ad-3d6e1b6a5f01",
+        now: new Date("2026-07-18T09:00:00.000Z"),
+      }),
+      "posts",
+      { id: "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12", now: new Date("2026-07-18T09:00:00.000Z") },
+    ),
+    "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12",
+    columnFields,
+    { id: "f1a2b3c4-5d6e-4f7a-8b9c-0d1e2f3a4b5c", now: new Date("2026-07-18T09:00:00.000Z") },
+  );
+
+  it("replaces the matching column's fields and bumps updatedAt", () => {
+    const updated = updateColumn(
+      original,
+      "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12",
+      "f1a2b3c4-5d6e-4f7a-8b9c-0d1e2f3a4b5c",
+      { ...columnFields, name: "heading", nullable: false },
+      { now: new Date("2026-07-19T09:00:00.000Z") },
+    );
+
+    expect(updated.tables[0]?.columns).toEqual([
+      {
+        id: "f1a2b3c4-5d6e-4f7a-8b9c-0d1e2f3a4b5c",
+        ...columnFields,
+        name: "heading",
+        nullable: false,
+      },
+    ]);
+    expect(updated.updatedAt).toEqual(new Date("2026-07-19T09:00:00.000Z"));
+  });
+
+  it("leaves other columns untouched", () => {
+    const withSecond = addColumn(original, "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12", columnFields, {
+      id: "a2b3c4d5-6e7f-4a8b-9c0d-1e2f3a4b5c6d",
+      now: new Date("2026-07-18T09:00:00.000Z"),
+    });
+
+    const updated = updateColumn(
+      withSecond,
+      "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12",
+      "f1a2b3c4-5d6e-4f7a-8b9c-0d1e2f3a4b5c",
+      { ...columnFields, name: "heading" },
+      { now: new Date("2026-07-19T09:00:00.000Z") },
+    );
+
+    expect(updated.tables[0]?.columns[1]).toEqual({
+      id: "a2b3c4d5-6e7f-4a8b-9c0d-1e2f3a4b5c6d",
+      ...columnFields,
+    });
+  });
+
+  it("is a no-op when the table id is unknown", () => {
+    const updated = updateColumn(
+      original,
+      "unknown-id",
+      "f1a2b3c4-5d6e-4f7a-8b9c-0d1e2f3a4b5c",
+      columnFields,
+      { now: new Date("2026-07-19T09:00:00.000Z") },
+    );
+
+    expect(updated).toBe(original);
+  });
+
+  it("is a no-op when the column id is unknown", () => {
+    const updated = updateColumn(
+      original,
+      "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12",
+      "unknown-id",
+      columnFields,
+      { now: new Date("2026-07-19T09:00:00.000Z") },
+    );
+
+    expect(updated).toBe(original);
+  });
+
+  it("does not mutate the input schema", () => {
+    updateColumn(
+      original,
+      "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12",
+      "f1a2b3c4-5d6e-4f7a-8b9c-0d1e2f3a4b5c",
+      { ...columnFields, name: "heading" },
+      { now: new Date("2026-07-19T09:00:00.000Z") },
+    );
+
+    expect(original.tables[0]?.columns[0]?.name).toBe("title");
+  });
+});
+
+describe("removeColumn", () => {
+  const original = addColumn(
+    createTable(
+      createSchema("Blog Schema", {
+        id: "c3a1e96a-9a75-4d3c-b0ad-3d6e1b6a5f01",
+        now: new Date("2026-07-18T09:00:00.000Z"),
+      }),
+      "posts",
+      { id: "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12", now: new Date("2026-07-18T09:00:00.000Z") },
+    ),
+    "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12",
+    columnFields,
+    { id: "f1a2b3c4-5d6e-4f7a-8b9c-0d1e2f3a4b5c", now: new Date("2026-07-18T09:00:00.000Z") },
+  );
+
+  it("removes the matching column and bumps updatedAt", () => {
+    const updated = removeColumn(
+      original,
+      "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12",
+      "f1a2b3c4-5d6e-4f7a-8b9c-0d1e2f3a4b5c",
+      { now: new Date("2026-07-19T09:00:00.000Z") },
+    );
+
+    expect(updated.tables[0]?.columns).toEqual([]);
+    expect(updated.updatedAt).toEqual(new Date("2026-07-19T09:00:00.000Z"));
+  });
+
+  it("leaves other columns untouched", () => {
+    const withSecond = addColumn(original, "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12", columnFields, {
+      id: "a2b3c4d5-6e7f-4a8b-9c0d-1e2f3a4b5c6d",
+      now: new Date("2026-07-18T09:00:00.000Z"),
+    });
+
+    const updated = removeColumn(
+      withSecond,
+      "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12",
+      "f1a2b3c4-5d6e-4f7a-8b9c-0d1e2f3a4b5c",
+      { now: new Date("2026-07-19T09:00:00.000Z") },
+    );
+
+    expect(updated.tables[0]?.columns).toEqual([
+      { id: "a2b3c4d5-6e7f-4a8b-9c0d-1e2f3a4b5c6d", ...columnFields },
+    ]);
+  });
+
+  it("is a no-op when the table id is unknown", () => {
+    const updated = removeColumn(original, "unknown-id", "f1a2b3c4-5d6e-4f7a-8b9c-0d1e2f3a4b5c", {
+      now: new Date("2026-07-19T09:00:00.000Z"),
+    });
+
+    expect(updated).toBe(original);
+  });
+
+  it("is a no-op when the column id is unknown", () => {
+    const updated = removeColumn(original, "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12", "unknown-id", {
+      now: new Date("2026-07-19T09:00:00.000Z"),
+    });
+
+    expect(updated).toBe(original);
+  });
+
+  it("does not mutate the input schema", () => {
+    removeColumn(
+      original,
+      "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12",
+      "f1a2b3c4-5d6e-4f7a-8b9c-0d1e2f3a4b5c",
+      { now: new Date("2026-07-19T09:00:00.000Z") },
+    );
+
+    expect(original.tables[0]?.columns).toHaveLength(1);
   });
 });

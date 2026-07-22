@@ -1,6 +1,7 @@
-import type { Position, SchemaSummary, Table } from "../../domain/schema";
+import type { Column, Position, SchemaSummary, Table } from "../../domain/schema";
 import { useActiveDialog } from "./ActiveDialogContext";
 import { Canvas } from "./components/Canvas";
+import { ColumnDialog } from "./components/ColumnDialog";
 import { ConfirmDialog } from "./components/ConfirmDialog";
 import { NotificationBar } from "./components/NotificationBar";
 import { SchemaNameDialog } from "./components/SchemaNameDialog";
@@ -17,6 +18,7 @@ type MainScreenViewProps = {
   createdDate: string;
   selectedTableId: string | null;
   selectedTable: Table | null;
+  selectedColumn: Column | null;
   isSidePanelOpen: boolean;
   onToggleSidePanel: () => void;
   onSelectSchema: (id: string) => void;
@@ -24,10 +26,14 @@ type MainScreenViewProps = {
   onRenameSchema: (name: string) => void;
   onDeleteSchema: () => void;
   onSelectTable: (id: string | null) => void;
+  onSelectColumn: (id: string | null) => void;
   onCreateTable: (name: string) => void;
   onUpdateTableName: (tableId: string, name: string) => void;
   onUpdateTableComment: (tableId: string, comment: string) => void;
   onMoveTable: (tableId: string, position: Position) => void;
+  onAddColumn: (tableId: string, fields: Omit<Column, "id">) => void;
+  onUpdateColumn: (tableId: string, columnId: string, fields: Omit<Column, "id">) => void;
+  onRemoveColumn: (tableId: string, columnId: string) => void;
 };
 
 export function MainScreenView({
@@ -39,6 +45,7 @@ export function MainScreenView({
   createdDate,
   selectedTableId,
   selectedTable,
+  selectedColumn,
   isSidePanelOpen,
   onToggleSidePanel,
   onSelectSchema,
@@ -46,12 +53,16 @@ export function MainScreenView({
   onRenameSchema,
   onDeleteSchema,
   onSelectTable,
+  onSelectColumn,
   onCreateTable,
   onUpdateTableName,
   onUpdateTableComment,
   onMoveTable,
+  onAddColumn,
+  onUpdateColumn,
+  onRemoveColumn,
 }: MainScreenViewProps) {
-  const { activeDialog, closeDialog } = useActiveDialog();
+  const { activeDialog, openDialog, closeDialog } = useActiveDialog();
 
   return (
     <div className="flex h-svh flex-col overflow-hidden">
@@ -81,6 +92,18 @@ export function MainScreenView({
           selectedTable={selectedTable}
           onUpdateTableName={onUpdateTableName}
           onUpdateTableComment={onUpdateTableComment}
+          onAddColumn={() => {
+            onSelectColumn(null);
+            openDialog("addColumn");
+          }}
+          onEditColumn={(columnId) => {
+            onSelectColumn(columnId);
+            openDialog("editColumn");
+          }}
+          onDeleteColumn={(columnId) => {
+            onSelectColumn(columnId);
+            openDialog("deleteColumn");
+          }}
         />
       </div>
       <SchemaNameDialog
@@ -121,6 +144,44 @@ export function MainScreenView({
         submitLabel="Create"
         onSubmit={(name) => {
           onCreateTable(name);
+          closeDialog();
+        }}
+        onCancel={closeDialog}
+      />
+      <ColumnDialog
+        open={activeDialog === "addColumn"}
+        title="Add Column"
+        submitLabel="Add"
+        onSubmit={(fields) => {
+          if (selectedTableId !== null) {
+            onAddColumn(selectedTableId, fields);
+          }
+          closeDialog();
+        }}
+        onCancel={closeDialog}
+      />
+      <ColumnDialog
+        open={activeDialog === "editColumn"}
+        title="Edit Column"
+        submitLabel="Save"
+        initialColumn={selectedColumn}
+        onSubmit={(fields) => {
+          if (selectedTableId !== null && selectedColumn !== null) {
+            onUpdateColumn(selectedTableId, selectedColumn.id, fields);
+          }
+          closeDialog();
+        }}
+        onCancel={closeDialog}
+      />
+      <ConfirmDialog
+        open={activeDialog === "deleteColumn"}
+        title="Delete Column"
+        message={`Delete column "${selectedColumn?.name ?? ""}"? This cannot be undone.`}
+        confirmLabel="Delete"
+        onConfirm={() => {
+          if (selectedTableId !== null && selectedColumn !== null) {
+            onRemoveColumn(selectedTableId, selectedColumn.id);
+          }
           closeDialog();
         }}
         onCancel={closeDialog}

@@ -237,4 +237,50 @@ describe("MainScreen", () => {
     });
     expect(within(sidePanel).getByLabelText("Comment")).toHaveValue("Registered users");
   });
+
+  it("adds, edits, and deletes a column from the side panel", async () => {
+    await runRestored();
+
+    await userEvent.click(screen.getByRole("button", { name: "Add Table" }));
+    const createTableDialog = screen.getByRole("dialog", { name: "New Table" });
+    await userEvent.type(within(createTableDialog).getByLabelText("Table name"), "users");
+    await userEvent.click(within(createTableDialog).getByRole("button", { name: "Create" }));
+
+    const node = await screen.findByRole("button", { name: "Table users" });
+    await userEvent.click(node);
+    const sidePanel = screen.getByRole("complementary", { name: "Side panel" });
+
+    await userEvent.click(within(sidePanel).getByRole("button", { name: "Add Column" }));
+    const addDialog = screen.getByRole("dialog", { name: "Add Column" });
+    await userEvent.type(within(addDialog).getByLabelText("Name"), "email");
+    await userEvent.click(within(addDialog).getByRole("button", { name: "Add" }));
+
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(within(sidePanel).getByText("email")).toBeInTheDocument();
+    await waitFor(() => {
+      expect(within(node).getByText("email")).toBeInTheDocument();
+    });
+
+    await userEvent.click(within(sidePanel).getByRole("button", { name: "Edit column email" }));
+    const editDialog = screen.getByRole("dialog", { name: "Edit Column" });
+    const editNameInput = within(editDialog).getByLabelText("Name");
+    await userEvent.clear(editNameInput);
+    await userEvent.type(editNameInput, "email_address");
+    await userEvent.click(within(editDialog).getByRole("button", { name: "Save" }));
+
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(within(sidePanel).getByText("email_address")).toBeInTheDocument();
+
+    await userEvent.click(
+      within(sidePanel).getByRole("button", { name: "Delete column email_address" }),
+    );
+    const deleteDialog = screen.getByRole("dialog", { name: "Delete Column" });
+    expect(
+      within(deleteDialog).getByText('Delete column "email_address"? This cannot be undone.'),
+    ).toBeInTheDocument();
+    await userEvent.click(within(deleteDialog).getByRole("button", { name: "Delete" }));
+
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(within(sidePanel).queryByText("email_address")).not.toBeInTheDocument();
+  });
 });

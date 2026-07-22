@@ -1,4 +1,4 @@
-import { screen } from "@testing-library/react";
+import { screen, within } from "@testing-library/react";
 import { composeStories } from "@storybook/react-vite";
 import * as stories from "./MainScreenView.stories";
 
@@ -10,6 +10,9 @@ const {
   DeleteSchemaDialogOpen,
   CreateTableDialogOpen,
   TableSelected,
+  AddColumnDialogOpen,
+  EditColumnDialogOpen,
+  DeleteColumnDialogOpen,
 } = composeStories(stories);
 
 describe("MainScreenView", () => {
@@ -61,5 +64,23 @@ describe("MainScreenView", () => {
     await TableSelected.run();
     expect(screen.getByRole("heading", { name: "Table" })).toBeInTheDocument();
     expect(screen.getByLabelText("Name")).toHaveValue("users");
+  });
+
+  it("shows the add column dialog while activeDialog is addColumn", async () => {
+    await AddColumnDialogOpen.run();
+    const dialog = screen.getByRole("dialog", { name: "Add Column" });
+    expect(within(dialog).getByLabelText("Name")).toHaveValue("");
+  });
+
+  it("shows the edit column dialog prefilled with the selected column", async () => {
+    await EditColumnDialogOpen.run();
+    const dialog = screen.getByRole("dialog", { name: "Edit Column" });
+    expect(within(dialog).getByLabelText("Name")).toHaveValue("email");
+  });
+
+  it("shows the delete column confirmation naming the selected column", async () => {
+    await DeleteColumnDialogOpen.run();
+    expect(screen.getByRole("dialog", { name: "Delete Column" })).toBeInTheDocument();
+    expect(screen.getByText('Delete column "email"? This cannot be undone.')).toBeInTheDocument();
   });
 });

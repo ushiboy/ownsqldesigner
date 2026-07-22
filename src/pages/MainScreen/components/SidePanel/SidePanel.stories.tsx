@@ -8,6 +8,31 @@ const table: Table = {
   name: "users",
   comment: "Registered users",
   position: { x: 0, y: 0 },
+  columns: [],
+};
+
+const tableWithColumns: Table = {
+  ...table,
+  columns: [
+    {
+      id: "f1a2b3c4-5d6e-4f7a-8b9c-0d1e2f3a4b5c",
+      name: "id",
+      type: "INTEGER",
+      size: "",
+      defaultValue: "",
+      nullable: false,
+      comment: "",
+    },
+    {
+      id: "a2b3c4d5-6e7f-4a8b-9c0d-1e2f3a4b5c6d",
+      name: "email",
+      type: "TEXT",
+      size: "",
+      defaultValue: "",
+      nullable: false,
+      comment: "",
+    },
+  ],
 };
 
 const meta = {
@@ -21,6 +46,9 @@ const meta = {
     selectedTable: null,
     onUpdateTableName: fn(),
     onUpdateTableComment: fn(),
+    onAddColumn: fn(),
+    onEditColumn: fn(),
+    onDeleteColumn: fn(),
   },
   decorators: [
     (Story) => (
@@ -40,5 +68,12 @@ export const TableSelected: Story = {
   args: {
     tableCount: 1,
     selectedTable: table,
+  },
+};
+
+export const TableWithColumns: Story = {
+  args: {
+    tableCount: 1,
+    selectedTable: tableWithColumns,
   },
 };

@@ -57,7 +57,11 @@ function tablesToNodes(tables: Table[], selectedTableId: string | null): TableNo
     id: table.id,
     type: "table",
     position: table.position,
-    data: { name: table.name, comment: table.comment },
+    data: {
+      name: table.name,
+      comment: table.comment,
+      columns: table.columns.map(({ id, name }) => ({ id, name })),
+    },
     selected: table.id === selectedTableId,
   }));
 }

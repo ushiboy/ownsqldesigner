@@ -1,15 +1,19 @@
 import { useEffect, useState } from "react";
 import {
   DEFAULT_SCHEMA_NAME,
+  type Column,
   type Position,
   type Schema,
   type SchemaSummary,
   type Table,
+  addColumn,
   createSchema,
   createTable,
   moveTable,
+  removeColumn,
   renameSchema,
   renameTable,
+  updateColumn,
   updateTableComment,
 } from "../../domain/schema";
 import type { SchemaRepository } from "../../domain/schemaRepository";
@@ -27,6 +31,9 @@ type SchemaWorkspace = {
   renameTable: (tableId: string, name: string) => void;
   updateTableComment: (tableId: string, comment: string) => void;
   moveTable: (tableId: string, position: Position) => void;
+  addColumn: (tableId: string, fields: Omit<Column, "id">) => void;
+  updateColumn: (tableId: string, columnId: string, fields: Omit<Column, "id">) => void;
+  removeColumn: (tableId: string, columnId: string) => void;
 };
 
 export function useSchemaWorkspace(repository: SchemaRepository): SchemaWorkspace {
@@ -158,6 +165,20 @@ export function useSchemaWorkspace(repository: SchemaRepository): SchemaWorkspac
           ? prev
           : moveTable(prev, tableId, position);
       });
+    },
+    addColumn: (tableId, fields) => {
+      dismissNotification();
+      setCurrentSchema((prev) => (prev === null ? prev : addColumn(prev, tableId, fields)));
+    },
+    updateColumn: (tableId, columnId, fields) => {
+      dismissNotification();
+      setCurrentSchema((prev) =>
+        prev === null ? prev : updateColumn(prev, tableId, columnId, fields),
+      );
+    },
+    removeColumn: (tableId, columnId) => {
+      dismissNotification();
+      setCurrentSchema((prev) => (prev === null ? prev : removeColumn(prev, tableId, columnId)));
     },
   };
 }

@@ -9,12 +9,14 @@ const tables: Table[] = [
     name: "users",
     comment: "Registered users",
     position: { x: 0, y: 0 },
+    columns: [],
   },
   {
     id: "e5c3fb8c-9c97-4f5e-d2cf-5f8f3d8c7b23",
     name: "posts",
     comment: "",
     position: { x: 260, y: 0 },
+    columns: [],
   },
 ];
 

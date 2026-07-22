@@ -32,6 +32,17 @@ const tables = [
     name: "users",
     comment: "Registered users",
     position: { x: 0, y: 0 },
+    columns: [
+      {
+        id: "f1a2b3c4-5d6e-4f7a-8b9c-0d1e2f3a4b5c",
+        name: "email",
+        type: "TEXT" as const,
+        size: "",
+        defaultValue: "",
+        nullable: false,
+        comment: "",
+      },
+    ],
   },
 ];
 
@@ -50,16 +61,21 @@ const meta = {
     createdDate: "2026-07-01",
     selectedTableId: null,
     selectedTable: null,
+    selectedColumn: null,
     onToggleSidePanel: fn(),
     onSelectSchema: fn(),
     onCreateSchema: fn(),
     onRenameSchema: fn(),
     onDeleteSchema: fn(),
     onSelectTable: fn(),
+    onSelectColumn: fn(),
     onCreateTable: fn(),
     onUpdateTableName: fn(),
     onUpdateTableComment: fn(),
     onMoveTable: fn(),
+    onAddColumn: fn(),
+    onUpdateColumn: fn(),
+    onRemoveColumn: fn(),
   },
   decorators: [withProviders],
 } satisfies Meta<typeof MainScreenView>;
@@ -131,5 +147,46 @@ export const TableSelected: Story = {
     tableCount: tables.length,
     selectedTableId: tables[0]?.id ?? null,
     selectedTable: tables[0] ?? null,
+  },
+};
+
+export const AddColumnDialogOpen: Story = {
+  args: {
+    isSidePanelOpen: true,
+    tables,
+    tableCount: tables.length,
+    selectedTableId: tables[0]?.id ?? null,
+    selectedTable: tables[0] ?? null,
+  },
+  parameters: {
+    dialog: "addColumn",
+  },
+};
+
+export const EditColumnDialogOpen: Story = {
+  args: {
+    isSidePanelOpen: true,
+    tables,
+    tableCount: tables.length,
+    selectedTableId: tables[0]?.id ?? null,
+    selectedTable: tables[0] ?? null,
+    selectedColumn: tables[0]?.columns[0] ?? null,
+  },
+  parameters: {
+    dialog: "editColumn",
+  },
+};
+
+export const DeleteColumnDialogOpen: Story = {
+  args: {
+    isSidePanelOpen: true,
+    tables,
+    tableCount: tables.length,
+    selectedTableId: tables[0]?.id ?? null,
+    selectedTable: tables[0] ?? null,
+    selectedColumn: tables[0]?.columns[0] ?? null,
+  },
+  parameters: {
+    dialog: "deleteColumn",
   },
 };

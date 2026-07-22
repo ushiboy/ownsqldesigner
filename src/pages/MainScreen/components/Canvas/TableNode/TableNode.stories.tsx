@@ -13,7 +13,7 @@ function makeNode(overrides: Partial<TableNodeType> = {}): TableNodeType {
     id: "1",
     type: "table",
     position: { x: 0, y: 0 },
-    data: { name: "users", comment: "" },
+    data: { name: "users", comment: "", columns: [] },
     ...overrides,
   };
 }
@@ -44,9 +44,24 @@ export const Default: Story = {
 };
 
 export const WithComment: Story = {
-  args: { node: makeNode({ data: { name: "users", comment: "Registered users" } }) },
+  args: { node: makeNode({ data: { name: "users", comment: "Registered users", columns: [] } }) },
 };
 
 export const Selected: Story = {
   args: { node: makeNode({ selected: true }) },
+};
+
+export const WithColumns: Story = {
+  args: {
+    node: makeNode({
+      data: {
+        name: "users",
+        comment: "",
+        columns: [
+          { id: "c1", name: "id" },
+          { id: "c2", name: "email" },
+        ],
+      },
+    }),
+  },
 };

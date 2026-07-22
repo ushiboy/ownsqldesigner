@@ -31,12 +31,12 @@ The Phase column gives a rough implementation order: Phase 1 = core MVP, Phase 2
 
 ### Table / column definition
 
-| ID      | Requirement                                                                                                       | Phase |
-| ------- | ----------------------------------------------------------------------------------------------------------------- | ----- |
-| REQ-009 | Create, rename, and comment tables ([0004](design/0004-table-creation-and-placement.md))                          | 1     |
-| REQ-010 | Add, edit, remove, and reorder columns (name / type / size / default value / nullable / auto-increment / comment) | 1     |
-| REQ-011 | Column type selection from a per-dialect datatype set (SQLite initially)                                          | 1     |
-| REQ-012 | Toggle display of column type / size on the canvas                                                                | 3     |
+| ID      | Requirement                                                                                                                                                        | Phase |
+| ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----- |
+| REQ-009 | Create, rename, and comment tables ([0004](design/0004-table-creation-and-placement.md))                                                                           | 1     |
+| REQ-010 | Add, edit, remove, and reorder columns (name / type / size / default value / nullable / auto-increment / comment) ([0006](design/0006-table-column-management.md)) | 1     |
+| REQ-011 | Column type selection from a per-dialect datatype set (SQLite initially) ([0006](design/0006-table-column-management.md))                                          | 1     |
+| REQ-012 | Toggle display of column type / size on the canvas                                                                                                                 | 3     |
 
 ### Keys and relations
 

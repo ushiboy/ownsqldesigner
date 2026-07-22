@@ -35,6 +35,7 @@ type MainScreenContentProps = {
 function MainScreenContent({ repository }: MainScreenContentProps) {
   const [isSidePanelOpen, setIsSidePanelOpen] = useState(true);
   const [selectedTableId, setSelectedTableId] = useState<string | null>(null);
+  const [selectedColumnId, setSelectedColumnId] = useState<string | null>(null);
   const [selectedSchemaId, setSelectedSchemaId] = useState<string | null | undefined>(undefined);
   const {
     currentSchema,
@@ -47,15 +48,21 @@ function MainScreenContent({ repository }: MainScreenContentProps) {
     renameTable,
     updateTableComment,
     moveTable,
+    addColumn,
+    updateColumn,
+    removeColumn,
   } = useSchemaWorkspace(repository);
 
   if (currentSchema?.id !== selectedSchemaId) {
     setSelectedSchemaId(currentSchema?.id ?? null);
     setSelectedTableId(null);
+    setSelectedColumnId(null);
   }
 
   const tables = currentSchema?.tables ?? NO_TABLES;
   const selectedTable = tables.find((table) => table.id === selectedTableId) ?? null;
+  const selectedColumn =
+    selectedTable?.columns.find((column) => column.id === selectedColumnId) ?? null;
 
   return (
     <MainScreenView
@@ -67,17 +74,25 @@ function MainScreenContent({ repository }: MainScreenContentProps) {
       createdDate={currentSchema === null ? "—" : format(currentSchema.createdAt, "yyyy-MM-dd")}
       selectedTableId={selectedTableId}
       selectedTable={selectedTable}
+      selectedColumn={selectedColumn}
       isSidePanelOpen={isSidePanelOpen}
       onToggleSidePanel={() => setIsSidePanelOpen((prev) => !prev)}
       onSelectSchema={selectSchema}
       onCreateSchema={createSchema}
       onRenameSchema={renameSchema}
       onDeleteSchema={deleteCurrentSchema}
-      onSelectTable={setSelectedTableId}
+      onSelectTable={(id) => {
+        setSelectedTableId(id);
+        setSelectedColumnId(null);
+      }}
+      onSelectColumn={setSelectedColumnId}
       onCreateTable={createTable}
       onUpdateTableName={renameTable}
       onUpdateTableComment={updateTableComment}
       onMoveTable={moveTable}
+      onAddColumn={addColumn}
+      onUpdateColumn={updateColumn}
+      onRemoveColumn={removeColumn}
     />
   );
 }

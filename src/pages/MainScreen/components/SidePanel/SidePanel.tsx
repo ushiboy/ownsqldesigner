@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { LuPencil, LuPlus, LuTrash2 } from "react-icons/lu";
 import { tv } from "tailwind-variants";
 import type { Table } from "../../../../domain/schema";
 
@@ -16,6 +17,12 @@ const fieldInput = tv({
   base: "mt-1 w-full rounded-md border border-edge bg-surface px-2.5 py-1.5 text-[14px] text-heading focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
 });
 
+// Small icon-only button, matching Toolbar.tsx's local `toolButton` — no
+// shared icon-button component exists yet in this codebase.
+const iconButton = tv({
+  base: "inline-flex items-center rounded-md p-1 text-body transition-colors hover:bg-accent-bg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
+});
+
 type SidePanelProps = {
   isOpen: boolean;
   schemaName: string;
@@ -25,6 +32,9 @@ type SidePanelProps = {
   selectedTable: Table | null;
   onUpdateTableName: (tableId: string, name: string) => void;
   onUpdateTableComment: (tableId: string, comment: string) => void;
+  onAddColumn: () => void;
+  onEditColumn: (columnId: string) => void;
+  onDeleteColumn: (columnId: string) => void;
 };
 
 export function SidePanel({
@@ -35,6 +45,9 @@ export function SidePanel({
   selectedTable,
   onUpdateTableName,
   onUpdateTableComment,
+  onAddColumn,
+  onEditColumn,
+  onDeleteColumn,
 }: SidePanelProps) {
   return (
     <aside
@@ -57,6 +70,9 @@ export function SidePanel({
             table={selectedTable}
             onUpdateTableName={onUpdateTableName}
             onUpdateTableComment={onUpdateTableComment}
+            onAddColumn={onAddColumn}
+            onEditColumn={onEditColumn}
+            onDeleteColumn={onDeleteColumn}
           />
         )}
       </div>
@@ -86,13 +102,27 @@ function SchemaSummary({ schemaName, tableCount, createdDate }: SchemaSummaryPro
   );
 }
 
+const addColumnButton = tv({
+  base: "mt-3 inline-flex items-center gap-1 rounded-md px-2 py-1 text-[13px] text-heading transition-colors hover:bg-accent-bg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
+});
+
 type TablePropertiesProps = {
   table: Table;
   onUpdateTableName: (tableId: string, name: string) => void;
   onUpdateTableComment: (tableId: string, comment: string) => void;
+  onAddColumn: () => void;
+  onEditColumn: (columnId: string) => void;
+  onDeleteColumn: (columnId: string) => void;
 };
 
-function TableProperties({ table, onUpdateTableName, onUpdateTableComment }: TablePropertiesProps) {
+function TableProperties({
+  table,
+  onUpdateTableName,
+  onUpdateTableComment,
+  onAddColumn,
+  onEditColumn,
+  onDeleteColumn,
+}: TablePropertiesProps) {
   const [name, setName] = useState(table.name);
 
   return (
@@ -129,6 +159,41 @@ function TableProperties({ table, onUpdateTableName, onUpdateTableComment }: Tab
             className={fieldInput()}
           />
         </label>
+      </div>
+      <div className="mt-6">
+        <h3 className="text-[14px] text-heading">Columns</h3>
+        <button type="button" onClick={onAddColumn} className={addColumnButton()}>
+          <LuPlus aria-hidden="true" className="size-4" />
+          Add Column
+        </button>
+        <ul className="mt-2 flex flex-col gap-1 text-[13px]">
+          {table.columns.map((column) => (
+            <li key={column.id} className="flex items-center justify-between gap-2">
+              <span className="truncate">
+                <span className="text-heading">{column.name}</span>{" "}
+                <span className="text-body">{column.type}</span>
+              </span>
+              <span className="flex shrink-0 items-center gap-1">
+                <button
+                  type="button"
+                  aria-label={`Edit column ${column.name}`}
+                  onClick={() => onEditColumn(column.id)}
+                  className={iconButton()}
+                >
+                  <LuPencil aria-hidden="true" className="size-4" />
+                </button>
+                <button
+                  type="button"
+                  aria-label={`Delete column ${column.name}`}
+                  onClick={() => onDeleteColumn(column.id)}
+                  className={iconButton()}
+                >
+                  <LuTrash2 aria-hidden="true" className="size-4" />
+                </button>
+              </span>
+            </li>
+          ))}
+        </ul>
       </div>
     </>
   );
