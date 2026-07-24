@@ -2,6 +2,7 @@ import { useState } from "react";
 import { LuPencil, LuPlus, LuTrash2 } from "react-icons/lu";
 import { tv } from "tailwind-variants";
 import type { Table } from "../../../../domain/schema";
+import { describeKey } from "./describeKey";
 
 const panel = tv({
   base: "shrink-0 overflow-hidden bg-surface transition-[width] duration-300 ease-in-out motion-reduce:transition-none",
@@ -35,6 +36,9 @@ type SidePanelProps = {
   onAddColumn: () => void;
   onEditColumn: (columnId: string) => void;
   onDeleteColumn: (columnId: string) => void;
+  onAddKey: () => void;
+  onEditKey: (keyId: string) => void;
+  onDeleteKey: (keyId: string) => void;
 };
 
 export function SidePanel({
@@ -48,6 +52,9 @@ export function SidePanel({
   onAddColumn,
   onEditColumn,
   onDeleteColumn,
+  onAddKey,
+  onEditKey,
+  onDeleteKey,
 }: SidePanelProps) {
   return (
     <aside
@@ -73,6 +80,9 @@ export function SidePanel({
             onAddColumn={onAddColumn}
             onEditColumn={onEditColumn}
             onDeleteColumn={onDeleteColumn}
+            onAddKey={onAddKey}
+            onEditKey={onEditKey}
+            onDeleteKey={onDeleteKey}
           />
         )}
       </div>
@@ -102,7 +112,7 @@ function SchemaSummary({ schemaName, tableCount, createdDate }: SchemaSummaryPro
   );
 }
 
-const addColumnButton = tv({
+const sectionActionButton = tv({
   base: "mt-3 inline-flex items-center gap-1 rounded-md px-2 py-1 text-[13px] text-heading transition-colors hover:bg-accent-bg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
 });
 
@@ -113,6 +123,9 @@ type TablePropertiesProps = {
   onAddColumn: () => void;
   onEditColumn: (columnId: string) => void;
   onDeleteColumn: (columnId: string) => void;
+  onAddKey: () => void;
+  onEditKey: (keyId: string) => void;
+  onDeleteKey: (keyId: string) => void;
 };
 
 function TableProperties({
@@ -122,6 +135,9 @@ function TableProperties({
   onAddColumn,
   onEditColumn,
   onDeleteColumn,
+  onAddKey,
+  onEditKey,
+  onDeleteKey,
 }: TablePropertiesProps) {
   const [name, setName] = useState(table.name);
 
@@ -162,7 +178,7 @@ function TableProperties({
       </div>
       <div className="mt-6">
         <h3 className="text-[14px] text-heading">Columns</h3>
-        <button type="button" onClick={onAddColumn} className={addColumnButton()}>
+        <button type="button" onClick={onAddColumn} className={sectionActionButton()}>
           <LuPlus aria-hidden="true" className="size-4" />
           Add Column
         </button>
@@ -195,6 +211,57 @@ function TableProperties({
           ))}
         </ul>
       </div>
+      <div className="mt-6">
+        <h3 className="text-[14px] text-heading">Keys</h3>
+        <button type="button" onClick={onAddKey} className={sectionActionButton()}>
+          <LuPlus aria-hidden="true" className="size-4" />
+          Add Key
+        </button>
+        <ul className="mt-2 flex flex-col gap-1 text-[13px]">
+          {table.keys.map((key) => (
+            <KeyRow
+              key={key.id}
+              keyId={key.id}
+              label={describeKey(key, table.columns)}
+              onEditKey={onEditKey}
+              onDeleteKey={onDeleteKey}
+            />
+          ))}
+        </ul>
+      </div>
     </>
+  );
+}
+
+type KeyRowProps = {
+  keyId: string;
+  label: string;
+  onEditKey: (keyId: string) => void;
+  onDeleteKey: (keyId: string) => void;
+};
+
+function KeyRow({ keyId, label, onEditKey, onDeleteKey }: KeyRowProps) {
+  return (
+    <li className="flex items-center justify-between gap-2">
+      <span className="truncate text-heading">{label}</span>
+      <span className="flex shrink-0 items-center gap-1">
+        <button
+          type="button"
+          aria-label={`Edit key ${label}`}
+          onClick={() => onEditKey(keyId)}
+          className={iconButton()}
+        >
+          <LuPencil aria-hidden="true" className="size-4" />
+        </button>
+        <button
+          type="button"
+          aria-label={`Delete key ${label}`}
+          onClick={() => onDeleteKey(keyId)}
+          className={iconButton()}
+        >
+          <LuTrash2 aria-hidden="true" className="size-4" />
+        </button>
+      </span>
+    </li>
   );
 }

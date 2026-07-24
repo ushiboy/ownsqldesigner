@@ -1,13 +1,11 @@
 import { render, screen, within } from "@testing-library/react";
-// storybook/test's userEvent (not the standalone @testing-library/user-event
-// package): typing into these inputs after a second composeStories `.run()`
-// in this file does not reach React's onChange with the standalone package.
-import { userEvent } from "storybook/test";
+import userEvent from "@testing-library/user-event";
+import { fn } from "storybook/test";
 import { composeStories } from "@storybook/react-vite";
 import * as stories from "./SidePanel.stories";
 import { SidePanel } from "./SidePanel";
 
-const { Default, TableSelected, TableWithColumns } = composeStories(stories);
+const { Default, TableSelected, TableWithColumns, TableWithKeys } = composeStories(stories);
 
 const closedProps = {
   isOpen: false,
@@ -20,11 +18,14 @@ const closedProps = {
   onAddColumn: () => {},
   onEditColumn: () => {},
   onDeleteColumn: () => {},
+  onAddKey: () => {},
+  onEditKey: () => {},
+  onDeleteKey: () => {},
 };
 
 describe("SidePanel", () => {
-  it("renders as a complementary landmark while open", async () => {
-    await Default.run();
+  it("renders as a complementary landmark while open", () => {
+    render(<Default />);
     expect(screen.getByRole("complementary", { name: "Side panel" })).toBeInTheDocument();
   });
 
@@ -38,8 +39,8 @@ describe("SidePanel", () => {
     expect(within(container).getByText("Schema")).toBeInTheDocument();
   });
 
-  it("shows the schema metadata", async () => {
-    await Default.run();
+  it("shows the schema metadata", () => {
+    render(<Default />);
     expect(screen.getByRole("heading", { name: "Schema" })).toBeInTheDocument();
     expect(screen.getByText("Name")).toBeInTheDocument();
     expect(screen.getByText("Blog Schema")).toBeInTheDocument();
@@ -49,47 +50,50 @@ describe("SidePanel", () => {
     expect(screen.getByText("2026-07-01")).toBeInTheDocument();
   });
 
-  it("shows the selected table's name and comment", async () => {
-    await TableSelected.run();
+  it("shows the selected table's name and comment", () => {
+    render(<TableSelected />);
     expect(screen.getByRole("heading", { name: "Table" })).toBeInTheDocument();
     expect(screen.getByLabelText("Name")).toHaveValue("users");
     expect(screen.getByLabelText("Comment")).toHaveValue("Registered users");
   });
 
   it("commits a comment edit immediately", async () => {
-    await TableSelected.run();
+    const onUpdateTableComment = fn();
+    render(<TableSelected onUpdateTableComment={onUpdateTableComment} />);
 
     await userEvent.type(screen.getByLabelText("Comment"), "!");
 
-    expect(TableSelected.args.onUpdateTableComment).toHaveBeenCalledWith(
+    expect(onUpdateTableComment).toHaveBeenCalledWith(
       "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12",
       "Registered users!",
     );
   });
 
   it("commits a name edit once the trimmed value is non-empty", async () => {
-    await TableSelected.run();
+    const onUpdateTableName = fn();
+    render(<TableSelected onUpdateTableName={onUpdateTableName} />);
 
     const input = screen.getByLabelText("Name");
     await userEvent.clear(input);
     await userEvent.type(input, "accounts");
 
-    expect(TableSelected.args.onUpdateTableName).toHaveBeenLastCalledWith(
+    expect(onUpdateTableName).toHaveBeenLastCalledWith(
       "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12",
       "accounts",
     );
   });
 
   it("does not commit while the name is cleared", async () => {
-    await TableSelected.run();
+    const onUpdateTableName = fn();
+    render(<TableSelected onUpdateTableName={onUpdateTableName} />);
 
     await userEvent.clear(screen.getByLabelText("Name"));
 
-    expect(TableSelected.args.onUpdateTableName).not.toHaveBeenCalled();
+    expect(onUpdateTableName).not.toHaveBeenCalled();
   });
 
   it("reverts the name field to the last committed value on blur while empty", async () => {
-    await TableSelected.run();
+    render(<TableSelected />);
 
     const input = screen.getByLabelText("Name");
     await userEvent.clear(input);
@@ -98,14 +102,14 @@ describe("SidePanel", () => {
     expect(input).toHaveValue("users");
   });
 
-  it("shows no columns for a table without any", async () => {
-    await TableSelected.run();
+  it("shows no columns for a table without any", () => {
+    render(<TableSelected />);
     expect(screen.getByRole("heading", { name: "Columns" })).toBeInTheDocument();
     expect(screen.queryByRole("listitem")).not.toBeInTheDocument();
   });
 
-  it("lists a table's columns with their type", async () => {
-    await TableWithColumns.run();
+  it("lists a table's columns with their type", () => {
+    render(<TableWithColumns />);
     expect(screen.getByText("id")).toBeInTheDocument();
     expect(screen.getByText("INTEGER")).toBeInTheDocument();
     expect(screen.getByText("email")).toBeInTheDocument();
@@ -113,24 +117,55 @@ describe("SidePanel", () => {
   });
 
   it("calls onAddColumn when the Add Column button is clicked", async () => {
-    await TableSelected.run();
+    const onAddColumn = fn();
+    render(<TableSelected onAddColumn={onAddColumn} />);
     await userEvent.click(screen.getByRole("button", { name: "Add Column" }));
-    expect(TableSelected.args.onAddColumn).toHaveBeenCalledOnce();
+    expect(onAddColumn).toHaveBeenCalledOnce();
   });
 
   it("calls onEditColumn with the clicked column's id", async () => {
-    await TableWithColumns.run();
+    const onEditColumn = fn();
+    render(<TableWithColumns onEditColumn={onEditColumn} />);
     await userEvent.click(screen.getByRole("button", { name: "Edit column id" }));
-    expect(TableWithColumns.args.onEditColumn).toHaveBeenCalledExactlyOnceWith(
-      "f1a2b3c4-5d6e-4f7a-8b9c-0d1e2f3a4b5c",
-    );
+    expect(onEditColumn).toHaveBeenCalledExactlyOnceWith("f1a2b3c4-5d6e-4f7a-8b9c-0d1e2f3a4b5c");
   });
 
   it("calls onDeleteColumn with the clicked column's id", async () => {
-    await TableWithColumns.run();
+    const onDeleteColumn = fn();
+    render(<TableWithColumns onDeleteColumn={onDeleteColumn} />);
     await userEvent.click(screen.getByRole("button", { name: "Delete column email" }));
-    expect(TableWithColumns.args.onDeleteColumn).toHaveBeenCalledExactlyOnceWith(
-      "a2b3c4d5-6e7f-4a8b-9c0d-1e2f3a4b5c6d",
-    );
+    expect(onDeleteColumn).toHaveBeenCalledExactlyOnceWith("a2b3c4d5-6e7f-4a8b-9c0d-1e2f3a4b5c6d");
+  });
+
+  it("shows no keys for a table without any", () => {
+    render(<TableSelected />);
+    expect(screen.getByRole("heading", { name: "Keys" })).toBeInTheDocument();
+  });
+
+  it("lists a table's keys with a computed label", () => {
+    render(<TableWithKeys />);
+    expect(screen.getByText("PRIMARY KEY (id)")).toBeInTheDocument();
+    expect(screen.getByText("UNIQUE (email)")).toBeInTheDocument();
+  });
+
+  it("calls onAddKey when the Add Key button is clicked", async () => {
+    const onAddKey = fn();
+    render(<TableWithKeys onAddKey={onAddKey} />);
+    await userEvent.click(screen.getByRole("button", { name: "Add Key" }));
+    expect(onAddKey).toHaveBeenCalledOnce();
+  });
+
+  it("calls onEditKey with the clicked key's id", async () => {
+    const onEditKey = fn();
+    render(<TableWithKeys onEditKey={onEditKey} />);
+    await userEvent.click(screen.getByRole("button", { name: "Edit key PRIMARY KEY (id)" }));
+    expect(onEditKey).toHaveBeenCalledExactlyOnceWith("b1c2d3e4-5f6a-4b7c-8d9e-0f1a2b3c4d5e");
+  });
+
+  it("calls onDeleteKey with the clicked key's id", async () => {
+    const onDeleteKey = fn();
+    render(<TableWithKeys onDeleteKey={onDeleteKey} />);
+    await userEvent.click(screen.getByRole("button", { name: "Delete key UNIQUE (email)" }));
+    expect(onDeleteKey).toHaveBeenCalledExactlyOnceWith("c1d2e3f4-5a6b-4c7d-8e9f-0a1b2c3d4e5f");
   });
 });

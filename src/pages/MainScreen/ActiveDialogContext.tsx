@@ -7,7 +7,10 @@ export type DialogKind =
   | "createTable"
   | "addColumn"
   | "editColumn"
-  | "deleteColumn";
+  | "deleteColumn"
+  | "addKey"
+  | "editKey"
+  | "deleteKey";
 
 type ActiveDialogContextValue = {
   /** null while no dialog is open; overlapping dialogs are unrepresentable. */

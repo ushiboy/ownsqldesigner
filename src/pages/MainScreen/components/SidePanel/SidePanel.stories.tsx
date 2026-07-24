@@ -9,6 +9,7 @@ const table: Table = {
   comment: "Registered users",
   position: { x: 0, y: 0 },
   columns: [],
+  keys: [],
 };
 
 const tableWithColumns: Table = {
@@ -21,6 +22,7 @@ const tableWithColumns: Table = {
       size: "",
       defaultValue: "",
       nullable: false,
+      autoIncrement: true,
       comment: "",
     },
     {
@@ -30,7 +32,24 @@ const tableWithColumns: Table = {
       size: "",
       defaultValue: "",
       nullable: false,
+      autoIncrement: false,
       comment: "",
+    },
+  ],
+};
+
+const tableWithKeys: Table = {
+  ...tableWithColumns,
+  keys: [
+    {
+      id: "b1c2d3e4-5f6a-4b7c-8d9e-0f1a2b3c4d5e",
+      type: "PRIMARY_KEY",
+      columnIds: ["f1a2b3c4-5d6e-4f7a-8b9c-0d1e2f3a4b5c"],
+    },
+    {
+      id: "c1d2e3f4-5a6b-4c7d-8e9f-0a1b2c3d4e5f",
+      type: "UNIQUE",
+      columnIds: ["a2b3c4d5-6e7f-4a8b-9c0d-1e2f3a4b5c6d"],
     },
   ],
 };
@@ -49,6 +68,9 @@ const meta = {
     onAddColumn: fn(),
     onEditColumn: fn(),
     onDeleteColumn: fn(),
+    onAddKey: fn(),
+    onEditKey: fn(),
+    onDeleteKey: fn(),
   },
   decorators: [
     (Story) => (
@@ -75,5 +97,12 @@ export const TableWithColumns: Story = {
   args: {
     tableCount: 1,
     selectedTable: tableWithColumns,
+  },
+};
+
+export const TableWithKeys: Story = {
+  args: {
+    tableCount: 1,
+    selectedTable: tableWithKeys,
   },
 };

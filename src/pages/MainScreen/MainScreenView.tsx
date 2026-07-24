@@ -1,13 +1,23 @@
-import type { Column, Position, SchemaSummary, Table } from "../../domain/schema";
+import type {
+  Column,
+  ColumnKeyMembership,
+  Key,
+  Position,
+  SchemaSummary,
+  Table,
+} from "../../domain/schema";
 import { useActiveDialog } from "./ActiveDialogContext";
 import { Canvas } from "./components/Canvas";
 import { ColumnDialog } from "./components/ColumnDialog";
 import { ConfirmDialog } from "./components/ConfirmDialog";
+import { KeyDialog } from "./components/KeyDialog";
 import { NotificationBar } from "./components/NotificationBar";
 import { SchemaNameDialog } from "./components/SchemaNameDialog";
-import { SidePanel } from "./components/SidePanel";
+import { describeKey, SidePanel } from "./components/SidePanel";
 import { TableNameDialog } from "./components/TableNameDialog";
 import { Toolbar } from "./components/Toolbar";
+
+const NO_COLUMNS: Column[] = [];
 
 type MainScreenViewProps = {
   schemaName: string;
@@ -19,6 +29,10 @@ type MainScreenViewProps = {
   selectedTableId: string | null;
   selectedTable: Table | null;
   selectedColumn: Column | null;
+  selectedKey: Key | null;
+  columnKeyMembership: ColumnKeyMembership;
+  columnKeyMembershipDisabled: ColumnKeyMembership;
+  primaryKeyDisabled: boolean;
   isSidePanelOpen: boolean;
   onToggleSidePanel: () => void;
   onSelectSchema: (id: string) => void;
@@ -27,13 +41,22 @@ type MainScreenViewProps = {
   onDeleteSchema: () => void;
   onSelectTable: (id: string | null) => void;
   onSelectColumn: (id: string | null) => void;
+  onSelectKey: (id: string | null) => void;
   onCreateTable: (name: string) => void;
   onUpdateTableName: (tableId: string, name: string) => void;
   onUpdateTableComment: (tableId: string, comment: string) => void;
   onMoveTable: (tableId: string, position: Position) => void;
-  onAddColumn: (tableId: string, fields: Omit<Column, "id">) => void;
+  onAddColumn: (tableId: string, fields: Omit<Column, "id">, id?: string) => void;
   onUpdateColumn: (tableId: string, columnId: string, fields: Omit<Column, "id">) => void;
   onRemoveColumn: (tableId: string, columnId: string) => void;
+  onSetColumnKeyMembership: (
+    tableId: string,
+    columnId: string,
+    membership: ColumnKeyMembership,
+  ) => void;
+  onAddKey: (tableId: string, fields: Omit<Key, "id">) => void;
+  onUpdateKey: (tableId: string, keyId: string, fields: Omit<Key, "id">) => void;
+  onRemoveKey: (tableId: string, keyId: string) => void;
 };
 
 export function MainScreenView({
@@ -46,6 +69,10 @@ export function MainScreenView({
   selectedTableId,
   selectedTable,
   selectedColumn,
+  selectedKey,
+  columnKeyMembership,
+  columnKeyMembershipDisabled,
+  primaryKeyDisabled,
   isSidePanelOpen,
   onToggleSidePanel,
   onSelectSchema,
@@ -54,6 +81,7 @@ export function MainScreenView({
   onDeleteSchema,
   onSelectTable,
   onSelectColumn,
+  onSelectKey,
   onCreateTable,
   onUpdateTableName,
   onUpdateTableComment,
@@ -61,6 +89,10 @@ export function MainScreenView({
   onAddColumn,
   onUpdateColumn,
   onRemoveColumn,
+  onSetColumnKeyMembership,
+  onAddKey,
+  onUpdateKey,
+  onRemoveKey,
 }: MainScreenViewProps) {
   const { activeDialog, openDialog, closeDialog } = useActiveDialog();
 
@@ -103,6 +135,18 @@ export function MainScreenView({
           onDeleteColumn={(columnId) => {
             onSelectColumn(columnId);
             openDialog("deleteColumn");
+          }}
+          onAddKey={() => {
+            onSelectKey(null);
+            openDialog("addKey");
+          }}
+          onEditKey={(keyId) => {
+            onSelectKey(keyId);
+            openDialog("editKey");
+          }}
+          onDeleteKey={(keyId) => {
+            onSelectKey(keyId);
+            openDialog("deleteKey");
           }}
         />
       </div>
@@ -152,9 +196,15 @@ export function MainScreenView({
         open={activeDialog === "addColumn"}
         title="Add Column"
         submitLabel="Add"
-        onSubmit={(fields) => {
+        keyMembership={columnKeyMembership}
+        keyMembershipDisabled={columnKeyMembershipDisabled}
+        onSubmit={(fields, keyMembership) => {
           if (selectedTableId !== null) {
-            onAddColumn(selectedTableId, fields);
+            // Generated here (rather than left to addColumn's default) so the
+            // same-submit key membership can reference this exact column id.
+            const columnId = crypto.randomUUID();
+            onAddColumn(selectedTableId, fields, columnId);
+            onSetColumnKeyMembership(selectedTableId, columnId, keyMembership);
           }
           closeDialog();
         }}
@@ -165,9 +215,12 @@ export function MainScreenView({
         title="Edit Column"
         submitLabel="Save"
         initialColumn={selectedColumn}
-        onSubmit={(fields) => {
+        keyMembership={columnKeyMembership}
+        keyMembershipDisabled={columnKeyMembershipDisabled}
+        onSubmit={(fields, keyMembership) => {
           if (selectedTableId !== null && selectedColumn !== null) {
             onUpdateColumn(selectedTableId, selectedColumn.id, fields);
+            onSetColumnKeyMembership(selectedTableId, selectedColumn.id, keyMembership);
           }
           closeDialog();
         }}
@@ -181,6 +234,48 @@ export function MainScreenView({
         onConfirm={() => {
           if (selectedTableId !== null && selectedColumn !== null) {
             onRemoveColumn(selectedTableId, selectedColumn.id);
+          }
+          closeDialog();
+        }}
+        onCancel={closeDialog}
+      />
+      <KeyDialog
+        open={activeDialog === "addKey"}
+        title="Add Key"
+        submitLabel="Add"
+        columns={selectedTable?.columns ?? NO_COLUMNS}
+        primaryKeyDisabled={primaryKeyDisabled}
+        onSubmit={(fields) => {
+          if (selectedTableId !== null) {
+            onAddKey(selectedTableId, fields);
+          }
+          closeDialog();
+        }}
+        onCancel={closeDialog}
+      />
+      <KeyDialog
+        open={activeDialog === "editKey"}
+        title="Edit Key"
+        submitLabel="Save"
+        columns={selectedTable?.columns ?? NO_COLUMNS}
+        initialKey={selectedKey}
+        primaryKeyDisabled={primaryKeyDisabled}
+        onSubmit={(fields) => {
+          if (selectedTableId !== null && selectedKey !== null) {
+            onUpdateKey(selectedTableId, selectedKey.id, fields);
+          }
+          closeDialog();
+        }}
+        onCancel={closeDialog}
+      />
+      <ConfirmDialog
+        open={activeDialog === "deleteKey"}
+        title="Delete Key"
+        message={`Delete key "${selectedKey !== null ? describeKey(selectedKey, selectedTable?.columns ?? NO_COLUMNS) : ""}"? This cannot be undone.`}
+        confirmLabel="Delete"
+        onConfirm={() => {
+          if (selectedTableId !== null && selectedKey !== null) {
+            onRemoveKey(selectedTableId, selectedKey.id);
           }
           closeDialog();
         }}

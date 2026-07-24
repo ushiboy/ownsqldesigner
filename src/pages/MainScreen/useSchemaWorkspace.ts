@@ -2,18 +2,24 @@ import { useEffect, useState } from "react";
 import {
   DEFAULT_SCHEMA_NAME,
   type Column,
+  type ColumnKeyMembership,
+  type Key,
   type Position,
   type Schema,
   type SchemaSummary,
   type Table,
   addColumn,
+  addKey,
   createSchema,
   createTable,
   moveTable,
   removeColumn,
+  removeKey,
   renameSchema,
   renameTable,
+  setColumnKeyMembership,
   updateColumn,
+  updateKey,
   updateTableComment,
 } from "../../domain/schema";
 import type { SchemaRepository } from "../../domain/schemaRepository";
@@ -31,9 +37,17 @@ type SchemaWorkspace = {
   renameTable: (tableId: string, name: string) => void;
   updateTableComment: (tableId: string, comment: string) => void;
   moveTable: (tableId: string, position: Position) => void;
-  addColumn: (tableId: string, fields: Omit<Column, "id">) => void;
+  addColumn: (tableId: string, fields: Omit<Column, "id">, id?: string) => void;
   updateColumn: (tableId: string, columnId: string, fields: Omit<Column, "id">) => void;
   removeColumn: (tableId: string, columnId: string) => void;
+  setColumnKeyMembership: (
+    tableId: string,
+    columnId: string,
+    membership: ColumnKeyMembership,
+  ) => void;
+  addKey: (tableId: string, fields: Omit<Key, "id">) => void;
+  updateKey: (tableId: string, keyId: string, fields: Omit<Key, "id">) => void;
+  removeKey: (tableId: string, keyId: string) => void;
 };
 
 export function useSchemaWorkspace(repository: SchemaRepository): SchemaWorkspace {
@@ -166,9 +180,11 @@ export function useSchemaWorkspace(repository: SchemaRepository): SchemaWorkspac
           : moveTable(prev, tableId, position);
       });
     },
-    addColumn: (tableId, fields) => {
+    // `id` lets the caller know the new column's id up front, so it can also
+    // create the column's PRIMARY KEY key in the same submit (see MainScreenView).
+    addColumn: (tableId, fields, id) => {
       dismissNotification();
-      setCurrentSchema((prev) => (prev === null ? prev : addColumn(prev, tableId, fields)));
+      setCurrentSchema((prev) => (prev === null ? prev : addColumn(prev, tableId, fields, { id })));
     },
     updateColumn: (tableId, columnId, fields) => {
       dismissNotification();
@@ -179,6 +195,24 @@ export function useSchemaWorkspace(repository: SchemaRepository): SchemaWorkspac
     removeColumn: (tableId, columnId) => {
       dismissNotification();
       setCurrentSchema((prev) => (prev === null ? prev : removeColumn(prev, tableId, columnId)));
+    },
+    setColumnKeyMembership: (tableId, columnId, membership) => {
+      dismissNotification();
+      setCurrentSchema((prev) =>
+        prev === null ? prev : setColumnKeyMembership(prev, tableId, columnId, membership),
+      );
+    },
+    addKey: (tableId, fields) => {
+      dismissNotification();
+      setCurrentSchema((prev) => (prev === null ? prev : addKey(prev, tableId, fields)));
+    },
+    updateKey: (tableId, keyId, fields) => {
+      dismissNotification();
+      setCurrentSchema((prev) => (prev === null ? prev : updateKey(prev, tableId, keyId, fields)));
+    },
+    removeKey: (tableId, keyId) => {
+      dismissNotification();
+      setCurrentSchema((prev) => (prev === null ? prev : removeKey(prev, tableId, keyId)));
     },
   };
 }

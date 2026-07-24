@@ -1,31 +1,83 @@
-import { screen } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { fn } from "storybook/test";
 import { composeStories } from "@storybook/react-vite";
 import * as stories from "./ColumnDialog.stories";
 
-const { Add, Edit } = composeStories(stories);
+const { Add, Edit, EditAllowsAutoIncrement, AddPrimaryKeyDisabled } = composeStories(stories);
 
 describe("ColumnDialog", () => {
-  it("shows the dialog with a disabled submit button while the name is empty", async () => {
-    await Add.run();
+  it("shows the dialog with a disabled submit button while the name is empty", () => {
+    render(<Add />);
     expect(screen.getByRole("dialog", { name: "Add Column" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Add" })).toBeDisabled();
   });
 
-  it("defaults to the TEXT type and nullable checked when adding", async () => {
-    await Add.run();
+  it("defaults to the TEXT type and nullable checked when adding", () => {
+    render(<Add />);
     expect(screen.getByLabelText("Type")).toHaveValue("TEXT");
     expect(screen.getByLabelText("Nullable")).toBeChecked();
   });
 
+  it("keeps auto increment disabled while Primary Key is unchecked", () => {
+    render(<Add />);
+    expect(screen.getByLabelText("Primary Key")).not.toBeChecked();
+    expect(screen.getByLabelText("Auto increment")).toBeDisabled();
+  });
+
+  it("keeps auto increment disabled when the type isn't INTEGER, even with Primary Key checked", async () => {
+    render(<Edit />);
+    await userEvent.click(screen.getByLabelText("Primary Key"));
+    expect(screen.getByLabelText("Auto increment")).toBeDisabled();
+  });
+
+  it("enables auto increment once Primary Key is checked on an INTEGER column", async () => {
+    render(<Add />);
+    await userEvent.selectOptions(screen.getByLabelText("Type"), "INTEGER");
+    await userEvent.click(screen.getByLabelText("Primary Key"));
+    expect(screen.getByLabelText("Auto increment")).toBeEnabled();
+  });
+
+  it("prefills Primary Key checked and auto increment enabled when already the sole PRIMARY KEY column", () => {
+    render(<EditAllowsAutoIncrement />);
+    expect(screen.getByLabelText("Primary Key")).toBeChecked();
+    expect(screen.getByLabelText("Auto increment")).toBeEnabled();
+  });
+
+  it("disables auto increment again after switching the type away from INTEGER", async () => {
+    render(<EditAllowsAutoIncrement />);
+    await userEvent.selectOptions(screen.getByLabelText("Type"), "TEXT");
+    expect(screen.getByLabelText("Auto increment")).toBeDisabled();
+  });
+
+  it("disables auto increment again after unchecking Primary Key", async () => {
+    render(<EditAllowsAutoIncrement />);
+    await userEvent.click(screen.getByLabelText("Primary Key"));
+    expect(screen.getByLabelText("Auto increment")).toBeDisabled();
+  });
+
+  it("disables the Primary Key checkbox when another column already holds it", () => {
+    render(<AddPrimaryKeyDisabled />);
+    expect(screen.getByLabelText("Primary Key")).toBeDisabled();
+  });
+
+  it("leaves Unique and Index enabled and unchecked by default when adding", () => {
+    render(<Add />);
+    expect(screen.getByLabelText("Unique")).toBeEnabled();
+    expect(screen.getByLabelText("Unique")).not.toBeChecked();
+    expect(screen.getByLabelText("Index")).toBeEnabled();
+    expect(screen.getByLabelText("Index")).not.toBeChecked();
+  });
+
   it("enables the submit button once a name is typed", async () => {
-    await Add.run();
+    render(<Add />);
     await userEvent.type(screen.getByLabelText("Name"), "title");
     expect(screen.getByRole("button", { name: "Add" })).toBeEnabled();
   });
 
   it("submits the trimmed name together with the other fields", async () => {
-    await Add.run();
+    const onSubmit = fn();
+    render(<Add onSubmit={onSubmit} />);
     await userEvent.type(screen.getByLabelText("Name"), "  title  ");
     await userEvent.selectOptions(screen.getByLabelText("Type"), "INTEGER");
     await userEvent.type(screen.getByLabelText("Size"), "10");
@@ -34,33 +86,108 @@ describe("ColumnDialog", () => {
     await userEvent.type(screen.getByLabelText("Comment"), "Post title");
     await userEvent.click(screen.getByRole("button", { name: "Add" }));
 
-    expect(Add.args.onSubmit).toHaveBeenCalledExactlyOnceWith({
-      name: "title",
-      type: "INTEGER",
-      size: "10",
-      defaultValue: "0",
-      nullable: false,
-      comment: "Post title",
+    expect(onSubmit).toHaveBeenCalledExactlyOnceWith(
+      {
+        name: "title",
+        type: "INTEGER",
+        size: "10",
+        defaultValue: "0",
+        nullable: false,
+        autoIncrement: false,
+        comment: "Post title",
+      },
+      { PRIMARY_KEY: false, UNIQUE: false, INDEX: false },
+    );
+  });
+
+  it("submits Primary Key membership true together with the other fields when checked", async () => {
+    const onSubmit = fn();
+    render(<Add onSubmit={onSubmit} />);
+    await userEvent.type(screen.getByLabelText("Name"), "id");
+    await userEvent.click(screen.getByLabelText("Primary Key"));
+    await userEvent.click(screen.getByRole("button", { name: "Add" }));
+
+    expect(onSubmit).toHaveBeenCalledExactlyOnceWith(expect.anything(), {
+      PRIMARY_KEY: true,
+      UNIQUE: false,
+      INDEX: false,
     });
   });
 
-  it("prefills the form from the initial column when editing", async () => {
-    await Edit.run();
+  it("submits Unique and Index membership independently of Primary Key", async () => {
+    const onSubmit = fn();
+    render(<Add onSubmit={onSubmit} />);
+    await userEvent.type(screen.getByLabelText("Name"), "email");
+    await userEvent.click(screen.getByLabelText("Unique"));
+    await userEvent.click(screen.getByLabelText("Index"));
+    await userEvent.click(screen.getByRole("button", { name: "Add" }));
+
+    expect(onSubmit).toHaveBeenCalledExactlyOnceWith(expect.anything(), {
+      PRIMARY_KEY: false,
+      UNIQUE: true,
+      INDEX: true,
+    });
+  });
+
+  it("checking Unique or Index alone does not enable auto increment", async () => {
+    render(<Add />);
+    await userEvent.selectOptions(screen.getByLabelText("Type"), "INTEGER");
+    await userEvent.click(screen.getByLabelText("Unique"));
+    expect(screen.getByLabelText("Auto increment")).toBeDisabled();
+  });
+
+  it("prefills the form from the initial column when editing", () => {
+    render(<Edit />);
     expect(screen.getByRole("dialog", { name: "Edit Column" })).toBeInTheDocument();
     expect(screen.getByLabelText("Name")).toHaveValue("title");
     expect(screen.getByLabelText("Type")).toHaveValue("TEXT");
     expect(screen.getByLabelText("Nullable")).toBeChecked();
   });
 
+  it("submits autoIncrement true only when it is actually allowed", async () => {
+    const onSubmit = fn();
+    render(<EditAllowsAutoIncrement onSubmit={onSubmit} />);
+    await userEvent.click(screen.getByLabelText("Auto increment"));
+    await userEvent.click(screen.getByRole("button", { name: "Save" }));
+
+    expect(onSubmit).toHaveBeenCalledExactlyOnceWith(
+      expect.objectContaining({ autoIncrement: true }),
+      {
+        PRIMARY_KEY: true,
+        UNIQUE: false,
+        INDEX: false,
+      },
+    );
+  });
+
+  it("forces autoIncrement false on submit once Primary Key has been unchecked", async () => {
+    const onSubmit = fn();
+    render(<EditAllowsAutoIncrement onSubmit={onSubmit} />);
+    await userEvent.click(screen.getByLabelText("Auto increment"));
+    await userEvent.click(screen.getByLabelText("Primary Key"));
+    await userEvent.click(screen.getByRole("button", { name: "Save" }));
+
+    expect(onSubmit).toHaveBeenCalledExactlyOnceWith(
+      expect.objectContaining({ autoIncrement: false }),
+      {
+        PRIMARY_KEY: false,
+        UNIQUE: false,
+        INDEX: false,
+      },
+    );
+  });
+
   it("calls onCancel when the Cancel button is clicked", async () => {
-    await Add.run();
+    const onCancel = fn();
+    render(<Add onCancel={onCancel} />);
     await userEvent.click(screen.getByRole("button", { name: "Cancel" }));
-    expect(Add.args.onCancel).toHaveBeenCalledOnce();
+    expect(onCancel).toHaveBeenCalledOnce();
   });
 
   it("calls onCancel when Escape is pressed", async () => {
-    await Add.run();
+    const onCancel = fn();
+    render(<Add onCancel={onCancel} />);
     await userEvent.keyboard("{Escape}");
-    expect(Add.args.onCancel).toHaveBeenCalledOnce();
+    expect(onCancel).toHaveBeenCalledOnce();
   });
 });

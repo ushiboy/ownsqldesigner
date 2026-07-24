@@ -1,7 +1,9 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { fn } from "storybook/test";
-import type { Column } from "../../../../domain/schema";
+import type { Column, ColumnKeyMembership } from "../../../../domain/schema";
 import { ColumnDialog } from "./ColumnDialog";
+
+const NO_KEY_MEMBERSHIP: ColumnKeyMembership = { PRIMARY_KEY: false, UNIQUE: false, INDEX: false };
 
 const column: Column = {
   id: "f1a2b3c4-5d6e-4f7a-8b9c-0d1e2f3a4b5c",
@@ -10,6 +12,18 @@ const column: Column = {
   size: "",
   defaultValue: "",
   nullable: true,
+  autoIncrement: false,
+  comment: "",
+};
+
+const primaryKeyColumn: Column = {
+  id: "a2b3c4d5-6e7f-4a8b-9c0d-1e2f3a4b5c6d",
+  name: "id",
+  type: "INTEGER",
+  size: "",
+  defaultValue: "",
+  nullable: false,
+  autoIncrement: false,
   comment: "",
 };
 
@@ -17,6 +31,8 @@ const meta = {
   title: "pages/MainScreen/ColumnDialog",
   component: ColumnDialog,
   args: {
+    keyMembership: NO_KEY_MEMBERSHIP,
+    keyMembershipDisabled: NO_KEY_MEMBERSHIP,
     onSubmit: fn(),
     onCancel: fn(),
   },
@@ -39,5 +55,24 @@ export const Edit: Story = {
     title: "Edit Column",
     submitLabel: "Save",
     initialColumn: column,
+  },
+};
+
+export const EditAllowsAutoIncrement: Story = {
+  args: {
+    open: true,
+    title: "Edit Column",
+    submitLabel: "Save",
+    initialColumn: primaryKeyColumn,
+    keyMembership: { PRIMARY_KEY: true, UNIQUE: false, INDEX: false },
+  },
+};
+
+export const AddPrimaryKeyDisabled: Story = {
+  args: {
+    open: true,
+    title: "Add Column",
+    submitLabel: "Add",
+    keyMembershipDisabled: { PRIMARY_KEY: true, UNIQUE: false, INDEX: false },
   },
 };

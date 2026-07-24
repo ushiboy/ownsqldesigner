@@ -1,8 +1,11 @@
 import type { Decorator, Meta, StoryObj } from "@storybook/react-vite";
 import { fn } from "storybook/test";
+import type { ColumnKeyMembership } from "../../domain/schema";
 import { ActiveDialogProvider } from "./ActiveDialogContext";
 import { MainScreenView } from "./MainScreenView";
 import { NotificationProvider } from "./NotificationContext";
+
+const NO_KEY_MEMBERSHIP: ColumnKeyMembership = { PRIMARY_KEY: false, UNIQUE: false, INDEX: false };
 
 // Context state is seeded per story via `parameters.notification` / `parameters.dialog`.
 const withProviders: Decorator = (Story, { parameters }) => (
@@ -26,25 +29,44 @@ const savedSchemas = [
   },
 ];
 
-const tables = [
-  {
-    id: "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12",
-    name: "users",
-    comment: "Registered users",
-    position: { x: 0, y: 0 },
-    columns: [
-      {
-        id: "f1a2b3c4-5d6e-4f7a-8b9c-0d1e2f3a4b5c",
-        name: "email",
-        type: "TEXT" as const,
-        size: "",
-        defaultValue: "",
-        nullable: false,
-        comment: "",
-      },
-    ],
-  },
-];
+const usersTable = {
+  id: "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12",
+  name: "users",
+  comment: "Registered users",
+  position: { x: 0, y: 0 },
+  columns: [
+    {
+      id: "f1a2b3c4-5d6e-4f7a-8b9c-0d1e2f3a4b5c",
+      name: "email",
+      type: "TEXT" as const,
+      size: "",
+      defaultValue: "",
+      nullable: false,
+      autoIncrement: false,
+      comment: "",
+    },
+    {
+      id: "e2b3c4d5-6e7f-4a8b-9c0d-1e2f3a4b5c6d",
+      name: "id",
+      type: "INTEGER" as const,
+      size: "",
+      defaultValue: "",
+      nullable: false,
+      autoIncrement: true,
+      comment: "",
+    },
+  ],
+  keys: [
+    {
+      id: "b1c2d3e4-5f6a-4b7c-8d9e-0f1a2b3c4d5e",
+      type: "PRIMARY_KEY" as const,
+      columnIds: ["e2b3c4d5-6e7f-4a8b-9c0d-1e2f3a4b5c6d"],
+    },
+  ],
+};
+
+const tables = [usersTable];
+const tablesWithoutPrimaryKey = [{ ...usersTable, keys: [] }];
 
 const meta = {
   title: "pages/MainScreen/MainScreenView",
@@ -62,6 +84,10 @@ const meta = {
     selectedTableId: null,
     selectedTable: null,
     selectedColumn: null,
+    selectedKey: null,
+    columnKeyMembership: NO_KEY_MEMBERSHIP,
+    columnKeyMembershipDisabled: NO_KEY_MEMBERSHIP,
+    primaryKeyDisabled: false,
     onToggleSidePanel: fn(),
     onSelectSchema: fn(),
     onCreateSchema: fn(),
@@ -69,6 +95,7 @@ const meta = {
     onDeleteSchema: fn(),
     onSelectTable: fn(),
     onSelectColumn: fn(),
+    onSelectKey: fn(),
     onCreateTable: fn(),
     onUpdateTableName: fn(),
     onUpdateTableComment: fn(),
@@ -76,6 +103,10 @@ const meta = {
     onAddColumn: fn(),
     onUpdateColumn: fn(),
     onRemoveColumn: fn(),
+    onSetColumnKeyMembership: fn(),
+    onAddKey: fn(),
+    onUpdateKey: fn(),
+    onRemoveKey: fn(),
   },
   decorators: [withProviders],
 } satisfies Meta<typeof MainScreenView>;
@@ -157,6 +188,20 @@ export const AddColumnDialogOpen: Story = {
     tableCount: tables.length,
     selectedTableId: tables[0]?.id ?? null,
     selectedTable: tables[0] ?? null,
+    columnKeyMembershipDisabled: { PRIMARY_KEY: true, UNIQUE: false, INDEX: false },
+  },
+  parameters: {
+    dialog: "addColumn",
+  },
+};
+
+export const AddColumnDialogOpenPrimaryKeyAvailable: Story = {
+  args: {
+    isSidePanelOpen: true,
+    tables: tablesWithoutPrimaryKey,
+    tableCount: tablesWithoutPrimaryKey.length,
+    selectedTableId: tablesWithoutPrimaryKey[0]?.id ?? null,
+    selectedTable: tablesWithoutPrimaryKey[0] ?? null,
   },
   parameters: {
     dialog: "addColumn",
@@ -171,6 +216,22 @@ export const EditColumnDialogOpen: Story = {
     selectedTableId: tables[0]?.id ?? null,
     selectedTable: tables[0] ?? null,
     selectedColumn: tables[0]?.columns[0] ?? null,
+    columnKeyMembershipDisabled: { PRIMARY_KEY: true, UNIQUE: false, INDEX: false },
+  },
+  parameters: {
+    dialog: "editColumn",
+  },
+};
+
+export const EditPrimaryKeyColumnDialogOpen: Story = {
+  args: {
+    isSidePanelOpen: true,
+    tables,
+    tableCount: tables.length,
+    selectedTableId: tables[0]?.id ?? null,
+    selectedTable: tables[0] ?? null,
+    selectedColumn: tables[0]?.columns[1] ?? null,
+    columnKeyMembership: { PRIMARY_KEY: true, UNIQUE: false, INDEX: false },
   },
   parameters: {
     dialog: "editColumn",
@@ -188,5 +249,47 @@ export const DeleteColumnDialogOpen: Story = {
   },
   parameters: {
     dialog: "deleteColumn",
+  },
+};
+
+export const AddKeyDialogOpen: Story = {
+  args: {
+    isSidePanelOpen: true,
+    tables,
+    tableCount: tables.length,
+    selectedTableId: tables[0]?.id ?? null,
+    selectedTable: tables[0] ?? null,
+    primaryKeyDisabled: true,
+  },
+  parameters: {
+    dialog: "addKey",
+  },
+};
+
+export const EditKeyDialogOpen: Story = {
+  args: {
+    isSidePanelOpen: true,
+    tables,
+    tableCount: tables.length,
+    selectedTableId: tables[0]?.id ?? null,
+    selectedTable: tables[0] ?? null,
+    selectedKey: tables[0]?.keys[0] ?? null,
+  },
+  parameters: {
+    dialog: "editKey",
+  },
+};
+
+export const DeleteKeyDialogOpen: Story = {
+  args: {
+    isSidePanelOpen: true,
+    tables,
+    tableCount: tables.length,
+    selectedTableId: tables[0]?.id ?? null,
+    selectedTable: tables[0] ?? null,
+    selectedKey: tables[0]?.keys[0] ?? null,
+  },
+  parameters: {
+    dialog: "deleteKey",
   },
 };

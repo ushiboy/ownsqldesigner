@@ -1,6 +1,12 @@
 import { useState } from "react";
 import { format } from "date-fns";
-import type { Table } from "../../domain/schema";
+import {
+  EMPTY_COLUMN_KEY_MEMBERSHIP,
+  getColumnKeyMembership,
+  getColumnKeyMembershipDisabled,
+  hasConflictingPrimaryKey,
+  type Table,
+} from "../../domain/schema";
 import type { SchemaRepository } from "../../domain/schemaRepository";
 import { createLocalStorageSchemaRepository } from "../../infrastructure/localStorageSchemaRepository";
 import { ActiveDialogProvider } from "./ActiveDialogContext";
@@ -36,6 +42,7 @@ function MainScreenContent({ repository }: MainScreenContentProps) {
   const [isSidePanelOpen, setIsSidePanelOpen] = useState(true);
   const [selectedTableId, setSelectedTableId] = useState<string | null>(null);
   const [selectedColumnId, setSelectedColumnId] = useState<string | null>(null);
+  const [selectedKeyId, setSelectedKeyId] = useState<string | null>(null);
   const [selectedSchemaId, setSelectedSchemaId] = useState<string | null | undefined>(undefined);
   const {
     currentSchema,
@@ -51,18 +58,36 @@ function MainScreenContent({ repository }: MainScreenContentProps) {
     addColumn,
     updateColumn,
     removeColumn,
+    setColumnKeyMembership,
+    addKey,
+    updateKey,
+    removeKey,
   } = useSchemaWorkspace(repository);
 
   if (currentSchema?.id !== selectedSchemaId) {
     setSelectedSchemaId(currentSchema?.id ?? null);
     setSelectedTableId(null);
     setSelectedColumnId(null);
+    setSelectedKeyId(null);
   }
 
   const tables = currentSchema?.tables ?? NO_TABLES;
   const selectedTable = tables.find((table) => table.id === selectedTableId) ?? null;
   const selectedColumn =
     selectedTable?.columns.find((column) => column.id === selectedColumnId) ?? null;
+  const selectedKey = selectedTable?.keys.find((key) => key.id === selectedKeyId) ?? null;
+  const columnId = selectedColumn?.id ?? null;
+  const columnKeyMembership =
+    selectedTable !== null
+      ? getColumnKeyMembership(selectedTable, columnId)
+      : EMPTY_COLUMN_KEY_MEMBERSHIP;
+  const columnKeyMembershipDisabled =
+    selectedTable !== null
+      ? getColumnKeyMembershipDisabled(selectedTable, columnId)
+      : EMPTY_COLUMN_KEY_MEMBERSHIP;
+  const keyDialogPrimaryKeyDisabled =
+    selectedTable !== null &&
+    hasConflictingPrimaryKey(selectedTable, "PRIMARY_KEY", selectedKeyId ?? undefined);
 
   return (
     <MainScreenView
@@ -75,6 +100,10 @@ function MainScreenContent({ repository }: MainScreenContentProps) {
       selectedTableId={selectedTableId}
       selectedTable={selectedTable}
       selectedColumn={selectedColumn}
+      selectedKey={selectedKey}
+      columnKeyMembership={columnKeyMembership}
+      columnKeyMembershipDisabled={columnKeyMembershipDisabled}
+      primaryKeyDisabled={keyDialogPrimaryKeyDisabled}
       isSidePanelOpen={isSidePanelOpen}
       onToggleSidePanel={() => setIsSidePanelOpen((prev) => !prev)}
       onSelectSchema={selectSchema}
@@ -84,8 +113,10 @@ function MainScreenContent({ repository }: MainScreenContentProps) {
       onSelectTable={(id) => {
         setSelectedTableId(id);
         setSelectedColumnId(null);
+        setSelectedKeyId(null);
       }}
       onSelectColumn={setSelectedColumnId}
+      onSelectKey={setSelectedKeyId}
       onCreateTable={createTable}
       onUpdateTableName={renameTable}
       onUpdateTableComment={updateTableComment}
@@ -93,6 +124,10 @@ function MainScreenContent({ repository }: MainScreenContentProps) {
       onAddColumn={addColumn}
       onUpdateColumn={updateColumn}
       onRemoveColumn={removeColumn}
+      onSetColumnKeyMembership={setColumnKeyMembership}
+      onAddKey={addKey}
+      onUpdateKey={updateKey}
+      onRemoveKey={removeKey}
     />
   );
 }

@@ -29,10 +29,11 @@ Choose the testing style by the kind of code:
 
 - Create `<Name>.stories.tsx` as a visual catalog of the component's representative states for Storybook.
 - Stories MUST NOT contain assertions. A `play` function MAY be used only to put the component into a state worth inspecting visually (e.g., clicking a button to show a post-interaction state) — never to verify behavior.
-- In `<Name>.test.tsx`, render the component by running its stories: `const { Default } = composeStories(stories)` then `await Default.run()`. This keeps tests rendering exactly what Storybook shows (same args and decorators).
-- Note that `run()` also executes the story's `play` function — a test that runs a story with a `play` starts from the post-play state, not the initial render.
-- Verify ALL behavior (rendering, interactions, prop branches, edge cases) with Testing Library assertions in the test file, after `run()`.
-- Prefer running an existing story as the starting point of a test. Only fall back to a plain `render(<Component ... />)` when the state under test is not worth cataloging as a story.
+- In `<Name>.test.tsx`, render the component by rendering its composed stories directly: `const { Default } = composeStories(stories)` then `render(<Default />)`. A composed story is usable as a React component, so this keeps tests rendering exactly what Storybook shows (same args, decorators, and `parameters`).
+- Override specific args per test by passing props: `render(<Default onSubmit={onSubmit} />)` with a test-local `fn()` (from `storybook/test`) — assert on that local mock rather than the story file's own `args.onSubmit`, so the test's expectations don't depend on the story's internal wiring.
+- Use `Story.run()` instead of `render(<Story />)` only when the story has a `play` function that must execute first — `render()` does not invoke `play`, so a story relying on it needs `await Story.run()` (optionally with an `{ args }` override) to reach the post-play state.
+- Verify ALL behavior (rendering, interactions, prop branches, edge cases) with Testing Library assertions in the test file.
+- Prefer rendering an existing story as the starting point of a test, overriding only the args needed. Only fall back to a plain `render(<Component ... />)` with hand-built props when the state under test is not worth cataloging as a story at all.
 
 ### Test data
 
@@ -50,7 +51,7 @@ Choose the testing style by the kind of code:
 `Home.test.tsx` — renders via `composeStories`, all assertions live here:
 
 ```tsx
-import { screen } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { composeStories } from "@storybook/react-vite";
 import * as stories from "./Home.stories";
@@ -58,14 +59,14 @@ import * as stories from "./Home.stories";
 const { Default } = composeStories(stories);
 
 describe("Home", () => {
-  it("renders the heading", async () => {
-    await Default.run();
+  it("renders the heading", () => {
+    render(<Default />);
     expect(screen.getByRole("heading", { name: "Get started" })).toBeInTheDocument();
   });
 
   it("increments the counter on click", async () => {
     const user = userEvent.setup();
-    await Default.run();
+    render(<Default />);
 
     const button = screen.getByRole("button", { name: "Count is 0" });
     await user.click(button);
