@@ -285,4 +285,31 @@ describe("MainScreen", () => {
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     expect(within(sidePanel).queryByText("email_address")).not.toBeInTheDocument();
   });
+
+  it("deletes a table from the side panel", async () => {
+    await runRestored();
+
+    await userEvent.click(screen.getByRole("button", { name: "Add Table" }));
+    const createDialog = screen.getByRole("dialog", { name: "New Table" });
+    await userEvent.type(within(createDialog).getByLabelText("Table name"), "users");
+    await userEvent.click(within(createDialog).getByRole("button", { name: "Create" }));
+
+    const node = await screen.findByRole("button", { name: "Table users" });
+    await userEvent.click(node);
+    const sidePanel = screen.getByRole("complementary", { name: "Side panel" });
+    expect(within(sidePanel).getByRole("heading", { name: "Table" })).toBeInTheDocument();
+
+    await userEvent.click(within(sidePanel).getByRole("button", { name: "Delete table" }));
+    const deleteDialog = screen.getByRole("dialog", { name: "Delete Table" });
+    expect(
+      within(deleteDialog).getByText(
+        'Delete "users"? All its columns and keys will be removed too. This cannot be undone.',
+      ),
+    ).toBeInTheDocument();
+    await userEvent.click(within(deleteDialog).getByRole("button", { name: "Delete" }));
+
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Table users" })).not.toBeInTheDocument();
+    expect(within(sidePanel).getByRole("heading", { name: "Schema" })).toBeInTheDocument();
+  });
 });

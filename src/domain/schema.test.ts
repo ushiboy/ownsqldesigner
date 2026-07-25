@@ -8,6 +8,7 @@ import {
   moveTable,
   removeColumn,
   removeKey,
+  removeTable,
   renameSchema,
   renameTable,
   type Schema,
@@ -348,6 +349,64 @@ describe("moveTable", () => {
     );
 
     expect(original.tables[0]?.position).toEqual({ x: 0, y: 0 });
+  });
+});
+
+describe("removeTable", () => {
+  const original = createTable(
+    createSchema("Blog Schema", {
+      id: "c3a1e96a-9a75-4d3c-b0ad-3d6e1b6a5f01",
+      now: new Date("2026-07-18T09:00:00.000Z"),
+    }),
+    "posts",
+    { id: "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12", now: new Date("2026-07-18T09:00:00.000Z") },
+  );
+
+  it("removes the matching table and bumps updatedAt", () => {
+    const updated = removeTable(original, "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12", {
+      now: new Date("2026-07-19T09:00:00.000Z"),
+    });
+
+    expect(updated.tables).toEqual([]);
+    expect(updated.updatedAt).toEqual(new Date("2026-07-19T09:00:00.000Z"));
+  });
+
+  it("leaves other tables untouched", () => {
+    const withSecond = createTable(original, "comments", {
+      id: "e5c3fb8c-9c97-4f5e-d2cf-5f8f3d8c7b23",
+      now: new Date("2026-07-18T09:00:00.000Z"),
+    });
+
+    const updated = removeTable(withSecond, "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12", {
+      now: new Date("2026-07-19T09:00:00.000Z"),
+    });
+
+    expect(updated.tables).toEqual([
+      {
+        id: "e5c3fb8c-9c97-4f5e-d2cf-5f8f3d8c7b23",
+        name: "comments",
+        comment: "",
+        position: { x: 260, y: 0 },
+        columns: [],
+        keys: [],
+      },
+    ]);
+  });
+
+  it("is a no-op when the table id is unknown", () => {
+    const updated = removeTable(original, "unknown-id", {
+      now: new Date("2026-07-19T09:00:00.000Z"),
+    });
+
+    expect(updated).toBe(original);
+  });
+
+  it("does not mutate the input schema", () => {
+    removeTable(original, "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12", {
+      now: new Date("2026-07-19T09:00:00.000Z"),
+    });
+
+    expect(original.tables).toHaveLength(1);
   });
 });
 

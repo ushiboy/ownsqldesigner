@@ -100,6 +100,7 @@ const meta = {
     onUpdateTableName: fn(),
     onUpdateTableComment: fn(),
     onMoveTable: fn(),
+    onRemoveTable: fn(),
     onAddColumn: fn(),
     onUpdateColumn: fn(),
     onRemoveColumn: fn(),
@@ -178,6 +179,19 @@ export const TableSelected: Story = {
     tableCount: tables.length,
     selectedTableId: tables[0]?.id ?? null,
     selectedTable: tables[0] ?? null,
+  },
+};
+
+export const DeleteTableDialogOpen: Story = {
+  args: {
+    isSidePanelOpen: true,
+    tables,
+    tableCount: tables.length,
+    selectedTableId: tables[0]?.id ?? null,
+    selectedTable: tables[0] ?? null,
+  },
+  parameters: {
+    dialog: "deleteTable",
   },
 };
 

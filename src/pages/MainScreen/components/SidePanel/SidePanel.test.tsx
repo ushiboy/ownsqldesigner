@@ -15,6 +15,7 @@ const closedProps = {
   selectedTable: null,
   onUpdateTableName: () => {},
   onUpdateTableComment: () => {},
+  onDeleteTable: () => {},
   onAddColumn: () => {},
   onEditColumn: () => {},
   onDeleteColumn: () => {},
@@ -100,6 +101,13 @@ describe("SidePanel", () => {
     await userEvent.tab();
 
     expect(input).toHaveValue("users");
+  });
+
+  it("calls onDeleteTable when the delete table button is clicked", async () => {
+    const onDeleteTable = fn();
+    render(<TableSelected onDeleteTable={onDeleteTable} />);
+    await userEvent.click(screen.getByRole("button", { name: "Delete table" }));
+    expect(onDeleteTable).toHaveBeenCalledOnce();
   });
 
   it("shows no columns for a table without any", () => {

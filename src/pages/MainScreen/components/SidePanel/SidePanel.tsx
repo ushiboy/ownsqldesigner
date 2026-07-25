@@ -33,6 +33,7 @@ type SidePanelProps = {
   selectedTable: Table | null;
   onUpdateTableName: (tableId: string, name: string) => void;
   onUpdateTableComment: (tableId: string, comment: string) => void;
+  onDeleteTable: () => void;
   onAddColumn: () => void;
   onEditColumn: (columnId: string) => void;
   onDeleteColumn: (columnId: string) => void;
@@ -49,6 +50,7 @@ export function SidePanel({
   selectedTable,
   onUpdateTableName,
   onUpdateTableComment,
+  onDeleteTable,
   onAddColumn,
   onEditColumn,
   onDeleteColumn,
@@ -77,6 +79,7 @@ export function SidePanel({
             table={selectedTable}
             onUpdateTableName={onUpdateTableName}
             onUpdateTableComment={onUpdateTableComment}
+            onDeleteTable={onDeleteTable}
             onAddColumn={onAddColumn}
             onEditColumn={onEditColumn}
             onDeleteColumn={onDeleteColumn}
@@ -120,6 +123,7 @@ type TablePropertiesProps = {
   table: Table;
   onUpdateTableName: (tableId: string, name: string) => void;
   onUpdateTableComment: (tableId: string, comment: string) => void;
+  onDeleteTable: () => void;
   onAddColumn: () => void;
   onEditColumn: (columnId: string) => void;
   onDeleteColumn: (columnId: string) => void;
@@ -132,6 +136,7 @@ function TableProperties({
   table,
   onUpdateTableName,
   onUpdateTableComment,
+  onDeleteTable,
   onAddColumn,
   onEditColumn,
   onDeleteColumn,
@@ -143,7 +148,17 @@ function TableProperties({
 
   return (
     <>
-      <h2 className="text-[16px]">Table</h2>
+      <div className="flex items-center justify-between">
+        <h2 className="text-[16px]">Table</h2>
+        <button
+          type="button"
+          aria-label="Delete table"
+          onClick={onDeleteTable}
+          className={iconButton()}
+        >
+          <LuTrash2 aria-hidden="true" className="size-4" />
+        </button>
+      </div>
       <div className="mt-4 flex flex-col gap-4 text-[14px]">
         <label className="block">
           Name

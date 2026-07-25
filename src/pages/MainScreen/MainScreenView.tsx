@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import type {
   Column,
   ColumnKeyMembership,
@@ -46,6 +47,7 @@ type MainScreenViewProps = {
   onUpdateTableName: (tableId: string, name: string) => void;
   onUpdateTableComment: (tableId: string, comment: string) => void;
   onMoveTable: (tableId: string, position: Position) => void;
+  onRemoveTable: (tableId: string) => void;
   onAddColumn: (tableId: string, fields: Omit<Column, "id">, id?: string) => void;
   onUpdateColumn: (tableId: string, columnId: string, fields: Omit<Column, "id">) => void;
   onRemoveColumn: (tableId: string, columnId: string) => void;
@@ -86,6 +88,7 @@ export function MainScreenView({
   onUpdateTableName,
   onUpdateTableComment,
   onMoveTable,
+  onRemoveTable,
   onAddColumn,
   onUpdateColumn,
   onRemoveColumn,
@@ -95,6 +98,27 @@ export function MainScreenView({
   onRemoveKey,
 }: MainScreenViewProps) {
   const { activeDialog, openDialog, closeDialog } = useActiveDialog();
+
+  // Delete/Backspace opens the same confirm dialog as the side panel's
+  // delete button, rather than deleting immediately — every destructive
+  // action in this app is confirmation-gated, and keyboard delete is no
+  // exception. Ignored while a dialog is already open or focus is in a
+  // text field, so it doesn't interfere with typing.
+  useEffect(() => {
+    function handleKeyDown(event: KeyboardEvent) {
+      if (activeDialog !== null || selectedTableId === null) {
+        return;
+      }
+      if (isTextInputElement(document.activeElement)) {
+        return;
+      }
+      if (event.key === "Delete" || event.key === "Backspace") {
+        openDialog("deleteTable");
+      }
+    }
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [activeDialog, selectedTableId, openDialog]);
 
   return (
     <div className="flex h-svh flex-col overflow-hidden">
@@ -124,6 +148,7 @@ export function MainScreenView({
           selectedTable={selectedTable}
           onUpdateTableName={onUpdateTableName}
           onUpdateTableComment={onUpdateTableComment}
+          onDeleteTable={() => openDialog("deleteTable")}
           onAddColumn={() => {
             onSelectColumn(null);
             openDialog("addColumn");
@@ -188,6 +213,19 @@ export function MainScreenView({
         submitLabel="Create"
         onSubmit={(name) => {
           onCreateTable(name);
+          closeDialog();
+        }}
+        onCancel={closeDialog}
+      />
+      <ConfirmDialog
+        open={activeDialog === "deleteTable"}
+        title="Delete Table"
+        message={`Delete "${selectedTable?.name ?? ""}"? All its columns and keys will be removed too. This cannot be undone.`}
+        confirmLabel="Delete"
+        onConfirm={() => {
+          if (selectedTableId !== null) {
+            onRemoveTable(selectedTableId);
+          }
           closeDialog();
         }}
         onCancel={closeDialog}
@@ -282,5 +320,13 @@ export function MainScreenView({
         onCancel={closeDialog}
       />
     </div>
+  );
+}
+
+function isTextInputElement(element: Element | null): boolean {
+  return (
+    element instanceof HTMLInputElement ||
+    element instanceof HTMLTextAreaElement ||
+    element instanceof HTMLSelectElement
   );
 }

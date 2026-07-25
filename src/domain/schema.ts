@@ -188,6 +188,26 @@ export function moveTable(
   };
 }
 
+type RemoveTableOptions = {
+  now?: Date;
+};
+
+export function removeTable(
+  schema: Schema,
+  tableId: string,
+  options: RemoveTableOptions = {},
+): Schema {
+  if (!schema.tables.some((table) => table.id === tableId)) {
+    return schema;
+  }
+  const { now = new Date() } = options;
+  return {
+    ...schema,
+    tables: schema.tables.filter((table) => table.id !== tableId),
+    updatedAt: now,
+  };
+}
+
 type AddColumnOptions = {
   id?: string;
   now?: Date;

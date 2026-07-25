@@ -55,6 +55,7 @@ function MainScreenContent({ repository }: MainScreenContentProps) {
     renameTable,
     updateTableComment,
     moveTable,
+    removeTable,
     addColumn,
     updateColumn,
     removeColumn,
@@ -121,6 +122,7 @@ function MainScreenContent({ repository }: MainScreenContentProps) {
       onUpdateTableName={renameTable}
       onUpdateTableComment={updateTableComment}
       onMoveTable={moveTable}
+      onRemoveTable={removeTable}
       onAddColumn={addColumn}
       onUpdateColumn={updateColumn}
       onRemoveColumn={removeColumn}

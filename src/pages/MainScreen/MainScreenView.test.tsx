@@ -12,6 +12,7 @@ const {
   DeleteSchemaDialogOpen,
   CreateTableDialogOpen,
   TableSelected,
+  DeleteTableDialogOpen,
   AddColumnDialogOpen,
   AddColumnDialogOpenPrimaryKeyAvailable,
   EditColumnDialogOpen,
@@ -71,6 +72,44 @@ describe("MainScreenView", () => {
     render(<TableSelected />);
     expect(screen.getByRole("heading", { name: "Table" })).toBeInTheDocument();
     expect(screen.getByLabelText("Name")).toHaveValue("users");
+  });
+
+  it("shows the delete table confirmation naming the selected table", () => {
+    render(<DeleteTableDialogOpen />);
+    expect(screen.getByRole("dialog", { name: "Delete Table" })).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        'Delete "users"? All its columns and keys will be removed too. This cannot be undone.',
+      ),
+    ).toBeInTheDocument();
+  });
+
+  it("opens the delete table confirmation when Delete is pressed while a table is selected", async () => {
+    render(<TableSelected />);
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+
+    await userEvent.keyboard("{Delete}");
+
+    expect(screen.getByRole("dialog", { name: "Delete Table" })).toBeInTheDocument();
+  });
+
+  it("ignores Delete while another dialog is already open", async () => {
+    render(<DeleteColumnDialogOpen />);
+    expect(screen.getByRole("dialog", { name: "Delete Column" })).toBeInTheDocument();
+
+    await userEvent.keyboard("{Delete}");
+
+    expect(screen.getByRole("dialog", { name: "Delete Column" })).toBeInTheDocument();
+    expect(screen.queryByRole("dialog", { name: "Delete Table" })).not.toBeInTheDocument();
+  });
+
+  it("ignores Delete while focus is in a text field", async () => {
+    render(<TableSelected />);
+    await userEvent.click(screen.getByLabelText("Name"));
+
+    await userEvent.keyboard("{Delete}");
+
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 
   it("shows the add column dialog while activeDialog is addColumn", () => {

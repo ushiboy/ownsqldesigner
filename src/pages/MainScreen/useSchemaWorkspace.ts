@@ -15,6 +15,7 @@ import {
   moveTable,
   removeColumn,
   removeKey,
+  removeTable,
   renameSchema,
   renameTable,
   setColumnKeyMembership,
@@ -37,6 +38,7 @@ type SchemaWorkspace = {
   renameTable: (tableId: string, name: string) => void;
   updateTableComment: (tableId: string, comment: string) => void;
   moveTable: (tableId: string, position: Position) => void;
+  removeTable: (tableId: string) => void;
   addColumn: (tableId: string, fields: Omit<Column, "id">, id?: string) => void;
   updateColumn: (tableId: string, columnId: string, fields: Omit<Column, "id">) => void;
   removeColumn: (tableId: string, columnId: string) => void;
@@ -179,6 +181,10 @@ export function useSchemaWorkspace(repository: SchemaRepository): SchemaWorkspac
           ? prev
           : moveTable(prev, tableId, position);
       });
+    },
+    removeTable: (tableId) => {
+      dismissNotification();
+      setCurrentSchema((prev) => (prev === null ? prev : removeTable(prev, tableId)));
     },
     // `id` lets the caller know the new column's id up front, so it can also
     // create the column's PRIMARY KEY key in the same submit (see MainScreenView).

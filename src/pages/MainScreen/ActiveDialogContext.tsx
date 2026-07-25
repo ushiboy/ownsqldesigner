@@ -5,6 +5,7 @@ export type DialogKind =
   | "renameSchema"
   | "deleteSchema"
   | "createTable"
+  | "deleteTable"
   | "addColumn"
   | "editColumn"
   | "deleteColumn"

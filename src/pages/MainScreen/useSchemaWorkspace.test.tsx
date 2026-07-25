@@ -425,6 +425,30 @@ describe("useSchemaWorkspace", () => {
     expect(result.current.workspace.currentSchema?.updatedAt).toEqual(blog.updatedAt);
   });
 
+  it("removes a table, bumps updatedAt, and persists it", async () => {
+    const blog = createTable(
+      createSchema("Blog Schema", { now: new Date("2026-07-01T09:00:00.000Z") }),
+      "posts",
+      { id: "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12", now: new Date("2026-07-01T09:00:00.000Z") },
+    );
+    const repository = createFakeSchemaRepository({ schemas: [blog], lastSchemaId: blog.id });
+    const { result } = renderWorkspace(repository);
+    await waitFor(() => {
+      expect(result.current.workspace.currentSchema).not.toBeNull();
+    });
+
+    act(() => {
+      result.current.workspace.removeTable("d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12");
+    });
+
+    await waitFor(() => {
+      expect(result.current.workspace.currentSchema?.tables).toEqual([]);
+    });
+    const persisted = await repository.load(blog.id);
+    expect(persisted?.tables).toEqual([]);
+    expect(persisted?.updatedAt.getTime()).toBeGreaterThan(blog.updatedAt.getTime());
+  });
+
   const columnFields = {
     name: "title",
     type: "TEXT" as const,

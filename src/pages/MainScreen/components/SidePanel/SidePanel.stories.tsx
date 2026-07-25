@@ -65,6 +65,7 @@ const meta = {
     selectedTable: null,
     onUpdateTableName: fn(),
     onUpdateTableComment: fn(),
+    onDeleteTable: fn(),
     onAddColumn: fn(),
     onEditColumn: fn(),
     onDeleteColumn: fn(),

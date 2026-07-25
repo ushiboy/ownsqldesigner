@@ -37,6 +37,12 @@ export function Canvas({ tables, selectedTableId, onSelectTable, onMoveTable }: 
         edges={edges}
         nodeTypes={nodeTypes}
         nodesConnectable={false}
+        // Table deletion goes through MainScreenView's own keydown listener
+        // and a confirm dialog; React Flow's built-in Backspace handling is
+        // disabled so it doesn't also act on this locally-synced `nodes`
+        // state (used only to animate in-progress drags) and cause a
+        // flicker before the confirm flow runs.
+        deleteKeyCode={null}
         onNodesChange={(changes) => {
           handleNodesChange(changes);
           for (const { id, position } of selectCommittedMoves(changes)) {
