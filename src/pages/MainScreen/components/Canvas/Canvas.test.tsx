@@ -7,7 +7,7 @@ import { fn, userEvent } from "storybook/test";
 import { composeStories } from "@storybook/react-vite";
 import * as stories from "./Canvas.stories";
 
-const { Default, WithTables, Selected } = composeStories(stories);
+const { Default, WithTables, Selected, WithRelation, RelationSelected } = composeStories(stories);
 
 describe("Canvas", () => {
   it("renders the React Flow surface", () => {
@@ -48,5 +48,53 @@ describe("Canvas", () => {
     await userEvent.click(pane);
 
     expect(onSelectTable).toHaveBeenCalledExactlyOnceWith(null);
+  });
+
+  it("renders a foreign-key edge between the connected columns", async () => {
+    render(<WithRelation />);
+    await screen.findByRole("button", { name: "Table users" });
+
+    expect(
+      screen.getByTestId("rf__wrapper").querySelector(".react-flow__edge"),
+    ).toBeInTheDocument();
+  });
+
+  it("highlights the edge belonging to the selected relation", async () => {
+    render(<RelationSelected />);
+    await screen.findByRole("button", { name: "Table users" });
+
+    expect(
+      screen.getByTestId("rf__wrapper").querySelector(".react-flow__edge.selected"),
+    ).toBeInTheDocument();
+  });
+
+  it("calls onSelectRelation with the clicked edge's id", async () => {
+    const onSelectRelation = fn();
+    render(<WithRelation onSelectRelation={onSelectRelation} />);
+    await screen.findByRole("button", { name: "Table users" });
+
+    const edge = screen.getByTestId("rf__wrapper").querySelector(".react-flow__edge-interaction");
+    if (edge === null) {
+      throw new Error("expected the edge's interaction path to be present");
+    }
+    await userEvent.click(edge);
+
+    expect(onSelectRelation).toHaveBeenCalledExactlyOnceWith(
+      "c1d2e3f4-5a6b-4c7d-8e9f-0a1b2c3d4e5f",
+    );
+  });
+
+  it("calls onSelectRelation with null on a pane click", async () => {
+    const onSelectRelation = fn();
+    render(<WithRelation onSelectRelation={onSelectRelation} />);
+    await screen.findByRole("button", { name: "Table users" });
+
+    const pane = screen.getByTestId("rf__wrapper").querySelector(".react-flow__pane");
+    if (pane === null) {
+      throw new Error("expected the React Flow pane to be present");
+    }
+    await userEvent.click(pane);
+
+    expect(onSelectRelation).toHaveBeenCalledExactlyOnceWith(null);
   });
 });

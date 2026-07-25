@@ -24,6 +24,12 @@ const iconButton = tv({
   base: "inline-flex items-center rounded-md p-1 text-body transition-colors hover:bg-accent-bg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
 });
 
+/** A pre-computed, cross-table label — SidePanel only ever sees the selected table. */
+export type RelationSummary = {
+  id: string;
+  label: string;
+};
+
 type SidePanelProps = {
   isOpen: boolean;
   schemaName: string;
@@ -31,6 +37,7 @@ type SidePanelProps = {
   /** Pre-formatted display date (e.g. "2026-07-01"); "—" while nothing is loaded. */
   createdDate: string;
   selectedTable: Table | null;
+  relations: RelationSummary[];
   onUpdateTableName: (tableId: string, name: string) => void;
   onUpdateTableComment: (tableId: string, comment: string) => void;
   onDeleteTable: () => void;
@@ -40,6 +47,7 @@ type SidePanelProps = {
   onAddKey: () => void;
   onEditKey: (keyId: string) => void;
   onDeleteKey: (keyId: string) => void;
+  onDeleteRelation: (relationId: string) => void;
 };
 
 export function SidePanel({
@@ -48,6 +56,7 @@ export function SidePanel({
   tableCount,
   createdDate,
   selectedTable,
+  relations,
   onUpdateTableName,
   onUpdateTableComment,
   onDeleteTable,
@@ -57,6 +66,7 @@ export function SidePanel({
   onAddKey,
   onEditKey,
   onDeleteKey,
+  onDeleteRelation,
 }: SidePanelProps) {
   return (
     <aside
@@ -77,6 +87,7 @@ export function SidePanel({
           <TableProperties
             key={selectedTable.id}
             table={selectedTable}
+            relations={relations}
             onUpdateTableName={onUpdateTableName}
             onUpdateTableComment={onUpdateTableComment}
             onDeleteTable={onDeleteTable}
@@ -86,6 +97,7 @@ export function SidePanel({
             onAddKey={onAddKey}
             onEditKey={onEditKey}
             onDeleteKey={onDeleteKey}
+            onDeleteRelation={onDeleteRelation}
           />
         )}
       </div>
@@ -121,6 +133,7 @@ const sectionActionButton = tv({
 
 type TablePropertiesProps = {
   table: Table;
+  relations: RelationSummary[];
   onUpdateTableName: (tableId: string, name: string) => void;
   onUpdateTableComment: (tableId: string, comment: string) => void;
   onDeleteTable: () => void;
@@ -130,10 +143,12 @@ type TablePropertiesProps = {
   onAddKey: () => void;
   onEditKey: (keyId: string) => void;
   onDeleteKey: (keyId: string) => void;
+  onDeleteRelation: (relationId: string) => void;
 };
 
 function TableProperties({
   table,
+  relations,
   onUpdateTableName,
   onUpdateTableComment,
   onDeleteTable,
@@ -143,6 +158,7 @@ function TableProperties({
   onAddKey,
   onEditKey,
   onDeleteKey,
+  onDeleteRelation,
 }: TablePropertiesProps) {
   const [name, setName] = useState(table.name);
 
@@ -244,6 +260,19 @@ function TableProperties({
           ))}
         </ul>
       </div>
+      <div className="mt-6">
+        <h3 className="text-[14px] text-heading">Relations</h3>
+        <ul className="mt-2 flex flex-col gap-1 text-[13px]">
+          {relations.map((relation) => (
+            <RelationRow
+              key={relation.id}
+              relationId={relation.id}
+              label={relation.label}
+              onDeleteRelation={onDeleteRelation}
+            />
+          ))}
+        </ul>
+      </div>
     </>
   );
 }
@@ -277,6 +306,28 @@ function KeyRow({ keyId, label, onEditKey, onDeleteKey }: KeyRowProps) {
           <LuTrash2 aria-hidden="true" className="size-4" />
         </button>
       </span>
+    </li>
+  );
+}
+
+type RelationRowProps = {
+  relationId: string;
+  label: string;
+  onDeleteRelation: (relationId: string) => void;
+};
+
+function RelationRow({ relationId, label, onDeleteRelation }: RelationRowProps) {
+  return (
+    <li className="flex items-center justify-between gap-2">
+      <span className="truncate text-heading">{label}</span>
+      <button
+        type="button"
+        aria-label={`Delete relation ${label}`}
+        onClick={() => onDeleteRelation(relationId)}
+        className={iconButton()}
+      >
+        <LuTrash2 aria-hidden="true" className="size-4" />
+      </button>
     </li>
   );
 }

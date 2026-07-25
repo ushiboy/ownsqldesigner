@@ -10,6 +10,7 @@ const table: Table = {
   position: { x: 0, y: 0 },
   columns: [],
   keys: [],
+  foreignKeys: [],
 };
 
 const tableWithColumns: Table = {
@@ -54,6 +55,8 @@ const tableWithKeys: Table = {
   ],
 };
 
+const relations = [{ id: "e5c3fb8c-9c97-4f5e-d2cf-5f8f3d8c7b23", label: "user_id → users.id" }];
+
 const meta = {
   title: "pages/MainScreen/SidePanel",
   component: SidePanel,
@@ -63,6 +66,7 @@ const meta = {
     tableCount: 0,
     createdDate: "2026-07-01",
     selectedTable: null,
+    relations: [],
     onUpdateTableName: fn(),
     onUpdateTableComment: fn(),
     onDeleteTable: fn(),
@@ -72,6 +76,7 @@ const meta = {
     onAddKey: fn(),
     onEditKey: fn(),
     onDeleteKey: fn(),
+    onDeleteRelation: fn(),
   },
   decorators: [
     (Story) => (
@@ -105,5 +110,13 @@ export const TableWithKeys: Story = {
   args: {
     tableCount: 1,
     selectedTable: tableWithKeys,
+  },
+};
+
+export const TableWithRelations: Story = {
+  args: {
+    tableCount: 1,
+    selectedTable: tableWithKeys,
+    relations,
   },
 };

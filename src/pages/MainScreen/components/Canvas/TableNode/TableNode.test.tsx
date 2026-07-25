@@ -2,7 +2,8 @@ import { render, screen } from "@testing-library/react";
 import { composeStories } from "@storybook/react-vite";
 import * as stories from "./TableNode.stories";
 
-const { Default, WithComment, Selected, WithColumns } = composeStories(stories);
+const { Default, WithComment, Selected, WithColumns, WithReferenceableColumn } =
+  composeStories(stories);
 
 describe("TableNode", () => {
   it("renders the table name", async () => {
@@ -35,5 +36,17 @@ describe("TableNode", () => {
     render(<WithColumns />);
     expect(screen.getByText("id")).toBeInTheDocument();
     expect(screen.getByText("email")).toBeInTheDocument();
+  });
+
+  it("renders a source handle for every column but no target handle when none are referenceable", () => {
+    const { container } = render(<WithColumns />);
+    expect(container.querySelectorAll(".react-flow__handle-right")).toHaveLength(2);
+    expect(container.querySelectorAll(".react-flow__handle-left")).toHaveLength(0);
+  });
+
+  it("renders a target handle only for a referenceable column (REQ-020)", () => {
+    const { container } = render(<WithReferenceableColumn />);
+    expect(container.querySelectorAll(".react-flow__handle-right")).toHaveLength(2);
+    expect(container.querySelectorAll(".react-flow__handle-left")).toHaveLength(1);
   });
 });

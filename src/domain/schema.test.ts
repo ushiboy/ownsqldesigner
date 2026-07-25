@@ -1,12 +1,16 @@
 import {
   addColumn,
+  addForeignKey,
   addKey,
   createSchema,
   createTable,
   getColumnKeyMembership,
   getColumnKeyMembershipDisabled,
+  getReferenceableColumns,
+  isReferenceableColumn,
   moveTable,
   removeColumn,
+  removeForeignKey,
   removeKey,
   removeTable,
   renameSchema,
@@ -110,6 +114,7 @@ describe("createTable", () => {
         position: { x: 0, y: 0 },
         columns: [],
         keys: [],
+        foreignKeys: [],
       },
     ]);
     expect(updated.updatedAt).toEqual(new Date("2026-07-19T09:00:00.000Z"));
@@ -133,6 +138,7 @@ describe("createTable", () => {
         position: { x: 0, y: 0 },
         columns: [],
         keys: [],
+        foreignKeys: [],
       },
       {
         id: "e5c3fb8c-9c97-4f5e-d2cf-5f8f3d8c7b23",
@@ -141,6 +147,7 @@ describe("createTable", () => {
         position: { x: 260, y: 0 },
         columns: [],
         keys: [],
+        foreignKeys: [],
       },
     ]);
   });
@@ -181,6 +188,7 @@ describe("renameTable", () => {
         position: { x: 0, y: 0 },
         columns: [],
         keys: [],
+        foreignKeys: [],
       },
     ]);
     expect(renamed.updatedAt).toEqual(new Date("2026-07-19T09:00:00.000Z"));
@@ -203,6 +211,7 @@ describe("renameTable", () => {
       position: { x: 260, y: 0 },
       columns: [],
       keys: [],
+      foreignKeys: [],
     });
   });
 
@@ -249,6 +258,7 @@ describe("updateTableComment", () => {
         position: { x: 0, y: 0 },
         columns: [],
         keys: [],
+        foreignKeys: [],
       },
     ]);
     expect(updated.updatedAt).toEqual(new Date("2026-07-19T09:00:00.000Z"));
@@ -297,6 +307,7 @@ describe("moveTable", () => {
         position: { x: 400, y: 300 },
         columns: [],
         keys: [],
+        foreignKeys: [],
       },
     ]);
     expect(moved.updatedAt).toEqual(new Date("2026-07-19T09:00:00.000Z"));
@@ -322,6 +333,7 @@ describe("moveTable", () => {
       position: { x: 260, y: 0 },
       columns: [],
       keys: [],
+      foreignKeys: [],
     });
   });
 
@@ -389,6 +401,7 @@ describe("removeTable", () => {
         position: { x: 260, y: 0 },
         columns: [],
         keys: [],
+        foreignKeys: [],
       },
     ]);
   });
@@ -1340,5 +1353,228 @@ describe("setColumnKeyMembership", () => {
     });
 
     expect(schemaSchema.safeParse(updated).success).toBe(true);
+  });
+});
+
+const USERS_TABLE_ID = "11111111-1111-4111-8111-111111111111";
+const USERS_ID_COLUMN_ID = "22222222-2222-4222-8222-222222222222";
+const USERS_ID_KEY_ID = "33333333-3333-4333-8333-333333333333";
+const USERS_EMAIL_COLUMN_ID = "44444444-4444-4444-8444-444444444444";
+const POSTS_TABLE_ID = "55555555-5555-4555-8555-555555555555";
+const POSTS_USER_ID_COLUMN_ID = "66666666-6666-4666-8666-666666666666";
+const POSTS_FOREIGN_KEY_ID = "77777777-7777-4777-8777-777777777777";
+
+function buildTwoTableSchema(): Schema {
+  const withUsersTable = createTable(
+    createSchema("Blog Schema", {
+      id: "c3a1e96a-9a75-4d3c-b0ad-3d6e1b6a5f01",
+      now: new Date("2026-07-18T09:00:00.000Z"),
+    }),
+    "users",
+    { id: USERS_TABLE_ID, now: new Date("2026-07-18T09:00:00.000Z") },
+  );
+  const withUsersIdColumn = addColumn(
+    withUsersTable,
+    USERS_TABLE_ID,
+    { ...columnFields, name: "id", type: "INTEGER" },
+    { id: USERS_ID_COLUMN_ID, now: new Date("2026-07-18T09:00:00.000Z") },
+  );
+  const withUsersEmailColumn = addColumn(
+    withUsersIdColumn,
+    USERS_TABLE_ID,
+    { ...columnFields, name: "email" },
+    { id: USERS_EMAIL_COLUMN_ID, now: new Date("2026-07-18T09:00:00.000Z") },
+  );
+  const withUsersPrimaryKey = addKey(
+    withUsersEmailColumn,
+    USERS_TABLE_ID,
+    { type: "PRIMARY_KEY", columnIds: [USERS_ID_COLUMN_ID] },
+    { id: USERS_ID_KEY_ID, now: new Date("2026-07-18T09:00:00.000Z") },
+  );
+  const withPostsTable = createTable(withUsersPrimaryKey, "posts", {
+    id: POSTS_TABLE_ID,
+    now: new Date("2026-07-18T09:00:00.000Z"),
+  });
+  return addColumn(
+    withPostsTable,
+    POSTS_TABLE_ID,
+    { ...columnFields, name: "user_id" },
+    { id: POSTS_USER_ID_COLUMN_ID, now: new Date("2026-07-18T09:00:00.000Z") },
+  );
+}
+
+describe("isReferenceableColumn / getReferenceableColumns", () => {
+  const schema = buildTwoTableSchema();
+
+  it("is true for the sole PRIMARY KEY column", () => {
+    const users = getTable(schema, USERS_TABLE_ID);
+    expect(isReferenceableColumn(users, USERS_ID_COLUMN_ID)).toBe(true);
+    expect(getReferenceableColumns(users)).toEqual([
+      expect.objectContaining({ id: USERS_ID_COLUMN_ID }),
+    ]);
+  });
+
+  it("is false for a column with no PRIMARY KEY or UNIQUE membership", () => {
+    const users = getTable(schema, USERS_TABLE_ID);
+    expect(isReferenceableColumn(users, USERS_EMAIL_COLUMN_ID)).toBe(false);
+  });
+});
+
+describe("addForeignKey", () => {
+  const original = buildTwoTableSchema();
+  const fields = {
+    columnId: POSTS_USER_ID_COLUMN_ID,
+    referencedTableId: USERS_TABLE_ID,
+    referencedColumnId: USERS_ID_COLUMN_ID,
+  };
+
+  it("appends a foreign key to the owning table and bumps updatedAt", () => {
+    const updated = addForeignKey(original, POSTS_TABLE_ID, fields, {
+      id: POSTS_FOREIGN_KEY_ID,
+      now: new Date("2026-07-19T09:00:00.000Z"),
+    });
+
+    expect(getTable(updated, POSTS_TABLE_ID).foreignKeys).toEqual([
+      { id: POSTS_FOREIGN_KEY_ID, ...fields },
+    ]);
+    expect(updated.updatedAt).toEqual(new Date("2026-07-19T09:00:00.000Z"));
+  });
+
+  it("is a no-op when the owning table id is unknown", () => {
+    const updated = addForeignKey(original, "unknown-id", fields, {
+      now: new Date("2026-07-19T09:00:00.000Z"),
+    });
+
+    expect(updated).toBe(original);
+  });
+
+  it("is a no-op when the child column does not belong to the owning table", () => {
+    const updated = addForeignKey(
+      original,
+      POSTS_TABLE_ID,
+      { ...fields, columnId: "unknown-id" },
+      { now: new Date("2026-07-19T09:00:00.000Z") },
+    );
+
+    expect(updated).toBe(original);
+  });
+
+  it("is a no-op when the referenced table is unknown", () => {
+    const updated = addForeignKey(
+      original,
+      POSTS_TABLE_ID,
+      { ...fields, referencedTableId: "unknown-id" },
+      { now: new Date("2026-07-19T09:00:00.000Z") },
+    );
+
+    expect(updated).toBe(original);
+  });
+
+  it("is a no-op when the referenced column is not a PRIMARY KEY or UNIQUE column (REQ-020)", () => {
+    const updated = addForeignKey(
+      original,
+      POSTS_TABLE_ID,
+      { ...fields, referencedColumnId: USERS_EMAIL_COLUMN_ID },
+      { now: new Date("2026-07-19T09:00:00.000Z") },
+    );
+
+    expect(updated).toBe(original);
+  });
+
+  it("does not mutate the input schema", () => {
+    addForeignKey(original, POSTS_TABLE_ID, fields, {
+      now: new Date("2026-07-19T09:00:00.000Z"),
+    });
+
+    expect(getTable(original, POSTS_TABLE_ID).foreignKeys).toEqual([]);
+  });
+
+  it("produces a document that passes runtime validation", () => {
+    const updated = addForeignKey(original, POSTS_TABLE_ID, fields);
+
+    expect(schemaSchema.safeParse(updated).success).toBe(true);
+  });
+});
+
+describe("removeForeignKey", () => {
+  const original = addForeignKey(
+    buildTwoTableSchema(),
+    POSTS_TABLE_ID,
+    {
+      columnId: POSTS_USER_ID_COLUMN_ID,
+      referencedTableId: USERS_TABLE_ID,
+      referencedColumnId: USERS_ID_COLUMN_ID,
+    },
+    { id: POSTS_FOREIGN_KEY_ID, now: new Date("2026-07-18T09:00:00.000Z") },
+  );
+
+  it("removes the matching foreign key and bumps updatedAt", () => {
+    const updated = removeForeignKey(original, POSTS_TABLE_ID, POSTS_FOREIGN_KEY_ID, {
+      now: new Date("2026-07-19T09:00:00.000Z"),
+    });
+
+    expect(getTable(updated, POSTS_TABLE_ID).foreignKeys).toEqual([]);
+    expect(updated.updatedAt).toEqual(new Date("2026-07-19T09:00:00.000Z"));
+  });
+
+  it("is a no-op when the owning table id is unknown", () => {
+    const updated = removeForeignKey(original, "unknown-id", POSTS_FOREIGN_KEY_ID, {
+      now: new Date("2026-07-19T09:00:00.000Z"),
+    });
+
+    expect(updated).toBe(original);
+  });
+
+  it("is a no-op when the foreign key id is unknown", () => {
+    const updated = removeForeignKey(original, POSTS_TABLE_ID, "unknown-id", {
+      now: new Date("2026-07-19T09:00:00.000Z"),
+    });
+
+    expect(updated).toBe(original);
+  });
+
+  it("does not mutate the input schema", () => {
+    removeForeignKey(original, POSTS_TABLE_ID, POSTS_FOREIGN_KEY_ID, {
+      now: new Date("2026-07-19T09:00:00.000Z"),
+    });
+
+    expect(getTable(original, POSTS_TABLE_ID).foreignKeys).toHaveLength(1);
+  });
+});
+
+describe("REQ-021: foreign keys never dangle after table/column deletion", () => {
+  const withForeignKey = addForeignKey(
+    buildTwoTableSchema(),
+    POSTS_TABLE_ID,
+    {
+      columnId: POSTS_USER_ID_COLUMN_ID,
+      referencedTableId: USERS_TABLE_ID,
+      referencedColumnId: USERS_ID_COLUMN_ID,
+    },
+    { id: POSTS_FOREIGN_KEY_ID, now: new Date("2026-07-18T09:00:00.000Z") },
+  );
+
+  it("removeTable strips foreign keys on other tables that referenced the removed table", () => {
+    const updated = removeTable(withForeignKey, USERS_TABLE_ID, {
+      now: new Date("2026-07-19T09:00:00.000Z"),
+    });
+
+    expect(getTable(updated, POSTS_TABLE_ID).foreignKeys).toEqual([]);
+  });
+
+  it("removeColumn strips a foreign key when its own (child) column is removed", () => {
+    const updated = removeColumn(withForeignKey, POSTS_TABLE_ID, POSTS_USER_ID_COLUMN_ID, {
+      now: new Date("2026-07-19T09:00:00.000Z"),
+    });
+
+    expect(getTable(updated, POSTS_TABLE_ID).foreignKeys).toEqual([]);
+  });
+
+  it("removeColumn strips a foreign key on another table when its referenced column is removed", () => {
+    const updated = removeColumn(withForeignKey, USERS_TABLE_ID, USERS_ID_COLUMN_ID, {
+      now: new Date("2026-07-19T09:00:00.000Z"),
+    });
+
+    expect(getTable(updated, POSTS_TABLE_ID).foreignKeys).toEqual([]);
   });
 });

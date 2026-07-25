@@ -41,6 +41,15 @@ export const keySchema = z.object({
 
 export type Key = z.infer<typeof keySchema>;
 
+export const foreignKeySchema = z.object({
+  id: z.uuid(),
+  columnId: z.uuid(),
+  referencedTableId: z.uuid(),
+  referencedColumnId: z.uuid(),
+});
+
+export type ForeignKey = z.infer<typeof foreignKeySchema>;
+
 export const tableSchema = z.object({
   id: z.uuid(),
   name: z.string().min(1),
@@ -48,6 +57,7 @@ export const tableSchema = z.object({
   position: positionSchema,
   columns: z.array(columnSchema),
   keys: z.array(keySchema),
+  foreignKeys: z.array(foreignKeySchema),
 });
 
 export type Table = z.infer<typeof tableSchema>;
@@ -119,6 +129,7 @@ export function createTable(
         position: defaultTablePosition(schema.tables.length),
         columns: [],
         keys: [],
+        foreignKeys: [],
       },
     ],
     updatedAt: now,
@@ -201,9 +212,10 @@ export function removeTable(
     return schema;
   }
   const { now = new Date() } = options;
+  const remaining = schema.tables.filter((table) => table.id !== tableId);
   return {
     ...schema,
-    tables: schema.tables.filter((table) => table.id !== tableId),
+    tables: removeForeignKeysReferencingTable(remaining, tableId),
     updatedAt: now,
   };
 }
@@ -279,17 +291,18 @@ export function removeColumn(
     return schema;
   }
   const { now = new Date() } = options;
+  const tables = schema.tables.map((table) =>
+    table.id === tableId
+      ? withNormalizedAutoIncrement({
+          ...table,
+          columns: table.columns.filter((column) => column.id !== columnId),
+          keys: removeColumnFromKeys(table.keys, columnId),
+        })
+      : table,
+  );
   return {
     ...schema,
-    tables: schema.tables.map((table) =>
-      table.id === tableId
-        ? withNormalizedAutoIncrement({
-            ...table,
-            columns: table.columns.filter((column) => column.id !== columnId),
-            keys: removeColumnFromKeys(table.keys, columnId),
-          })
-        : table,
-    ),
+    tables: removeForeignKeysInvolvingColumn(tables, columnId),
     updatedAt: now,
   };
 }
@@ -380,6 +393,58 @@ export function removeKey(
   };
 }
 
+type AddForeignKeyOptions = {
+  id?: string;
+  now?: Date;
+};
+
+export function addForeignKey(
+  schema: Schema,
+  tableId: string,
+  fields: Omit<ForeignKey, "id">,
+  options: AddForeignKeyOptions = {},
+): Schema {
+  if (!canAddForeignKey(schema, tableId, fields)) {
+    return schema;
+  }
+  const { id = crypto.randomUUID(), now = new Date() } = options;
+  return {
+    ...schema,
+    tables: schema.tables.map((table) =>
+      table.id === tableId
+        ? { ...table, foreignKeys: [...table.foreignKeys, { id, ...fields }] }
+        : table,
+    ),
+    updatedAt: now,
+  };
+}
+
+type RemoveForeignKeyOptions = {
+  now?: Date;
+};
+
+export function removeForeignKey(
+  schema: Schema,
+  tableId: string,
+  foreignKeyId: string,
+  options: RemoveForeignKeyOptions = {},
+): Schema {
+  const targetTable = schema.tables.find((table) => table.id === tableId);
+  if (!hasForeignKey(targetTable, foreignKeyId)) {
+    return schema;
+  }
+  const { now = new Date() } = options;
+  return {
+    ...schema,
+    tables: schema.tables.map((table) =>
+      table.id === tableId
+        ? { ...table, foreignKeys: table.foreignKeys.filter((fk) => fk.id !== foreignKeyId) }
+        : table,
+    ),
+    updatedAt: now,
+  };
+}
+
 /** Whether the table already has a PRIMARY KEY key other than `excludeKeyId`. */
 export function hasConflictingPrimaryKey(
   table: Table,
@@ -454,6 +519,18 @@ export function getColumnKeyMembershipDisabled(
   };
 }
 
+/** Whether `columnId` may be a foreign key's target (REQ-020: the sole PRIMARY KEY or UNIQUE column). */
+export function isReferenceableColumn(table: Table, columnId: string): boolean {
+  return (
+    soleKeyOfType(table, columnId, "PRIMARY_KEY") !== undefined ||
+    soleKeyOfType(table, columnId, "UNIQUE") !== undefined
+  );
+}
+
+export function getReferenceableColumns(table: Table): Column[] {
+  return table.columns.filter((column) => isReferenceableColumn(table, column.id));
+}
+
 function hasColumn(table: Table | undefined, columnId: string): boolean {
   return table !== undefined && table.columns.some((column) => column.id === columnId);
 }
@@ -514,6 +591,42 @@ function removeColumnFromKeys(keys: Key[], columnId: string): Key[] {
   return keys
     .map((key) => ({ ...key, columnIds: key.columnIds.filter((id) => id !== columnId) }))
     .filter((key) => key.columnIds.length > 0);
+}
+
+function hasForeignKey(table: Table | undefined, foreignKeyId: string): boolean {
+  return table !== undefined && table.foreignKeys.some((fk) => fk.id === foreignKeyId);
+}
+
+function canAddForeignKey(
+  schema: Schema,
+  tableId: string,
+  fields: Omit<ForeignKey, "id">,
+): boolean {
+  const table = schema.tables.find((t) => t.id === tableId);
+  const referencedTable = schema.tables.find((t) => t.id === fields.referencedTableId);
+  if (table === undefined || referencedTable === undefined) {
+    return false;
+  }
+  if (!hasColumn(table, fields.columnId)) {
+    return false;
+  }
+  return isReferenceableColumn(referencedTable, fields.referencedColumnId);
+}
+
+function removeForeignKeysReferencingTable(tables: Table[], removedTableId: string): Table[] {
+  return tables.map((table) => ({
+    ...table,
+    foreignKeys: table.foreignKeys.filter((fk) => fk.referencedTableId !== removedTableId),
+  }));
+}
+
+function removeForeignKeysInvolvingColumn(tables: Table[], columnId: string): Table[] {
+  return tables.map((table) => ({
+    ...table,
+    foreignKeys: table.foreignKeys.filter(
+      (fk) => fk.columnId !== columnId && fk.referencedColumnId !== columnId,
+    ),
+  }));
 }
 
 function withNormalizedAutoIncrement(table: Table): Table {

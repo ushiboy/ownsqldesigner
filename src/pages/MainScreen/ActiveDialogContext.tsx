@@ -11,7 +11,8 @@ export type DialogKind =
   | "deleteColumn"
   | "addKey"
   | "editKey"
-  | "deleteKey";
+  | "deleteKey"
+  | "deleteRelation";
 
 type ActiveDialogContextValue = {
   /** null while no dialog is open; overlapping dialogs are unrepresentable. */

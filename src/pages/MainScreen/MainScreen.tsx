@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { format } from "date-fns";
 import {
   EMPTY_COLUMN_KEY_MEMBERSHIP,
+  type ForeignKey,
   getColumnKeyMembership,
   getColumnKeyMembershipDisabled,
   hasConflictingPrimaryKey,
@@ -10,12 +11,14 @@ import {
 import type { SchemaRepository } from "../../domain/schemaRepository";
 import { createLocalStorageSchemaRepository } from "../../infrastructure/localStorageSchemaRepository";
 import { ActiveDialogProvider } from "./ActiveDialogContext";
+import { describeForeignKey, type RelationSummary } from "./components/SidePanel";
 import { MainScreenView } from "./MainScreenView";
 import { NotificationProvider } from "./NotificationContext";
 import { useSchemaWorkspace } from "./useSchemaWorkspace";
 
 const defaultRepository = createLocalStorageSchemaRepository();
 const NO_TABLES: Table[] = [];
+const NO_RELATIONS: RelationSummary[] = [];
 
 type MainScreenProps = {
   /** Injection point for tests and stories; the app uses localStorage. */
@@ -43,6 +46,7 @@ function MainScreenContent({ repository }: MainScreenContentProps) {
   const [selectedTableId, setSelectedTableId] = useState<string | null>(null);
   const [selectedColumnId, setSelectedColumnId] = useState<string | null>(null);
   const [selectedKeyId, setSelectedKeyId] = useState<string | null>(null);
+  const [selectedRelationId, setSelectedRelationId] = useState<string | null>(null);
   const [selectedSchemaId, setSelectedSchemaId] = useState<string | null | undefined>(undefined);
   const {
     currentSchema,
@@ -63,6 +67,8 @@ function MainScreenContent({ repository }: MainScreenContentProps) {
     addKey,
     updateKey,
     removeKey,
+    addForeignKey,
+    removeForeignKey,
   } = useSchemaWorkspace(repository);
 
   if (currentSchema?.id !== selectedSchemaId) {
@@ -70,6 +76,7 @@ function MainScreenContent({ repository }: MainScreenContentProps) {
     setSelectedTableId(null);
     setSelectedColumnId(null);
     setSelectedKeyId(null);
+    setSelectedRelationId(null);
   }
 
   const tables = currentSchema?.tables ?? NO_TABLES;
@@ -89,6 +96,21 @@ function MainScreenContent({ repository }: MainScreenContentProps) {
   const keyDialogPrimaryKeyDisabled =
     selectedTable !== null &&
     hasConflictingPrimaryKey(selectedTable, "PRIMARY_KEY", selectedKeyId ?? undefined);
+  const selectedRelation = findForeignKey(tables, selectedRelationId);
+  const relations: RelationSummary[] = useMemo(
+    () =>
+      selectedTable !== null
+        ? selectedTable.foreignKeys.map((foreignKey) => ({
+            id: foreignKey.id,
+            label: describeForeignKey(
+              foreignKey,
+              selectedTable.columns,
+              tables.find((table) => table.id === foreignKey.referencedTableId),
+            ),
+          }))
+        : NO_RELATIONS,
+    [selectedTable, tables],
+  );
 
   return (
     <MainScreenView
@@ -102,6 +124,10 @@ function MainScreenContent({ repository }: MainScreenContentProps) {
       selectedTable={selectedTable}
       selectedColumn={selectedColumn}
       selectedKey={selectedKey}
+      selectedRelationId={selectedRelationId}
+      selectedForeignKey={selectedRelation?.foreignKey ?? null}
+      selectedRelationOwnerTable={selectedRelation?.table ?? null}
+      relations={relations}
       columnKeyMembership={columnKeyMembership}
       columnKeyMembershipDisabled={columnKeyMembershipDisabled}
       primaryKeyDisabled={keyDialogPrimaryKeyDisabled}
@@ -118,6 +144,7 @@ function MainScreenContent({ repository }: MainScreenContentProps) {
       }}
       onSelectColumn={setSelectedColumnId}
       onSelectKey={setSelectedKeyId}
+      onSelectRelation={setSelectedRelationId}
       onCreateTable={createTable}
       onUpdateTableName={renameTable}
       onUpdateTableComment={updateTableComment}
@@ -130,6 +157,21 @@ function MainScreenContent({ repository }: MainScreenContentProps) {
       onAddKey={addKey}
       onUpdateKey={updateKey}
       onRemoveKey={removeKey}
+      onAddForeignKey={addForeignKey}
+      onRemoveForeignKey={removeForeignKey}
     />
   );
+}
+
+function findForeignKey(
+  tables: Table[],
+  foreignKeyId: string | null,
+): { table: Table; foreignKey: ForeignKey } | undefined {
+  for (const table of tables) {
+    const foreignKey = table.foreignKeys.find((fk) => fk.id === foreignKeyId);
+    if (foreignKey !== undefined) {
+      return { table, foreignKey };
+    }
+  }
+  return undefined;
 }

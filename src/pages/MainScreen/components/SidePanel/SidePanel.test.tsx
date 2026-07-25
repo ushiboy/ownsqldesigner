@@ -5,7 +5,8 @@ import { composeStories } from "@storybook/react-vite";
 import * as stories from "./SidePanel.stories";
 import { SidePanel } from "./SidePanel";
 
-const { Default, TableSelected, TableWithColumns, TableWithKeys } = composeStories(stories);
+const { Default, TableSelected, TableWithColumns, TableWithKeys, TableWithRelations } =
+  composeStories(stories);
 
 const closedProps = {
   isOpen: false,
@@ -13,6 +14,7 @@ const closedProps = {
   tableCount: 0,
   createdDate: "2026-07-01",
   selectedTable: null,
+  relations: [],
   onUpdateTableName: () => {},
   onUpdateTableComment: () => {},
   onDeleteTable: () => {},
@@ -22,6 +24,7 @@ const closedProps = {
   onAddKey: () => {},
   onEditKey: () => {},
   onDeleteKey: () => {},
+  onDeleteRelation: () => {},
 };
 
 describe("SidePanel", () => {
@@ -175,5 +178,30 @@ describe("SidePanel", () => {
     render(<TableWithKeys onDeleteKey={onDeleteKey} />);
     await userEvent.click(screen.getByRole("button", { name: "Delete key UNIQUE (email)" }));
     expect(onDeleteKey).toHaveBeenCalledExactlyOnceWith("c1d2e3f4-5a6b-4c7d-8e9f-0a1b2c3d4e5f");
+  });
+
+  it("shows no relations for a table without any", () => {
+    render(<TableSelected />);
+    expect(screen.getByRole("heading", { name: "Relations" })).toBeInTheDocument();
+  });
+
+  it("lists a table's relations with their computed label, and no add/edit affordance", () => {
+    render(<TableWithRelations />);
+    expect(screen.getByText("user_id → users.id")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Add Relation" })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Edit relation user_id → users.id" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("calls onDeleteRelation with the clicked relation's id", async () => {
+    const onDeleteRelation = fn();
+    render(<TableWithRelations onDeleteRelation={onDeleteRelation} />);
+    await userEvent.click(
+      screen.getByRole("button", { name: "Delete relation user_id → users.id" }),
+    );
+    expect(onDeleteRelation).toHaveBeenCalledExactlyOnceWith(
+      "e5c3fb8c-9c97-4f5e-d2cf-5f8f3d8c7b23",
+    );
   });
 });

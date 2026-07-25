@@ -2,19 +2,25 @@ import { useEffect } from "react";
 import type {
   Column,
   ColumnKeyMembership,
+  ForeignKey,
   Key,
   Position,
   SchemaSummary,
   Table,
 } from "../../domain/schema";
-import { useActiveDialog } from "./ActiveDialogContext";
+import { type DialogKind, useActiveDialog } from "./ActiveDialogContext";
 import { Canvas } from "./components/Canvas";
 import { ColumnDialog } from "./components/ColumnDialog";
 import { ConfirmDialog } from "./components/ConfirmDialog";
 import { KeyDialog } from "./components/KeyDialog";
 import { NotificationBar } from "./components/NotificationBar";
 import { SchemaNameDialog } from "./components/SchemaNameDialog";
-import { describeKey, SidePanel } from "./components/SidePanel";
+import {
+  describeForeignKey,
+  describeKey,
+  type RelationSummary,
+  SidePanel,
+} from "./components/SidePanel";
 import { TableNameDialog } from "./components/TableNameDialog";
 import { Toolbar } from "./components/Toolbar";
 
@@ -31,6 +37,10 @@ type MainScreenViewProps = {
   selectedTable: Table | null;
   selectedColumn: Column | null;
   selectedKey: Key | null;
+  selectedRelationId: string | null;
+  selectedForeignKey: ForeignKey | null;
+  selectedRelationOwnerTable: Table | null;
+  relations: RelationSummary[];
   columnKeyMembership: ColumnKeyMembership;
   columnKeyMembershipDisabled: ColumnKeyMembership;
   primaryKeyDisabled: boolean;
@@ -43,6 +53,7 @@ type MainScreenViewProps = {
   onSelectTable: (id: string | null) => void;
   onSelectColumn: (id: string | null) => void;
   onSelectKey: (id: string | null) => void;
+  onSelectRelation: (id: string | null) => void;
   onCreateTable: (name: string) => void;
   onUpdateTableName: (tableId: string, name: string) => void;
   onUpdateTableComment: (tableId: string, comment: string) => void;
@@ -59,6 +70,8 @@ type MainScreenViewProps = {
   onAddKey: (tableId: string, fields: Omit<Key, "id">) => void;
   onUpdateKey: (tableId: string, keyId: string, fields: Omit<Key, "id">) => void;
   onRemoveKey: (tableId: string, keyId: string) => void;
+  onAddForeignKey: (tableId: string, fields: Omit<ForeignKey, "id">) => void;
+  onRemoveForeignKey: (tableId: string, foreignKeyId: string) => void;
 };
 
 export function MainScreenView({
@@ -72,6 +85,10 @@ export function MainScreenView({
   selectedTable,
   selectedColumn,
   selectedKey,
+  selectedRelationId,
+  selectedForeignKey,
+  selectedRelationOwnerTable,
+  relations,
   columnKeyMembership,
   columnKeyMembershipDisabled,
   primaryKeyDisabled,
@@ -84,6 +101,7 @@ export function MainScreenView({
   onSelectTable,
   onSelectColumn,
   onSelectKey,
+  onSelectRelation,
   onCreateTable,
   onUpdateTableName,
   onUpdateTableComment,
@@ -96,6 +114,8 @@ export function MainScreenView({
   onAddKey,
   onUpdateKey,
   onRemoveKey,
+  onAddForeignKey,
+  onRemoveForeignKey,
 }: MainScreenViewProps) {
   const { activeDialog, openDialog, closeDialog } = useActiveDialog();
 
@@ -103,22 +123,24 @@ export function MainScreenView({
   // delete button, rather than deleting immediately — every destructive
   // action in this app is confirmation-gated, and keyboard delete is no
   // exception. Ignored while a dialog is already open or focus is in a
-  // text field, so it doesn't interfere with typing.
+  // text field, so it doesn't interfere with typing. Relation and table
+  // selection are mutually exclusive (see MainScreen), so which dialog to
+  // open is unambiguous.
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
-      if (activeDialog !== null || selectedTableId === null) {
+      if (shouldIgnoreKeyboardDelete(activeDialog, selectedTableId, selectedRelationId)) {
         return;
       }
       if (isTextInputElement(document.activeElement)) {
         return;
       }
       if (event.key === "Delete" || event.key === "Backspace") {
-        openDialog("deleteTable");
+        openDialog(selectedRelationId !== null ? "deleteRelation" : "deleteTable");
       }
     }
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [activeDialog, selectedTableId, openDialog]);
+  }, [activeDialog, selectedTableId, selectedRelationId, openDialog]);
 
   return (
     <div className="flex h-svh flex-col overflow-hidden">
@@ -136,8 +158,11 @@ export function MainScreenView({
           <Canvas
             tables={tables}
             selectedTableId={selectedTableId}
+            selectedRelationId={selectedRelationId}
             onSelectTable={onSelectTable}
+            onSelectRelation={onSelectRelation}
             onMoveTable={onMoveTable}
+            onAddForeignKey={onAddForeignKey}
           />
         </main>
         <SidePanel
@@ -146,6 +171,7 @@ export function MainScreenView({
           tableCount={tableCount}
           createdDate={createdDate}
           selectedTable={selectedTable}
+          relations={relations}
           onUpdateTableName={onUpdateTableName}
           onUpdateTableComment={onUpdateTableComment}
           onDeleteTable={() => openDialog("deleteTable")}
@@ -172,6 +198,10 @@ export function MainScreenView({
           onDeleteKey={(keyId) => {
             onSelectKey(keyId);
             openDialog("deleteKey");
+          }}
+          onDeleteRelation={(relationId) => {
+            onSelectRelation(relationId);
+            openDialog("deleteRelation");
           }}
         />
       </div>
@@ -319,8 +349,40 @@ export function MainScreenView({
         }}
         onCancel={closeDialog}
       />
+      <ConfirmDialog
+        open={activeDialog === "deleteRelation"}
+        title="Delete Relation"
+        message={describeDeleteRelationMessage(
+          tables,
+          selectedForeignKey,
+          selectedRelationOwnerTable,
+        )}
+        confirmLabel="Delete"
+        onConfirm={() => {
+          if (selectedRelationOwnerTable !== null && selectedForeignKey !== null) {
+            onRemoveForeignKey(selectedRelationOwnerTable.id, selectedForeignKey.id);
+          }
+          // Reset selection so a subsequent Delete keypress doesn't reopen
+          // this same (now stale) relation's dialog instead of acting on
+          // whatever table is still selected on the canvas.
+          onSelectRelation(null);
+          closeDialog();
+        }}
+        onCancel={() => {
+          onSelectRelation(null);
+          closeDialog();
+        }}
+      />
     </div>
   );
+}
+
+function shouldIgnoreKeyboardDelete(
+  activeDialog: DialogKind | null,
+  selectedTableId: string | null,
+  selectedRelationId: string | null,
+): boolean {
+  return activeDialog !== null || (selectedTableId === null && selectedRelationId === null);
 }
 
 function isTextInputElement(element: Element | null): boolean {
@@ -329,4 +391,20 @@ function isTextInputElement(element: Element | null): boolean {
     element instanceof HTMLTextAreaElement ||
     element instanceof HTMLSelectElement
   );
+}
+
+function describeDeleteRelationMessage(
+  tables: Table[],
+  selectedForeignKey: ForeignKey | null,
+  selectedRelationOwnerTable: Table | null,
+): string {
+  const label =
+    selectedForeignKey !== null && selectedRelationOwnerTable !== null
+      ? describeForeignKey(
+          selectedForeignKey,
+          selectedRelationOwnerTable.columns,
+          tables.find((table) => table.id === selectedForeignKey.referencedTableId),
+        )
+      : "";
+  return `Delete relation "${label}"? This cannot be undone.`;
 }

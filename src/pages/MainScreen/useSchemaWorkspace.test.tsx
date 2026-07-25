@@ -1,6 +1,6 @@
 import { act, renderHook, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
-import { addColumn, addKey, createSchema, createTable } from "../../domain/schema";
+import { addColumn, addForeignKey, addKey, createSchema, createTable } from "../../domain/schema";
 import type { SchemaRepository } from "../../domain/schemaRepository";
 import { createFakeSchemaRepository } from "../../test/fakeSchemaRepository";
 import { NotificationProvider, useNotification } from "./NotificationContext";
@@ -661,6 +661,89 @@ describe("useSchemaWorkspace", () => {
     });
     const persisted = await repository.load(blog.id);
     expect(persisted?.tables[0]?.keys).toEqual([]);
+    expect(persisted?.updatedAt.getTime()).toBeGreaterThan(blog.updatedAt.getTime());
+  });
+
+  const foreignKeyFields = {
+    columnId: "a2b3c4d5-6e7f-4a8b-9c0d-1e2f3a4b5c6d",
+    referencedTableId: "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12",
+    referencedColumnId: "f1a2b3c4-5d6e-4f7a-8b9c-0d1e2f3a4b5c",
+  };
+
+  function buildBlogWithReferenceableColumn() {
+    const withUniqueColumn = addKey(
+      addColumn(
+        createTable(
+          createSchema("Blog Schema", { now: new Date("2026-07-01T09:00:00.000Z") }),
+          "posts",
+          { id: "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12", now: new Date("2026-07-01T09:00:00.000Z") },
+        ),
+        "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12",
+        columnFields,
+        { id: "f1a2b3c4-5d6e-4f7a-8b9c-0d1e2f3a4b5c", now: new Date("2026-07-01T09:00:00.000Z") },
+      ),
+      "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12",
+      keyFields,
+      { id: "b1c2d3e4-5f6a-4b7c-8d9e-0f1a2b3c4d5e", now: new Date("2026-07-01T09:00:00.000Z") },
+    );
+    return addColumn(
+      withUniqueColumn,
+      "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12",
+      { ...columnFields, name: "author_id" },
+      { id: "a2b3c4d5-6e7f-4a8b-9c0d-1e2f3a4b5c6d", now: new Date("2026-07-01T09:00:00.000Z") },
+    );
+  }
+
+  it("adds a foreign key to a table, bumps updatedAt, and persists it", async () => {
+    const blog = buildBlogWithReferenceableColumn();
+    const repository = createFakeSchemaRepository({ schemas: [blog], lastSchemaId: blog.id });
+    const { result } = renderWorkspace(repository);
+    await waitFor(() => {
+      expect(result.current.workspace.currentSchema).not.toBeNull();
+    });
+
+    act(() => {
+      result.current.workspace.addForeignKey(
+        "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12",
+        foreignKeyFields,
+      );
+    });
+
+    await waitFor(() => {
+      expect(result.current.workspace.currentSchema?.tables[0]?.foreignKeys).toHaveLength(1);
+    });
+    const persisted = await repository.load(blog.id);
+    expect(persisted?.tables[0]?.foreignKeys).toEqual(
+      result.current.workspace.currentSchema?.tables[0]?.foreignKeys,
+    );
+    expect(persisted?.updatedAt.getTime()).toBeGreaterThan(blog.updatedAt.getTime());
+  });
+
+  it("removes a foreign key from a table, bumps updatedAt, and persists it", async () => {
+    const blog = addForeignKey(
+      buildBlogWithReferenceableColumn(),
+      "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12",
+      foreignKeyFields,
+      { id: "c1d2e3f4-5a6b-4c7d-8e9f-0a1b2c3d4e5f", now: new Date("2026-07-01T09:00:00.000Z") },
+    );
+    const repository = createFakeSchemaRepository({ schemas: [blog], lastSchemaId: blog.id });
+    const { result } = renderWorkspace(repository);
+    await waitFor(() => {
+      expect(result.current.workspace.currentSchema).not.toBeNull();
+    });
+
+    act(() => {
+      result.current.workspace.removeForeignKey(
+        "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12",
+        "c1d2e3f4-5a6b-4c7d-8e9f-0a1b2c3d4e5f",
+      );
+    });
+
+    await waitFor(() => {
+      expect(result.current.workspace.currentSchema?.tables[0]?.foreignKeys).toEqual([]);
+    });
+    const persisted = await repository.load(blog.id);
+    expect(persisted?.tables[0]?.foreignKeys).toEqual([]);
     expect(persisted?.updatedAt.getTime()).toBeGreaterThan(blog.updatedAt.getTime());
   });
 });

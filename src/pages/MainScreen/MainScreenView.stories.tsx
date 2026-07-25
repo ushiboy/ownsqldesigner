@@ -63,10 +63,40 @@ const usersTable = {
       columnIds: ["e2b3c4d5-6e7f-4a8b-9c0d-1e2f3a4b5c6d"],
     },
   ],
+  foreignKeys: [],
+};
+
+const postsTable = {
+  id: "e5c3fb8c-9c97-4f5e-d2cf-5f8f3d8c7b23",
+  name: "posts",
+  comment: "",
+  position: { x: 300, y: 200 },
+  columns: [
+    {
+      id: "a2b3c4d5-6e7f-4a8b-9c0d-1e2f3a4b5c6d",
+      name: "user_id",
+      type: "INTEGER" as const,
+      size: "",
+      defaultValue: "",
+      nullable: false,
+      autoIncrement: false,
+      comment: "",
+    },
+  ],
+  keys: [],
+  foreignKeys: [
+    {
+      id: "c1d2e3f4-5a6b-4c7d-8e9f-0a1b2c3d4e5f",
+      columnId: "a2b3c4d5-6e7f-4a8b-9c0d-1e2f3a4b5c6d",
+      referencedTableId: usersTable.id,
+      referencedColumnId: "e2b3c4d5-6e7f-4a8b-9c0d-1e2f3a4b5c6d",
+    },
+  ],
 };
 
 const tables = [usersTable];
 const tablesWithoutPrimaryKey = [{ ...usersTable, keys: [] }];
+const tablesWithRelation = [usersTable, postsTable];
 
 const meta = {
   title: "pages/MainScreen/MainScreenView",
@@ -85,6 +115,10 @@ const meta = {
     selectedTable: null,
     selectedColumn: null,
     selectedKey: null,
+    selectedRelationId: null,
+    selectedForeignKey: null,
+    selectedRelationOwnerTable: null,
+    relations: [],
     columnKeyMembership: NO_KEY_MEMBERSHIP,
     columnKeyMembershipDisabled: NO_KEY_MEMBERSHIP,
     primaryKeyDisabled: false,
@@ -96,6 +130,7 @@ const meta = {
     onSelectTable: fn(),
     onSelectColumn: fn(),
     onSelectKey: fn(),
+    onSelectRelation: fn(),
     onCreateTable: fn(),
     onUpdateTableName: fn(),
     onUpdateTableComment: fn(),
@@ -108,6 +143,8 @@ const meta = {
     onAddKey: fn(),
     onUpdateKey: fn(),
     onRemoveKey: fn(),
+    onAddForeignKey: fn(),
+    onRemoveForeignKey: fn(),
   },
   decorators: [withProviders],
 } satisfies Meta<typeof MainScreenView>;
@@ -305,5 +342,30 @@ export const DeleteKeyDialogOpen: Story = {
   },
   parameters: {
     dialog: "deleteKey",
+  },
+};
+
+export const TableWithRelationSelected: Story = {
+  args: {
+    isSidePanelOpen: true,
+    tables: tablesWithRelation,
+    tableCount: tablesWithRelation.length,
+    selectedTableId: postsTable.id,
+    selectedTable: postsTable,
+    relations: [{ id: postsTable.foreignKeys[0].id, label: "user_id → users.id" }],
+  },
+};
+
+export const DeleteRelationDialogOpen: Story = {
+  args: {
+    isSidePanelOpen: true,
+    tables: tablesWithRelation,
+    tableCount: tablesWithRelation.length,
+    selectedRelationId: postsTable.foreignKeys[0].id,
+    selectedForeignKey: postsTable.foreignKeys[0],
+    selectedRelationOwnerTable: postsTable,
+  },
+  parameters: {
+    dialog: "deleteRelation",
   },
 };

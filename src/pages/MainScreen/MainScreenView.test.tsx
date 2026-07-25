@@ -21,6 +21,8 @@ const {
   AddKeyDialogOpen,
   EditKeyDialogOpen,
   DeleteKeyDialogOpen,
+  TableWithRelationSelected,
+  DeleteRelationDialogOpen,
 } = composeStories(stories);
 
 describe("MainScreenView", () => {
@@ -187,5 +189,46 @@ describe("MainScreenView", () => {
     expect(
       screen.getByText('Delete key "PRIMARY KEY (id)"? This cannot be undone.'),
     ).toBeInTheDocument();
+  });
+
+  it("lists the selected table's relations in the side panel", () => {
+    render(<TableWithRelationSelected />);
+    expect(screen.getByText("user_id → users.id")).toBeInTheDocument();
+  });
+
+  it("shows the delete relation confirmation naming the selected relation", () => {
+    render(<DeleteRelationDialogOpen />);
+    expect(screen.getByRole("dialog", { name: "Delete Relation" })).toBeInTheDocument();
+    expect(
+      screen.getByText('Delete relation "user_id → users.id"? This cannot be undone.'),
+    ).toBeInTheDocument();
+  });
+
+  it("opens the delete relation confirmation when Delete is pressed while a relation is selected", async () => {
+    render(<TableWithRelationSelected selectedRelationId="c1d2e3f4-5a6b-4c7d-8e9f-0a1b2c3d4e5f" />);
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+
+    await userEvent.keyboard("{Delete}");
+
+    expect(screen.getByRole("dialog", { name: "Delete Relation" })).toBeInTheDocument();
+  });
+
+  it("calls onRemoveForeignKey and clears the relation selection on confirm", async () => {
+    const onRemoveForeignKey = fn();
+    const onSelectRelation = fn();
+    render(
+      <DeleteRelationDialogOpen
+        onRemoveForeignKey={onRemoveForeignKey}
+        onSelectRelation={onSelectRelation}
+      />,
+    );
+
+    await userEvent.click(screen.getByRole("button", { name: "Delete" }));
+
+    expect(onRemoveForeignKey).toHaveBeenCalledExactlyOnceWith(
+      "e5c3fb8c-9c97-4f5e-d2cf-5f8f3d8c7b23",
+      "c1d2e3f4-5a6b-4c7d-8e9f-0a1b2c3d4e5f",
+    );
+    expect(onSelectRelation).toHaveBeenCalledExactlyOnceWith(null);
   });
 });

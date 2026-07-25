@@ -3,17 +3,20 @@ import {
   DEFAULT_SCHEMA_NAME,
   type Column,
   type ColumnKeyMembership,
+  type ForeignKey,
   type Key,
   type Position,
   type Schema,
   type SchemaSummary,
   type Table,
   addColumn,
+  addForeignKey,
   addKey,
   createSchema,
   createTable,
   moveTable,
   removeColumn,
+  removeForeignKey,
   removeKey,
   removeTable,
   renameSchema,
@@ -50,6 +53,8 @@ type SchemaWorkspace = {
   addKey: (tableId: string, fields: Omit<Key, "id">) => void;
   updateKey: (tableId: string, keyId: string, fields: Omit<Key, "id">) => void;
   removeKey: (tableId: string, keyId: string) => void;
+  addForeignKey: (tableId: string, fields: Omit<ForeignKey, "id">) => void;
+  removeForeignKey: (tableId: string, foreignKeyId: string) => void;
 };
 
 export function useSchemaWorkspace(repository: SchemaRepository): SchemaWorkspace {
@@ -219,6 +224,16 @@ export function useSchemaWorkspace(repository: SchemaRepository): SchemaWorkspac
     removeKey: (tableId, keyId) => {
       dismissNotification();
       setCurrentSchema((prev) => (prev === null ? prev : removeKey(prev, tableId, keyId)));
+    },
+    addForeignKey: (tableId, fields) => {
+      dismissNotification();
+      setCurrentSchema((prev) => (prev === null ? prev : addForeignKey(prev, tableId, fields)));
+    },
+    removeForeignKey: (tableId, foreignKeyId) => {
+      dismissNotification();
+      setCurrentSchema((prev) =>
+        prev === null ? prev : removeForeignKey(prev, tableId, foreignKeyId),
+      );
     },
   };
 }
