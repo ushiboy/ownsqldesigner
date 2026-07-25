@@ -1,6 +1,8 @@
-import { screen, waitFor, within } from "@testing-library/react";
-// storybook/test's userEvent: typing into inputs after Story.run() does not
-// reach React onChange with the standalone @testing-library/user-event.
+import { render, screen, waitFor, within } from "@testing-library/react";
+// storybook/test's userEvent (not the standalone @testing-library/user-event
+// package): its default click also crashes React Flow's d3-zoom pane, which
+// reads `event.view` from the dispatched mouse event and gets null from the
+// standalone package.
 import { userEvent } from "storybook/test";
 import { composeStories } from "@storybook/react-vite";
 import * as stories from "./MainScreen.stories";
@@ -9,7 +11,7 @@ const { Default } = composeStories(stories);
 
 /** Waits until the startup restore has finished and the schema name is shown. */
 async function runRestored() {
-  await Default.run();
+  render(<Default />);
   await waitFor(() =>
     expect(screen.getByRole("button", { name: "Blog Schema" })).toBeInTheDocument(),
   );

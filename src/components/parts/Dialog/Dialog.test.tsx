@@ -8,21 +8,22 @@ import { Dialog } from "./Dialog";
 const { Open } = composeStories(stories);
 
 describe("Dialog", () => {
-  it("shows the title and the content", async () => {
-    await Open.run();
+  it("shows the title and the content", () => {
+    render(<Open />);
     expect(screen.getByRole("dialog", { name: "Dialog Title" })).toBeInTheDocument();
     expect(screen.getByText("Dialog content goes here.")).toBeInTheDocument();
   });
 
-  it("moves the initial focus to the content's data-autofocus element", async () => {
-    await Open.run();
+  it("moves the initial focus to the content's data-autofocus element", () => {
+    render(<Open />);
     expect(screen.getByRole("button", { name: "OK" })).toHaveFocus();
   });
 
   it("calls onClose when Escape is pressed", async () => {
-    await Open.run();
+    const onClose = fn();
+    render(<Open onClose={onClose} />);
     await userEvent.keyboard("{Escape}");
-    expect(Open.args.onClose).toHaveBeenCalledOnce();
+    expect(onClose).toHaveBeenCalledOnce();
   });
 
   it("renders nothing while closed", () => {
