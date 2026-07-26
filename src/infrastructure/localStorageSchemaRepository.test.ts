@@ -1,5 +1,80 @@
-import { createSchema } from "../domain/schema";
+import {
+  addColumn,
+  addForeignKey,
+  addKey,
+  createSchema,
+  createTable,
+  moveTable,
+} from "../domain/schema";
 import { createLocalStorageSchemaRepository } from "./localStorageSchemaRepository";
+
+const NOW = new Date("2026-01-01T00:00:00.000Z");
+const SCHEMA_ID = "11111111-1111-4111-8111-111111111111";
+const USERS_TABLE_ID = "22222222-2222-4222-8222-222222222222";
+const USERS_ID_COLUMN_ID = "33333333-3333-4333-8333-333333333333";
+const USERS_PK_KEY_ID = "44444444-4444-4444-8444-444444444444";
+const POSTS_TABLE_ID = "55555555-5555-4555-8555-555555555555";
+const POSTS_ID_COLUMN_ID = "66666666-6666-4666-8666-666666666666";
+const POSTS_PK_KEY_ID = "77777777-7777-4777-8777-777777777777";
+const POSTS_USER_ID_COLUMN_ID = "88888888-8888-4888-8888-888888888888";
+const POSTS_USER_FK_ID = "99999999-9999-4999-8999-999999999999";
+
+const COLUMN_DEFAULTS = {
+  size: "",
+  defaultValue: "",
+  nullable: false,
+  autoIncrement: false,
+  comment: "",
+} as const;
+
+function buildFullyPopulatedSchema() {
+  let schema = createSchema("Blog Schema", { id: SCHEMA_ID, now: NOW });
+  schema = createTable(schema, "users", { id: USERS_TABLE_ID, now: NOW });
+  schema = addColumn(
+    schema,
+    USERS_TABLE_ID,
+    { name: "id", type: "INTEGER", ...COLUMN_DEFAULTS },
+    { id: USERS_ID_COLUMN_ID, now: NOW },
+  );
+  schema = addKey(
+    schema,
+    USERS_TABLE_ID,
+    { type: "PRIMARY_KEY", columnIds: [USERS_ID_COLUMN_ID] },
+    { id: USERS_PK_KEY_ID, now: NOW },
+  );
+
+  schema = createTable(schema, "posts", { id: POSTS_TABLE_ID, now: NOW });
+  schema = addColumn(
+    schema,
+    POSTS_TABLE_ID,
+    { name: "id", type: "INTEGER", ...COLUMN_DEFAULTS },
+    { id: POSTS_ID_COLUMN_ID, now: NOW },
+  );
+  schema = addKey(
+    schema,
+    POSTS_TABLE_ID,
+    { type: "PRIMARY_KEY", columnIds: [POSTS_ID_COLUMN_ID] },
+    { id: POSTS_PK_KEY_ID, now: NOW },
+  );
+  schema = addColumn(
+    schema,
+    POSTS_TABLE_ID,
+    { name: "user_id", type: "INTEGER", ...COLUMN_DEFAULTS },
+    { id: POSTS_USER_ID_COLUMN_ID, now: NOW },
+  );
+  schema = addForeignKey(
+    schema,
+    POSTS_TABLE_ID,
+    {
+      columnId: POSTS_USER_ID_COLUMN_ID,
+      referencedTableId: USERS_TABLE_ID,
+      referencedColumnId: USERS_ID_COLUMN_ID,
+    },
+    { id: POSTS_USER_FK_ID, now: NOW },
+  );
+
+  return moveTable(schema, POSTS_TABLE_ID, { x: 400, y: 320 }, { now: NOW });
+}
 
 describe("createLocalStorageSchemaRepository", () => {
   beforeEach(() => {
@@ -9,6 +84,15 @@ describe("createLocalStorageSchemaRepository", () => {
   it("round-trips a saved schema through load", async () => {
     const repository = createLocalStorageSchemaRepository();
     const schema = createSchema("Blog Schema");
+
+    await repository.save(schema);
+
+    await expect(repository.load(schema.id)).resolves.toEqual(schema);
+  });
+
+  it("round-trips a schema with columns, keys, a foreign key, and a moved table (REQ-024)", async () => {
+    const repository = createLocalStorageSchemaRepository();
+    const schema = buildFullyPopulatedSchema();
 
     await repository.save(schema);
 
