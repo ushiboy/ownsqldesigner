@@ -31,6 +31,7 @@ const meta = {
   title: "pages/MainScreen/ColumnDialog",
   component: ColumnDialog,
   args: {
+    existingNames: [],
     keyMembership: NO_KEY_MEMBERSHIP,
     keyMembershipDisabled: NO_KEY_MEMBERSHIP,
     onSubmit: fn(),
@@ -74,5 +75,24 @@ export const AddPrimaryKeyDisabled: Story = {
     title: "Add Column",
     submitLabel: "Add",
     keyMembershipDisabled: { PRIMARY_KEY: true, UNIQUE: false, INDEX: false },
+  },
+};
+
+export const DuplicateName: Story = {
+  args: {
+    open: true,
+    title: "Edit Column",
+    submitLabel: "Save",
+    initialColumn: column,
+    existingNames: ["title", "body"],
+  },
+};
+
+export const InvalidName: Story = {
+  args: {
+    open: true,
+    title: "Edit Column",
+    submitLabel: "Save",
+    initialColumn: { ...column, name: "1title" },
   },
 };

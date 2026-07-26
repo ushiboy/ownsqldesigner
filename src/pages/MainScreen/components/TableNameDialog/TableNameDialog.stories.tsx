@@ -6,6 +6,7 @@ const meta = {
   title: "pages/MainScreen/TableNameDialog",
   component: TableNameDialog,
   args: {
+    existingNames: [],
     onSubmit: fn(),
     onCancel: fn(),
   },
@@ -19,5 +20,24 @@ export const Open: Story = {
     open: true,
     title: "New Table",
     submitLabel: "Create",
+  },
+};
+
+export const DuplicateName: Story = {
+  args: {
+    open: true,
+    title: "New Table",
+    submitLabel: "Create",
+    initialName: "users",
+    existingNames: ["users", "posts"],
+  },
+};
+
+export const InvalidName: Story = {
+  args: {
+    open: true,
+    title: "New Table",
+    submitLabel: "Create",
+    initialName: "1users",
   },
 };

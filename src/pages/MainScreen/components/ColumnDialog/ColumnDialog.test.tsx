@@ -4,7 +4,8 @@ import { fn } from "storybook/test";
 import { composeStories } from "@storybook/react-vite";
 import * as stories from "./ColumnDialog.stories";
 
-const { Add, Edit, EditAllowsAutoIncrement, AddPrimaryKeyDisabled } = composeStories(stories);
+const { Add, Edit, EditAllowsAutoIncrement, AddPrimaryKeyDisabled, DuplicateName, InvalidName } =
+  composeStories(stories);
 
 describe("ColumnDialog", () => {
   it("shows the dialog with a disabled submit button while the name is empty", () => {
@@ -189,5 +190,27 @@ describe("ColumnDialog", () => {
     render(<Add onCancel={onCancel} />);
     await userEvent.keyboard("{Escape}");
     expect(onCancel).toHaveBeenCalledOnce();
+  });
+
+  it("disables submit and shows a hint for a name that is already taken", () => {
+    render(<DuplicateName />);
+    expect(screen.getByRole("button", { name: "Save" })).toBeDisabled();
+    expect(screen.getByText("A column with this name already exists.")).toBeInTheDocument();
+  });
+
+  it("re-enables submit once a duplicate name is edited to something unique", async () => {
+    render(<DuplicateName />);
+    await userEvent.type(screen.getByLabelText("Name"), "2");
+    expect(screen.getByRole("button", { name: "Save" })).toBeEnabled();
+  });
+
+  it("disables submit and shows a hint for a name with an invalid shape", () => {
+    render(<InvalidName />);
+    expect(screen.getByRole("button", { name: "Save" })).toBeDisabled();
+    expect(
+      screen.getByText(
+        "Must start with a letter or underscore and contain only letters, digits, and underscores.",
+      ),
+    ).toBeInTheDocument();
   });
 });

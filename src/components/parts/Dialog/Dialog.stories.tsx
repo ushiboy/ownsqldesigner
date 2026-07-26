@@ -37,3 +37,10 @@ export const Open: Story = {
     ),
   },
 };
+
+export const Large: Story = {
+  args: {
+    ...Open.args,
+    size: "large",
+  },
+};

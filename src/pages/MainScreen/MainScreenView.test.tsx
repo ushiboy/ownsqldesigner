@@ -22,6 +22,7 @@ const {
   EditKeyDialogOpen,
   DeleteKeyDialogOpen,
   TableWithRelationSelected,
+  ExportSqlDialogOpen,
   DeleteRelationDialogOpen,
 } = composeStories(stories);
 
@@ -189,6 +190,23 @@ describe("MainScreenView", () => {
     expect(
       screen.getByText('Delete key "PRIMARY KEY (id)"? This cannot be undone.'),
     ).toBeInTheDocument();
+  });
+
+  it("shows the export SQL dialog with the generated DDL while activeDialog is exportSql", () => {
+    render(<ExportSqlDialogOpen />);
+    expect(screen.getByRole("dialog", { name: "Export SQL" })).toBeInTheDocument();
+    expect(screen.getByLabelText("Generated SQL")).toHaveValue(
+      "CREATE TABLE users (\n  email TEXT NOT NULL,\n  id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL\n);",
+    );
+  });
+
+  it("opens the export SQL dialog when the Export SQL toolbar button is clicked", async () => {
+    render(<Default />);
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole("button", { name: "Export SQL" }));
+
+    expect(screen.getByRole("dialog", { name: "Export SQL" })).toBeInTheDocument();
   });
 
   it("lists the selected table's relations in the side panel", () => {

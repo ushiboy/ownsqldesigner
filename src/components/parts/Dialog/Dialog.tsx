@@ -8,23 +8,33 @@ const overlay = tv({
 const dialogBox = tv({
   // `static m-0` neutralizes the browser's default centered-absolute dialog
   // styles so the overlay's flexbox does the centering instead.
-  base: "static m-0 w-96 rounded-lg border border-edge bg-surface p-6 text-body shadow-card",
+  base: "static m-0 rounded-lg border border-edge bg-surface p-6 text-body shadow-card",
+  variants: {
+    size: {
+      default: "w-96",
+      large: "w-[640px] max-w-[90vw]",
+    },
+  },
 });
+
+type DialogSize = "default" | "large";
 
 type DialogProps = {
   open: boolean;
   title: string;
   /** Invoked on Escape; wire it to the same handler as the content's cancel button. */
   onClose: () => void;
+  /** Widens the dialog box for content that needs more room, e.g. SQL preview text. */
+  size?: DialogSize;
   children: ReactNode;
 };
 
-export function Dialog({ open, title, onClose, children }: DialogProps) {
+export function Dialog({ open, title, onClose, size = "default", children }: DialogProps) {
   if (!open) {
     return null;
   }
   return (
-    <DialogPanel title={title} onClose={onClose}>
+    <DialogPanel title={title} onClose={onClose} size={size}>
       {children}
     </DialogPanel>
   );
@@ -33,12 +43,13 @@ export function Dialog({ open, title, onClose, children }: DialogProps) {
 type DialogPanelProps = {
   title: string;
   onClose: () => void;
+  size: DialogSize;
   children: ReactNode;
 };
 
 // Mounted only while the dialog is open, so the Escape listener and any
 // state in the content reset each time.
-function DialogPanel({ title, onClose, children }: DialogPanelProps) {
+function DialogPanel({ title, onClose, size, children }: DialogPanelProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
 
   // Initial focus is imperative rather than an autoFocus attribute: content
@@ -67,7 +78,7 @@ function DialogPanel({ title, onClose, children }: DialogPanelProps) {
         open
         aria-modal="true"
         aria-labelledby="dialog-title"
-        className={dialogBox()}
+        className={dialogBox({ size })}
       >
         <h2 id="dialog-title" className="text-[16px]">
           {title}

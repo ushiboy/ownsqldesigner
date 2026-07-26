@@ -5,6 +5,8 @@ import {
   type Column,
   type ColumnKeyMembership,
   type ColumnType,
+  isNameTaken,
+  isValidIdentifierName,
   KEY_TYPES,
   SQLITE_COLUMN_TYPES,
 } from "../../../../domain/schema";
@@ -34,6 +36,8 @@ type ColumnDialogProps = {
   title: string;
   submitLabel: string;
   initialColumn?: Column | null;
+  /** Sibling column names to validate against (REQ-018); caller excludes the column being edited. */
+  existingNames: string[];
   /** Whether this column currently solely owns each single-column key type; seeds the checkboxes. */
   keyMembership: ColumnKeyMembership;
   /** Whether each checkbox is unavailable (a different/composite key of that type already applies). */
@@ -47,16 +51,18 @@ export function ColumnDialog({
   title,
   submitLabel,
   initialColumn,
+  existingNames,
   keyMembership,
   keyMembershipDisabled,
   onSubmit,
   onCancel,
 }: ColumnDialogProps) {
   return (
-    <Dialog open={open} title={title} onClose={onCancel}>
+    <Dialog open={open} title={title} onClose={onCancel} size="large">
       <ColumnForm
         submitLabel={submitLabel}
         initialColumn={initialColumn ?? null}
+        existingNames={existingNames}
         keyMembership={keyMembership}
         keyMembershipDisabled={keyMembershipDisabled}
         onSubmit={onSubmit}
@@ -69,6 +75,7 @@ export function ColumnDialog({
 type ColumnFormProps = {
   submitLabel: string;
   initialColumn: Column | null;
+  existingNames: string[];
   keyMembership: ColumnKeyMembership;
   keyMembershipDisabled: ColumnKeyMembership;
   onSubmit: (fields: ColumnFields, keyMembership: ColumnKeyMembership) => void;
@@ -89,6 +96,7 @@ const BLANK_COLUMN: ColumnFields = {
 function ColumnForm({
   submitLabel,
   initialColumn,
+  existingNames,
   keyMembership: initialKeyMembership,
   keyMembershipDisabled,
   onSubmit,
@@ -97,6 +105,10 @@ function ColumnForm({
   const [fields, setFields] = useState<ColumnFields>(initialColumn ?? BLANK_COLUMN);
   const [keyMembership, setKeyMembership] = useState(initialKeyMembership);
   const trimmedName = fields.name.trim();
+  const isNameEmpty = trimmedName === "";
+  const isNameInvalidShape = !isNameEmpty && !isValidIdentifierName(trimmedName);
+  const isNameDuplicate =
+    !isNameEmpty && !isNameInvalidShape && isNameTaken(trimmedName, existingNames);
   // Live against the checkbox above, not the seeded initial value: checking
   // Primary Key and Auto increment together in one submit is the point.
   const autoIncrementAllowed = keyMembership.PRIMARY_KEY && fields.type === "INTEGER";
@@ -119,88 +131,109 @@ function ColumnForm({
         );
       }}
     >
-      <label className="mt-4 block text-[14px]">
-        Name
-        <input
-          type="text"
-          value={fields.name}
-          onChange={(event) => setField("name", event.target.value)}
-          data-autofocus
-          className={fieldInput()}
-        />
-      </label>
-      <label className="mt-4 block text-[14px]">
-        Type
-        <select
-          value={fields.type}
-          onChange={(event) => setField("type", event.target.value as ColumnType)}
-          className={fieldInput()}
-        >
-          {SQLITE_COLUMN_TYPES.map((columnType) => (
-            <option key={columnType} value={columnType}>
-              {columnType}
-            </option>
-          ))}
-        </select>
-      </label>
-      <label className="mt-4 block text-[14px]">
-        Size
-        <input
-          type="text"
-          value={fields.size}
-          onChange={(event) => setField("size", event.target.value)}
-          className={fieldInput()}
-        />
-      </label>
-      <label className="mt-4 block text-[14px]">
-        Default value
-        <input
-          type="text"
-          value={fields.defaultValue}
-          onChange={(event) => setField("defaultValue", event.target.value)}
-          className={fieldInput()}
-        />
-      </label>
-      <label className="mt-4 flex items-center gap-2 text-[14px]">
-        <input
-          type="checkbox"
-          checked={fields.nullable}
-          onChange={(event) => setField("nullable", event.target.checked)}
-        />
-        Nullable
-      </label>
-      {KEY_TYPES.map((keyType) => (
-        <div key={keyType}>
-          <label className="mt-4 flex items-center gap-2 text-[14px]">
+      <div className="mt-4 grid grid-cols-2 gap-x-6">
+        <div className="flex flex-col gap-3">
+          <div>
+            <label className="block text-[14px]">
+              Name
+              <input
+                type="text"
+                value={fields.name}
+                onChange={(event) => setField("name", event.target.value)}
+                data-autofocus
+                className={fieldInput()}
+              />
+            </label>
+            {isNameInvalidShape && (
+              <p className="mt-1 text-[12px] text-body">
+                Must start with a letter or underscore and contain only letters, digits, and
+                underscores.
+              </p>
+            )}
+            {isNameDuplicate && (
+              <p className="mt-1 text-[12px] text-body">A column with this name already exists.</p>
+            )}
+          </div>
+          <label className="block text-[14px]">
+            Type
+            <select
+              value={fields.type}
+              onChange={(event) => setField("type", event.target.value as ColumnType)}
+              className={fieldInput()}
+            >
+              {SQLITE_COLUMN_TYPES.map((columnType) => (
+                <option key={columnType} value={columnType}>
+                  {columnType}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="block text-[14px]">
+            Size
+            <input
+              type="text"
+              value={fields.size}
+              onChange={(event) => setField("size", event.target.value)}
+              className={fieldInput()}
+            />
+          </label>
+          <label className="block text-[14px]">
+            Default value
+            <input
+              type="text"
+              value={fields.defaultValue}
+              onChange={(event) => setField("defaultValue", event.target.value)}
+              className={fieldInput()}
+            />
+          </label>
+          <label className="flex items-center gap-2 text-[14px]">
             <input
               type="checkbox"
-              checked={keyMembership[keyType]}
-              disabled={keyMembershipDisabled[keyType]}
-              onChange={(event) =>
-                setKeyMembership((prev) => ({ ...prev, [keyType]: event.target.checked }))
-              }
+              checked={fields.nullable}
+              onChange={(event) => setField("nullable", event.target.checked)}
             />
-            {KEY_MEMBERSHIP_CHECKBOX_LABELS[keyType]}
+            Nullable
           </label>
-          {keyMembershipDisabled[keyType] && (
-            <p className="mt-1 text-[12px] text-body">{KEY_MEMBERSHIP_DISABLED_HINT[keyType]}</p>
-          )}
         </div>
-      ))}
-      <label className="mt-4 flex items-center gap-2 text-[14px]">
-        <input
-          type="checkbox"
-          checked={fields.autoIncrement}
-          disabled={!autoIncrementAllowed}
-          onChange={(event) => setField("autoIncrement", event.target.checked)}
-        />
-        Auto increment
-      </label>
-      {!autoIncrementAllowed && (
-        <p className="mt-1 text-[12px] text-body">
-          Only available when this is the table's sole PRIMARY KEY column of type INTEGER.
-        </p>
-      )}
+        <div className="flex flex-col gap-3">
+          {KEY_TYPES.map((keyType) => (
+            <div key={keyType}>
+              <label className="flex items-center gap-2 text-[14px]">
+                <input
+                  type="checkbox"
+                  checked={keyMembership[keyType]}
+                  disabled={keyMembershipDisabled[keyType]}
+                  onChange={(event) =>
+                    setKeyMembership((prev) => ({ ...prev, [keyType]: event.target.checked }))
+                  }
+                />
+                {KEY_MEMBERSHIP_CHECKBOX_LABELS[keyType]}
+              </label>
+              {keyMembershipDisabled[keyType] && (
+                <p className="mt-1 text-[12px] text-body">
+                  {KEY_MEMBERSHIP_DISABLED_HINT[keyType]}
+                </p>
+              )}
+            </div>
+          ))}
+          <div>
+            <label className="flex items-center gap-2 text-[14px]">
+              <input
+                type="checkbox"
+                checked={fields.autoIncrement}
+                disabled={!autoIncrementAllowed}
+                onChange={(event) => setField("autoIncrement", event.target.checked)}
+              />
+              Auto increment
+            </label>
+            {!autoIncrementAllowed && (
+              <p className="mt-1 text-[12px] text-body">
+                Only available when this is the table's sole PRIMARY KEY column of type INTEGER.
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
       <label className="mt-4 block text-[14px]">
         Comment
         <textarea
@@ -220,7 +253,7 @@ function ColumnForm({
         </button>
         <button
           type="submit"
-          disabled={trimmedName === ""}
+          disabled={isNameEmpty || isNameInvalidShape || isNameDuplicate}
           className={dialogActionButton({ variant: "primary" })}
         >
           {submitLabel}

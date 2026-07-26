@@ -5,8 +5,14 @@ import { composeStories } from "@storybook/react-vite";
 import * as stories from "./SidePanel.stories";
 import { SidePanel } from "./SidePanel";
 
-const { Default, TableSelected, TableWithColumns, TableWithKeys, TableWithRelations } =
-  composeStories(stories);
+const {
+  Default,
+  TableSelected,
+  TableWithColumns,
+  TableWithKeys,
+  TableWithRelations,
+  TableSelectedWithSiblings,
+} = composeStories(stories);
 
 const closedProps = {
   isOpen: false,
@@ -14,6 +20,7 @@ const closedProps = {
   tableCount: 0,
   createdDate: "2026-07-01",
   selectedTable: null,
+  existingTableNames: [],
   relations: [],
   onUpdateTableName: () => {},
   onUpdateTableComment: () => {},
@@ -101,6 +108,47 @@ describe("SidePanel", () => {
 
     const input = screen.getByLabelText("Name");
     await userEvent.clear(input);
+    await userEvent.tab();
+
+    expect(input).toHaveValue("users");
+  });
+
+  it("does not commit a rename to a name already used by a sibling table, and shows a hint", async () => {
+    const onUpdateTableName = fn();
+    render(<TableSelectedWithSiblings onUpdateTableName={onUpdateTableName} />);
+
+    const input = screen.getByLabelText("Name");
+    await userEvent.clear(input);
+    await userEvent.type(input, "posts");
+
+    // Each intermediate keystroke ("p", "po", ...) is a valid, unique name and
+    // does commit; only the final, fully-typed duplicate "posts" is rejected.
+    expect(onUpdateTableName).not.toHaveBeenLastCalledWith(expect.anything(), "posts");
+    expect(screen.getByText("A table with this name already exists.")).toBeInTheDocument();
+  });
+
+  it("does not commit a rename to an invalid identifier shape, and shows a hint", async () => {
+    const onUpdateTableName = fn();
+    render(<TableSelectedWithSiblings onUpdateTableName={onUpdateTableName} />);
+
+    const input = screen.getByLabelText("Name");
+    await userEvent.clear(input);
+    await userEvent.type(input, "1abc");
+
+    expect(onUpdateTableName).not.toHaveBeenCalled();
+    expect(
+      screen.getByText(
+        "Must start with a letter or underscore and contain only letters, digits, and underscores.",
+      ),
+    ).toBeInTheDocument();
+  });
+
+  it("reverts the name field to the last committed value on blur while invalid", async () => {
+    render(<TableSelectedWithSiblings />);
+
+    const input = screen.getByLabelText("Name");
+    await userEvent.clear(input);
+    await userEvent.type(input, "posts");
     await userEvent.tab();
 
     expect(input).toHaveValue("users");

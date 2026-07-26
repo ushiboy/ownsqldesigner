@@ -66,6 +66,7 @@ const meta = {
     tableCount: 0,
     createdDate: "2026-07-01",
     selectedTable: null,
+    existingTableNames: [],
     relations: [],
     onUpdateTableName: fn(),
     onUpdateTableComment: fn(),
@@ -118,5 +119,13 @@ export const TableWithRelations: Story = {
     tableCount: 1,
     selectedTable: tableWithKeys,
     relations,
+  },
+};
+
+export const TableSelectedWithSiblings: Story = {
+  args: {
+    tableCount: 2,
+    selectedTable: table,
+    existingTableNames: ["posts"],
   },
 };

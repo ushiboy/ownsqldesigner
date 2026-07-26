@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { LuPencil, LuPlus, LuTrash2 } from "react-icons/lu";
 import { tv } from "tailwind-variants";
-import type { Table } from "../../../../domain/schema";
+import { isNameTaken, isValidIdentifierName, type Table } from "../../../../domain/schema";
 import { describeKey } from "./describeKey";
 
 const panel = tv({
@@ -37,6 +37,8 @@ type SidePanelProps = {
   /** Pre-formatted display date (e.g. "2026-07-01"); "—" while nothing is loaded. */
   createdDate: string;
   selectedTable: Table | null;
+  /** Sibling table names to validate a rename against (REQ-018); excludes the selected table. */
+  existingTableNames: string[];
   relations: RelationSummary[];
   onUpdateTableName: (tableId: string, name: string) => void;
   onUpdateTableComment: (tableId: string, comment: string) => void;
@@ -56,6 +58,7 @@ export function SidePanel({
   tableCount,
   createdDate,
   selectedTable,
+  existingTableNames,
   relations,
   onUpdateTableName,
   onUpdateTableComment,
@@ -87,6 +90,7 @@ export function SidePanel({
           <TableProperties
             key={selectedTable.id}
             table={selectedTable}
+            existingTableNames={existingTableNames}
             relations={relations}
             onUpdateTableName={onUpdateTableName}
             onUpdateTableComment={onUpdateTableComment}
@@ -133,6 +137,7 @@ const sectionActionButton = tv({
 
 type TablePropertiesProps = {
   table: Table;
+  existingTableNames: string[];
   relations: RelationSummary[];
   onUpdateTableName: (tableId: string, name: string) => void;
   onUpdateTableComment: (tableId: string, comment: string) => void;
@@ -148,6 +153,7 @@ type TablePropertiesProps = {
 
 function TableProperties({
   table,
+  existingTableNames,
   relations,
   onUpdateTableName,
   onUpdateTableComment,
@@ -161,6 +167,12 @@ function TableProperties({
   onDeleteRelation,
 }: TablePropertiesProps) {
   const [name, setName] = useState(table.name);
+  const trimmedName = name.trim();
+  const isNameEmpty = trimmedName === "";
+  const isNameInvalidShape = !isNameEmpty && !isValidIdentifierName(trimmedName);
+  const isNameDuplicate =
+    !isNameEmpty && !isNameInvalidShape && isNameTaken(trimmedName, existingTableNames);
+  const isNameInvalid = isNameEmpty || isNameInvalidShape || isNameDuplicate;
 
   return (
     <>
@@ -185,18 +197,27 @@ function TableProperties({
               const value = event.target.value;
               setName(value);
               const trimmed = value.trim();
-              if (trimmed !== "") {
+              if (canCommitTableName(trimmed, existingTableNames)) {
                 onUpdateTableName(table.id, trimmed);
               }
             }}
             onBlur={() => {
-              if (name.trim() === "") {
+              if (isNameInvalid) {
                 setName(table.name);
               }
             }}
             className={fieldInput()}
           />
         </label>
+        {isNameInvalidShape && (
+          <p className="text-[12px] text-body">
+            Must start with a letter or underscore and contain only letters, digits, and
+            underscores.
+          </p>
+        )}
+        {isNameDuplicate && (
+          <p className="text-[12px] text-body">A table with this name already exists.</p>
+        )}
         <label className="block">
           Comment
           <textarea
@@ -275,6 +296,11 @@ function TableProperties({
       </div>
     </>
   );
+}
+
+/** Whether `name` (the value being typed, not yet committed to state) can be saved as the table's new name. */
+function canCommitTableName(name: string, existingNames: string[]): boolean {
+  return name !== "" && isValidIdentifierName(name) && !isNameTaken(name, existingNames);
 }
 
 type KeyRowProps = {

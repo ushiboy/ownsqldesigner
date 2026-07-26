@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import type {
   Column,
   ColumnKeyMembership,
@@ -8,10 +8,12 @@ import type {
   SchemaSummary,
   Table,
 } from "../../domain/schema";
+import { generateSqliteDdl } from "../../domain/sqlite/generateDdl";
 import { type DialogKind, useActiveDialog } from "./ActiveDialogContext";
 import { Canvas } from "./components/Canvas";
 import { ColumnDialog } from "./components/ColumnDialog";
 import { ConfirmDialog } from "./components/ConfirmDialog";
+import { ExportSqlDialog } from "./components/ExportSqlDialog";
 import { KeyDialog } from "./components/KeyDialog";
 import { NotificationBar } from "./components/NotificationBar";
 import { SchemaNameDialog } from "./components/SchemaNameDialog";
@@ -25,6 +27,7 @@ import { TableNameDialog } from "./components/TableNameDialog";
 import { Toolbar } from "./components/Toolbar";
 
 const NO_COLUMNS: Column[] = [];
+const NO_NAMES: string[] = [];
 
 type MainScreenViewProps = {
   schemaName: string;
@@ -118,6 +121,23 @@ export function MainScreenView({
   onRemoveForeignKey,
 }: MainScreenViewProps) {
   const { activeDialog, openDialog, closeDialog } = useActiveDialog();
+  const ddl = useMemo(() => generateSqliteDdl(tables), [tables]);
+  const tableNames = useMemo(() => tables.map((table) => table.name), [tables]);
+  const siblingTableNames = useMemo(
+    () => tables.filter((table) => table.id !== selectedTableId).map((table) => table.name),
+    [tables, selectedTableId],
+  );
+  const columnNames = useMemo(
+    () => selectedTable?.columns.map((column) => column.name) ?? NO_NAMES,
+    [selectedTable],
+  );
+  const siblingColumnNames = useMemo(
+    () =>
+      selectedTable?.columns
+        .filter((column) => column.id !== selectedColumn?.id)
+        .map((column) => column.name) ?? NO_NAMES,
+    [selectedTable, selectedColumn],
+  );
 
   // Delete/Backspace opens the same confirm dialog as the side panel's
   // delete button, rather than deleting immediately — every destructive
@@ -171,6 +191,7 @@ export function MainScreenView({
           tableCount={tableCount}
           createdDate={createdDate}
           selectedTable={selectedTable}
+          existingTableNames={siblingTableNames}
           relations={relations}
           onUpdateTableName={onUpdateTableName}
           onUpdateTableComment={onUpdateTableComment}
@@ -241,6 +262,7 @@ export function MainScreenView({
         open={activeDialog === "createTable"}
         title="New Table"
         submitLabel="Create"
+        existingNames={tableNames}
         onSubmit={(name) => {
           onCreateTable(name);
           closeDialog();
@@ -264,6 +286,7 @@ export function MainScreenView({
         open={activeDialog === "addColumn"}
         title="Add Column"
         submitLabel="Add"
+        existingNames={columnNames}
         keyMembership={columnKeyMembership}
         keyMembershipDisabled={columnKeyMembershipDisabled}
         onSubmit={(fields, keyMembership) => {
@@ -283,6 +306,7 @@ export function MainScreenView({
         title="Edit Column"
         submitLabel="Save"
         initialColumn={selectedColumn}
+        existingNames={siblingColumnNames}
         keyMembership={columnKeyMembership}
         keyMembershipDisabled={columnKeyMembershipDisabled}
         onSubmit={(fields, keyMembership) => {
@@ -372,6 +396,12 @@ export function MainScreenView({
           onSelectRelation(null);
           closeDialog();
         }}
+      />
+      <ExportSqlDialog
+        open={activeDialog === "exportSql"}
+        ddl={ddl}
+        schemaName={schemaName}
+        onClose={closeDialog}
       />
     </div>
   );

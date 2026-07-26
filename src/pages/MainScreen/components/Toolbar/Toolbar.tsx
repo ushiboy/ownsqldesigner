@@ -80,7 +80,7 @@ export function Toolbar({
           <LuPlus aria-hidden="true" className="size-4" />
           Add Table
         </button>
-        <button type="button" className={toolButton()}>
+        <button type="button" onClick={() => openDialog("exportSql")} className={toolButton()}>
           Export SQL
         </button>
         <button

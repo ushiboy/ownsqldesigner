@@ -356,6 +356,17 @@ export const TableWithRelationSelected: Story = {
   },
 };
 
+export const ExportSqlDialogOpen: Story = {
+  args: {
+    isSidePanelOpen: true,
+    tables,
+    tableCount: tables.length,
+  },
+  parameters: {
+    dialog: "exportSql",
+  },
+};
+
 export const DeleteRelationDialogOpen: Story = {
   args: {
     isSidePanelOpen: true,

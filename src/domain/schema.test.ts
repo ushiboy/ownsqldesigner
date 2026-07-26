@@ -7,7 +7,11 @@ import {
   getColumnKeyMembership,
   getColumnKeyMembershipDisabled,
   getReferenceableColumns,
+  isColumnNameAvailable,
+  isNameTaken,
   isReferenceableColumn,
+  isTableNameAvailable,
+  isValidIdentifierName,
   moveTable,
   removeColumn,
   removeForeignKey,
@@ -163,6 +167,28 @@ describe("createTable", () => {
 
     expect(schemaSchema.safeParse(updated).success).toBe(true);
   });
+
+  it("is a no-op when the name is not a valid identifier", () => {
+    const updated = createTable(original, "1posts", {
+      now: new Date("2026-07-19T09:00:00.000Z"),
+    });
+
+    expect(updated).toBe(original);
+  });
+
+  it("is a no-op when the name is already used by another table, case-insensitively", () => {
+    const withFirst = createTable(original, "posts", {
+      id: "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12",
+      now: new Date("2026-07-19T09:00:00.000Z"),
+    });
+
+    const updated = createTable(withFirst, "Posts", {
+      id: "e5c3fb8c-9c97-4f5e-d2cf-5f8f3d8c7b23",
+      now: new Date("2026-07-20T09:00:00.000Z"),
+    });
+
+    expect(updated).toBe(withFirst);
+  });
 });
 
 describe("renameTable", () => {
@@ -229,6 +255,36 @@ describe("renameTable", () => {
     });
 
     expect(original.tables[0]?.name).toBe("posts");
+  });
+
+  it("is a no-op when the name is not a valid identifier", () => {
+    const renamed = renameTable(original, "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12", "1articles", {
+      now: new Date("2026-07-19T09:00:00.000Z"),
+    });
+
+    expect(renamed).toBe(original);
+  });
+
+  it("is a no-op when the name is already used by another table, case-insensitively", () => {
+    const withSecond = createTable(original, "comments", {
+      id: "e5c3fb8c-9c97-4f5e-d2cf-5f8f3d8c7b23",
+      now: new Date("2026-07-18T09:00:00.000Z"),
+    });
+
+    const renamed = renameTable(withSecond, "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12", "Comments", {
+      now: new Date("2026-07-19T09:00:00.000Z"),
+    });
+
+    expect(renamed).toBe(withSecond);
+  });
+
+  it("allows renaming a table to its own current name", () => {
+    const renamed = renameTable(original, "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12", "posts", {
+      now: new Date("2026-07-19T09:00:00.000Z"),
+    });
+
+    expect(renamed.tables[0]?.name).toBe("posts");
+    expect(renamed.updatedAt).toEqual(new Date("2026-07-19T09:00:00.000Z"));
   });
 });
 
@@ -497,6 +553,33 @@ describe("addColumn", () => {
 
     expect(schemaSchema.safeParse(updated).success).toBe(true);
   });
+
+  it("is a no-op when the name is not a valid identifier", () => {
+    const updated = addColumn(
+      original,
+      "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12",
+      { ...columnFields, name: "1title" },
+      { now: new Date("2026-07-19T09:00:00.000Z") },
+    );
+
+    expect(updated).toBe(original);
+  });
+
+  it("is a no-op when the name is already used by another column, case-insensitively", () => {
+    const withFirst = addColumn(original, "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12", columnFields, {
+      id: "f1a2b3c4-5d6e-4f7a-8b9c-0d1e2f3a4b5c",
+      now: new Date("2026-07-19T09:00:00.000Z"),
+    });
+
+    const updated = addColumn(
+      withFirst,
+      "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12",
+      { ...columnFields, name: "Title" },
+      { id: "a2b3c4d5-6e7f-4a8b-9c0d-1e2f3a4b5c6d", now: new Date("2026-07-20T09:00:00.000Z") },
+    );
+
+    expect(updated).toBe(withFirst);
+  });
 });
 
 describe("updateColumn", () => {
@@ -535,10 +618,15 @@ describe("updateColumn", () => {
   });
 
   it("leaves other columns untouched", () => {
-    const withSecond = addColumn(original, "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12", columnFields, {
-      id: "a2b3c4d5-6e7f-4a8b-9c0d-1e2f3a4b5c6d",
-      now: new Date("2026-07-18T09:00:00.000Z"),
-    });
+    const withSecond = addColumn(
+      original,
+      "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12",
+      { ...columnFields, name: "subtitle" },
+      {
+        id: "a2b3c4d5-6e7f-4a8b-9c0d-1e2f3a4b5c6d",
+        now: new Date("2026-07-18T09:00:00.000Z"),
+      },
+    );
 
     const updated = updateColumn(
       withSecond,
@@ -551,6 +639,7 @@ describe("updateColumn", () => {
     expect(updated.tables[0]?.columns[1]).toEqual({
       id: "a2b3c4d5-6e7f-4a8b-9c0d-1e2f3a4b5c6d",
       ...columnFields,
+      name: "subtitle",
     });
   });
 
@@ -589,6 +678,53 @@ describe("updateColumn", () => {
 
     expect(original.tables[0]?.columns[0]?.name).toBe("title");
   });
+
+  it("is a no-op when the name is not a valid identifier", () => {
+    const updated = updateColumn(
+      original,
+      "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12",
+      "f1a2b3c4-5d6e-4f7a-8b9c-0d1e2f3a4b5c",
+      { ...columnFields, name: "1heading" },
+      { now: new Date("2026-07-19T09:00:00.000Z") },
+    );
+
+    expect(updated).toBe(original);
+  });
+
+  it("is a no-op when the name is already used by another column, case-insensitively", () => {
+    const withSecond = addColumn(
+      original,
+      "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12",
+      { ...columnFields, name: "subtitle" },
+      { id: "a2b3c4d5-6e7f-4a8b-9c0d-1e2f3a4b5c6d", now: new Date("2026-07-18T09:00:00.000Z") },
+    );
+
+    const updated = updateColumn(
+      withSecond,
+      "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12",
+      "f1a2b3c4-5d6e-4f7a-8b9c-0d1e2f3a4b5c",
+      { ...columnFields, name: "Subtitle" },
+      { now: new Date("2026-07-19T09:00:00.000Z") },
+    );
+
+    expect(updated).toBe(withSecond);
+  });
+
+  it("allows renaming a column to its own current name", () => {
+    const updated = updateColumn(
+      original,
+      "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12",
+      "f1a2b3c4-5d6e-4f7a-8b9c-0d1e2f3a4b5c",
+      { ...columnFields, comment: "Post title" },
+      { now: new Date("2026-07-19T09:00:00.000Z") },
+    );
+
+    expect(updated.tables[0]?.columns[0]).toEqual({
+      id: "f1a2b3c4-5d6e-4f7a-8b9c-0d1e2f3a4b5c",
+      ...columnFields,
+      comment: "Post title",
+    });
+  });
 });
 
 describe("removeColumn", () => {
@@ -619,10 +755,15 @@ describe("removeColumn", () => {
   });
 
   it("leaves other columns untouched", () => {
-    const withSecond = addColumn(original, "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12", columnFields, {
-      id: "a2b3c4d5-6e7f-4a8b-9c0d-1e2f3a4b5c6d",
-      now: new Date("2026-07-18T09:00:00.000Z"),
-    });
+    const withSecond = addColumn(
+      original,
+      "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12",
+      { ...columnFields, name: "subtitle" },
+      {
+        id: "a2b3c4d5-6e7f-4a8b-9c0d-1e2f3a4b5c6d",
+        now: new Date("2026-07-18T09:00:00.000Z"),
+      },
+    );
 
     const updated = removeColumn(
       withSecond,
@@ -632,7 +773,7 @@ describe("removeColumn", () => {
     );
 
     expect(updated.tables[0]?.columns).toEqual([
-      { id: "a2b3c4d5-6e7f-4a8b-9c0d-1e2f3a4b5c6d", ...columnFields },
+      { id: "a2b3c4d5-6e7f-4a8b-9c0d-1e2f3a4b5c6d", ...columnFields, name: "subtitle" },
     ]);
   });
 
@@ -1417,6 +1558,82 @@ describe("isReferenceableColumn / getReferenceableColumns", () => {
   it("is false for a column with no PRIMARY KEY or UNIQUE membership", () => {
     const users = getTable(schema, USERS_TABLE_ID);
     expect(isReferenceableColumn(users, USERS_EMAIL_COLUMN_ID)).toBe(false);
+  });
+});
+
+describe("isValidIdentifierName", () => {
+  it("accepts a name starting with a letter or underscore, made only of letters/digits/underscores", () => {
+    expect(isValidIdentifierName("users")).toBe(true);
+    expect(isValidIdentifierName("_users")).toBe(true);
+    expect(isValidIdentifierName("user_2")).toBe(true);
+  });
+
+  it("rejects a name starting with a digit", () => {
+    expect(isValidIdentifierName("2users")).toBe(false);
+  });
+
+  it("rejects a name containing a space or symbol", () => {
+    expect(isValidIdentifierName("user name")).toBe(false);
+    expect(isValidIdentifierName("user-name")).toBe(false);
+  });
+
+  it("rejects an empty name", () => {
+    expect(isValidIdentifierName("")).toBe(false);
+  });
+});
+
+describe("isNameTaken", () => {
+  it("is true for an exact match", () => {
+    expect(isNameTaken("users", ["posts", "users"])).toBe(true);
+  });
+
+  it("is true for a case-insensitive match", () => {
+    expect(isNameTaken("Users", ["posts", "users"])).toBe(true);
+  });
+
+  it("is false when no existing name matches", () => {
+    expect(isNameTaken("comments", ["posts", "users"])).toBe(false);
+  });
+});
+
+describe("isTableNameAvailable", () => {
+  const schema = buildTwoTableSchema();
+
+  it("is true for a valid, unused name", () => {
+    expect(isTableNameAvailable(schema, "comments")).toBe(true);
+  });
+
+  it("is false for a name already used by another table, case-insensitively", () => {
+    expect(isTableNameAvailable(schema, "Posts")).toBe(false);
+  });
+
+  it("is false for an invalid identifier shape", () => {
+    expect(isTableNameAvailable(schema, "1comments")).toBe(false);
+  });
+
+  it("is true for a table's own current name when excluded", () => {
+    expect(isTableNameAvailable(schema, "posts", POSTS_TABLE_ID)).toBe(true);
+  });
+});
+
+describe("isColumnNameAvailable", () => {
+  const schema = buildTwoTableSchema();
+  const users = getTable(schema, USERS_TABLE_ID);
+
+  it("is true for a valid, unused name", () => {
+    expect(isColumnNameAvailable(users, "created_at")).toBe(true);
+  });
+
+  it("is false for a name already used by another column, case-insensitively", () => {
+    expect(isColumnNameAvailable(users, "Email")).toBe(false);
+  });
+
+  it("is false for an invalid identifier shape", () => {
+    expect(isColumnNameAvailable(users, "1created_at")).toBe(false);
+  });
+
+  it("is true for a column's own current name when excluded", () => {
+    expect(isColumnNameAvailable(users, "email", USERS_EMAIL_COLUMN_ID)).toBe(true);
   });
 });
 

@@ -5,13 +5,23 @@ import { composeStories } from "@storybook/react-vite";
 import * as stories from "./Dialog.stories";
 import { Dialog } from "./Dialog";
 
-const { Open } = composeStories(stories);
+const { Open, Large } = composeStories(stories);
 
 describe("Dialog", () => {
   it("shows the title and the content", () => {
     render(<Open />);
     expect(screen.getByRole("dialog", { name: "Dialog Title" })).toBeInTheDocument();
     expect(screen.getByText("Dialog content goes here.")).toBeInTheDocument();
+  });
+
+  it("uses the default width by default", () => {
+    render(<Open />);
+    expect(screen.getByRole("dialog", { name: "Dialog Title" })).toHaveClass("w-96");
+  });
+
+  it("uses a wider box for the large size", () => {
+    render(<Large />);
+    expect(screen.getByRole("dialog", { name: "Dialog Title" })).toHaveClass("w-[640px]");
   });
 
   it("moves the initial focus to the content's data-autofocus element", () => {

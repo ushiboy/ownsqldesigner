@@ -6,6 +6,8 @@ const GRID_COLUMNS = 4;
 const GRID_CELL_WIDTH = 260;
 const GRID_CELL_HEIGHT = 160;
 
+const IDENTIFIER_PATTERN = /^[A-Za-z_][A-Za-z0-9_]*$/;
+
 const positionSchema = z.object({ x: z.number(), y: z.number() });
 
 export type Position = z.infer<typeof positionSchema>;
@@ -117,6 +119,9 @@ export function createTable(
   name: string,
   options: CreateTableOptions = {},
 ): Schema {
+  if (!isTableNameAvailable(schema, name)) {
+    return schema;
+  }
   const { id = crypto.randomUUID(), now = new Date() } = options;
   return {
     ...schema,
@@ -147,6 +152,9 @@ export function renameTable(
   options: RenameTableOptions = {},
 ): Schema {
   if (!schema.tables.some((table) => table.id === tableId)) {
+    return schema;
+  }
+  if (!isTableNameAvailable(schema, name, tableId)) {
     return schema;
   }
   const { now = new Date() } = options;
@@ -231,7 +239,8 @@ export function addColumn(
   fields: Omit<Column, "id">,
   options: AddColumnOptions = {},
 ): Schema {
-  if (!schema.tables.some((table) => table.id === tableId)) {
+  const targetTable = schema.tables.find((table) => table.id === tableId);
+  if (!canAddColumn(targetTable, fields)) {
     return schema;
   }
   const { id = crypto.randomUUID(), now = new Date() } = options;
@@ -256,7 +265,7 @@ export function updateColumn(
   options: UpdateColumnOptions = {},
 ): Schema {
   const targetTable = schema.tables.find((table) => table.id === tableId);
-  if (!hasColumn(targetTable, columnId)) {
+  if (!canUpdateColumn(targetTable, columnId, fields)) {
     return schema;
   }
   const { now = new Date() } = options;
@@ -531,8 +540,61 @@ export function getReferenceableColumns(table: Table): Column[] {
   return table.columns.filter((column) => isReferenceableColumn(table, column.id));
 }
 
-function hasColumn(table: Table | undefined, columnId: string): boolean {
+/** Whether `name` matches the unquoted-SQL-identifier shape required by REQ-019. */
+export function isValidIdentifierName(name: string): boolean {
+  return IDENTIFIER_PATTERN.test(name);
+}
+
+/** Case-insensitive membership check, matching SQLite's own identifier comparison. */
+export function isNameTaken(name: string, existingNames: string[]): boolean {
+  const normalized = name.toLowerCase();
+  return existingNames.some((existing) => existing.toLowerCase() === normalized);
+}
+
+/** Whether `name` is a valid identifier not already used by another table in `schema` (REQ-018/019). */
+export function isTableNameAvailable(
+  schema: Schema,
+  name: string,
+  excludeTableId?: string,
+): boolean {
+  return (
+    isValidIdentifierName(name) &&
+    !isNameTaken(
+      name,
+      schema.tables.filter((table) => table.id !== excludeTableId).map((table) => table.name),
+    )
+  );
+}
+
+/** Whether `name` is a valid identifier not already used by another column on `table` (REQ-018/019). */
+export function isColumnNameAvailable(
+  table: Table,
+  name: string,
+  excludeColumnId?: string,
+): boolean {
+  return (
+    isValidIdentifierName(name) &&
+    !isNameTaken(
+      name,
+      table.columns.filter((column) => column.id !== excludeColumnId).map((column) => column.name),
+    )
+  );
+}
+
+function hasColumn(table: Table | undefined, columnId: string): table is Table {
   return table !== undefined && table.columns.some((column) => column.id === columnId);
+}
+
+function canAddColumn(table: Table | undefined, fields: Omit<Column, "id">): boolean {
+  return table !== undefined && isColumnNameAvailable(table, fields.name);
+}
+
+function canUpdateColumn(
+  table: Table | undefined,
+  columnId: string,
+  fields: Omit<Column, "id">,
+): boolean {
+  return hasColumn(table, columnId) && isColumnNameAvailable(table, fields.name, columnId);
 }
 
 function hasKey(table: Table | undefined, keyId: string): boolean {

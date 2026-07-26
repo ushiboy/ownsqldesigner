@@ -12,7 +12,8 @@ export type DialogKind =
   | "addKey"
   | "editKey"
   | "deleteKey"
-  | "deleteRelation";
+  | "deleteRelation"
+  | "exportSql";
 
 type ActiveDialogContextValue = {
   /** null while no dialog is open; overlapping dialogs are unrepresentable. */
