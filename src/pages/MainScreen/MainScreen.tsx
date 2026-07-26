@@ -14,7 +14,8 @@ import { ActiveDialogProvider, type DialogKind } from "./ActiveDialogContext";
 import { describeForeignKey, type RelationSummary } from "./components/SidePanel";
 import { MainScreenView } from "./MainScreenView";
 import { NotificationProvider } from "./NotificationContext";
-import { SchemaWorkspaceProvider, useCurrentSchema, useTables } from "./SchemaWorkspaceContext";
+import { SchemaWorkspaceProvider, useTables } from "./SchemaWorkspaceContext";
+import { type InitialSelection, SelectionProvider, useSelection } from "./SelectionContext";
 
 const defaultRepository = createLocalStorageSchemaRepository();
 const NO_RELATIONS: RelationSummary[] = [];
@@ -26,13 +27,6 @@ export type MainScreenSeed = {
   initialDialog?: DialogKind | null;
   initialNotification?: string | null;
   initialSidePanelOpen?: boolean;
-};
-
-type InitialSelection = {
-  tableId?: string;
-  columnId?: string;
-  keyId?: string;
-  relationId?: string;
 };
 
 type MainScreenProps = MainScreenSeed & {
@@ -52,10 +46,9 @@ function MainScreen({
     <NotificationProvider initialNotification={initialNotification}>
       <ActiveDialogProvider initialDialog={initialDialog}>
         <SchemaWorkspaceProvider repository={repository} initialSchema={initialSchema}>
-          <MainScreenContent
-            initialSelection={initialSelection}
-            initialSidePanelOpen={initialSidePanelOpen}
-          />
+          <SelectionProvider initialSelection={initialSelection}>
+            <MainScreenContent initialSidePanelOpen={initialSidePanelOpen} />
+          </SelectionProvider>
         </SchemaWorkspaceProvider>
       </ActiveDialogProvider>
     </NotificationProvider>
@@ -65,38 +58,12 @@ function MainScreen({
 export default MainScreen;
 
 type MainScreenContentProps = {
-  initialSelection?: InitialSelection;
   initialSidePanelOpen?: boolean;
 };
 
-function MainScreenContent({ initialSelection, initialSidePanelOpen }: MainScreenContentProps) {
-  const currentSchema = useCurrentSchema();
+function MainScreenContent({ initialSidePanelOpen }: MainScreenContentProps) {
   const [isSidePanelOpen, setIsSidePanelOpen] = useState(initialSidePanelOpen ?? true);
-  const [selectedTableId, setSelectedTableId] = useState<string | null>(
-    initialSelection?.tableId ?? null,
-  );
-  const [selectedColumnId, setSelectedColumnId] = useState<string | null>(
-    initialSelection?.columnId ?? null,
-  );
-  const [selectedKeyId, setSelectedKeyId] = useState<string | null>(
-    initialSelection?.keyId ?? null,
-  );
-  const [selectedRelationId, setSelectedRelationId] = useState<string | null>(
-    initialSelection?.relationId ?? null,
-  );
-  // Seeded from the workspace rather than starting undefined, so a seeded
-  // schema does not read as a schema switch and wipe the seeded selection
-  // on the first render.
-  const [selectedSchemaId, setSelectedSchemaId] = useState<string | null | undefined>(
-    () => currentSchema?.id,
-  );
-  if (currentSchema?.id !== selectedSchemaId) {
-    setSelectedSchemaId(currentSchema?.id ?? null);
-    setSelectedTableId(null);
-    setSelectedColumnId(null);
-    setSelectedKeyId(null);
-    setSelectedRelationId(null);
-  }
+  const { selectedTableId, selectedColumnId, selectedKeyId, selectedRelationId } = useSelection();
 
   const tables = useTables();
   const selectedTable = tables.find((table) => table.id === selectedTableId) ?? null;
@@ -133,11 +100,9 @@ function MainScreenContent({ initialSelection, initialSidePanelOpen }: MainScree
 
   return (
     <MainScreenView
-      selectedTableId={selectedTableId}
       selectedTable={selectedTable}
       selectedColumn={selectedColumn}
       selectedKey={selectedKey}
-      selectedRelationId={selectedRelationId}
       selectedForeignKey={selectedRelation?.foreignKey ?? null}
       selectedRelationOwnerTable={selectedRelation?.table ?? null}
       relations={relations}
@@ -146,14 +111,6 @@ function MainScreenContent({ initialSelection, initialSidePanelOpen }: MainScree
       primaryKeyDisabled={keyDialogPrimaryKeyDisabled}
       isSidePanelOpen={isSidePanelOpen}
       onToggleSidePanel={() => setIsSidePanelOpen((prev) => !prev)}
-      onSelectTable={(id) => {
-        setSelectedTableId(id);
-        setSelectedColumnId(null);
-        setSelectedKeyId(null);
-      }}
-      onSelectColumn={setSelectedColumnId}
-      onSelectKey={setSelectedKeyId}
-      onSelectRelation={setSelectedRelationId}
     />
   );
 }

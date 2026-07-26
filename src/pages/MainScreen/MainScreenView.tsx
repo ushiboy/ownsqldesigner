@@ -24,6 +24,7 @@ import {
   useSchemaActions,
   useTables,
 } from "./SchemaWorkspaceContext";
+import { useSelection } from "./SelectionContext";
 import { useDeleteKeyShortcut } from "./hooks/useDeleteKeyShortcut";
 
 const NO_COLUMNS: Column[] = [];
@@ -31,11 +32,9 @@ const NO_NAMES: string[] = [];
 const NO_VALUE = "—";
 
 type MainScreenViewProps = {
-  selectedTableId: string | null;
   selectedTable: Table | null;
   selectedColumn: Column | null;
   selectedKey: Key | null;
-  selectedRelationId: string | null;
   selectedForeignKey: ForeignKey | null;
   selectedRelationOwnerTable: Table | null;
   relations: RelationSummary[];
@@ -44,18 +43,12 @@ type MainScreenViewProps = {
   primaryKeyDisabled: boolean;
   isSidePanelOpen: boolean;
   onToggleSidePanel: () => void;
-  onSelectTable: (id: string | null) => void;
-  onSelectColumn: (id: string | null) => void;
-  onSelectKey: (id: string | null) => void;
-  onSelectRelation: (id: string | null) => void;
 };
 
 export function MainScreenView({
-  selectedTableId,
   selectedTable,
   selectedColumn,
   selectedKey,
-  selectedRelationId,
   selectedForeignKey,
   selectedRelationOwnerTable,
   relations,
@@ -64,15 +57,19 @@ export function MainScreenView({
   primaryKeyDisabled,
   isSidePanelOpen,
   onToggleSidePanel,
-  onSelectTable,
-  onSelectColumn,
-  onSelectKey,
-  onSelectRelation,
 }: MainScreenViewProps) {
   const { activeDialog, openDialog, closeDialog } = useActiveDialog();
   const currentSchema = useCurrentSchema();
   const savedSchemas = useSavedSchemas();
   const tables = useTables();
+  const {
+    selectedTableId,
+    selectedRelationId,
+    selectTable,
+    selectColumn,
+    selectKey,
+    selectRelation,
+  } = useSelection();
   const {
     createSchema: onCreateSchema,
     selectSchema: onSelectSchema,
@@ -139,8 +136,8 @@ export function MainScreenView({
             tables={tables}
             selectedTableId={selectedTableId}
             selectedRelationId={selectedRelationId}
-            onSelectTable={onSelectTable}
-            onSelectRelation={onSelectRelation}
+            onSelectTable={selectTable}
+            onSelectRelation={selectRelation}
             onMoveTable={onMoveTable}
             onAddForeignKey={onAddForeignKey}
           />
@@ -157,31 +154,31 @@ export function MainScreenView({
           onUpdateTableComment={onUpdateTableComment}
           onDeleteTable={() => openDialog("deleteTable")}
           onAddColumn={() => {
-            onSelectColumn(null);
+            selectColumn(null);
             openDialog("addColumn");
           }}
           onEditColumn={(columnId) => {
-            onSelectColumn(columnId);
+            selectColumn(columnId);
             openDialog("editColumn");
           }}
           onDeleteColumn={(columnId) => {
-            onSelectColumn(columnId);
+            selectColumn(columnId);
             openDialog("deleteColumn");
           }}
           onAddKey={() => {
-            onSelectKey(null);
+            selectKey(null);
             openDialog("addKey");
           }}
           onEditKey={(keyId) => {
-            onSelectKey(keyId);
+            selectKey(keyId);
             openDialog("editKey");
           }}
           onDeleteKey={(keyId) => {
-            onSelectKey(keyId);
+            selectKey(keyId);
             openDialog("deleteKey");
           }}
           onDeleteRelation={(relationId) => {
-            onSelectRelation(relationId);
+            selectRelation(relationId);
             openDialog("deleteRelation");
           }}
         />
@@ -349,11 +346,11 @@ export function MainScreenView({
           // Reset selection so a subsequent Delete keypress doesn't reopen
           // this same (now stale) relation's dialog instead of acting on
           // whatever table is still selected on the canvas.
-          onSelectRelation(null);
+          selectRelation(null);
           closeDialog();
         }}
         onCancel={() => {
-          onSelectRelation(null);
+          selectRelation(null);
           closeDialog();
         }}
       />
