@@ -141,74 +141,10 @@ export const WithNotification: Story = {
   },
 };
 
-export const CreateSchemaDialogOpen: Story = {
-  args: {
-    initialDialog: "createSchema",
-  },
-};
-
-export const RenameSchemaDialogOpen: Story = {
-  args: {
-    initialDialog: "renameSchema",
-  },
-};
-
-export const DeleteSchemaDialogOpen: Story = {
-  args: {
-    initialDialog: "deleteSchema",
-  },
-};
-
-export const CreateTableDialogOpen: Story = {
-  args: {
-    initialDialog: "createTable",
-  },
-};
-
 export const TableSelected: Story = {
   args: {
     initialSchema: withUsers,
     initialSelection: { tableId: usersTable.id },
-  },
-};
-
-export const DeleteTableDialogOpen: Story = {
-  args: {
-    initialSchema: withUsers,
-    initialSelection: { tableId: usersTable.id },
-    initialDialog: "deleteTable",
-  },
-};
-
-export const AddColumnDialogOpen: Story = {
-  args: {
-    initialSchema: withUsers,
-    initialSelection: { tableId: usersTable.id },
-    initialDialog: "addColumn",
-  },
-};
-
-export const AddColumnDialogOpenPrimaryKeyAvailable: Story = {
-  args: {
-    initialSchema: withUsersLackingPrimaryKey,
-    initialSelection: { tableId: usersTable.id },
-    initialDialog: "addColumn",
-  },
-};
-
-export const EditColumnDialogOpen: Story = {
-  args: {
-    initialSchema: withUsers,
-    initialSelection: { tableId: usersTable.id, columnId: usersTable.columns[0].id },
-    initialDialog: "editColumn",
-  },
-};
-
-export const EditPrimaryKeyColumnDialogOpen: Story = {
-  args: {
-    initialSchema: withUsers,
-    initialSelection: { tableId: usersTable.id, columnId: usersTable.columns[1].id },
-    initialDialog: "editColumn",
   },
 };
 
@@ -220,27 +156,19 @@ export const DeleteColumnDialogOpen: Story = {
   },
 };
 
-export const AddKeyDialogOpen: Story = {
+export const AddColumnDialogOpenPrimaryKeyAvailable: Story = {
   args: {
-    initialSchema: withUsers,
+    initialSchema: withUsersLackingPrimaryKey,
     initialSelection: { tableId: usersTable.id },
-    initialDialog: "addKey",
+    initialDialog: "addColumn",
   },
 };
 
-export const EditKeyDialogOpen: Story = {
+export const EditPrimaryKeyColumnDialogOpen: Story = {
   args: {
     initialSchema: withUsers,
-    initialSelection: { tableId: usersTable.id, keyId: usersTable.keys[0].id },
-    initialDialog: "editKey",
-  },
-};
-
-export const DeleteKeyDialogOpen: Story = {
-  args: {
-    initialSchema: withUsers,
-    initialSelection: { tableId: usersTable.id, keyId: usersTable.keys[0].id },
-    initialDialog: "deleteKey",
+    initialSelection: { tableId: usersTable.id, columnId: usersTable.columns[1].id },
+    initialDialog: "editColumn",
   },
 };
 
@@ -255,13 +183,6 @@ export const RelationSelected: Story = {
   args: {
     initialSchema: withRelation,
     initialSelection: { tableId: postsTable.id, relationId: postsTable.foreignKeys[0].id },
-  },
-};
-
-export const ExportSqlDialogOpen: Story = {
-  args: {
-    initialSchema: withUsers,
-    initialDialog: "exportSql",
   },
 };
 
