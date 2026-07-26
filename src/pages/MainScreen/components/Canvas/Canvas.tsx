@@ -56,7 +56,7 @@ export function Canvas({
         nodes={nodes}
         edges={edges}
         nodeTypes={nodeTypes}
-        // Table deletion goes through MainScreenView's own keydown listener
+        // Table deletion goes through the page's own useDeleteKeyShortcut
         // and a confirm dialog; React Flow's built-in Backspace handling is
         // disabled so it doesn't also act on this locally-synced `nodes`
         // state (used only to animate in-progress drags) and cause a

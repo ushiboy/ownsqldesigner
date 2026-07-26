@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useMemo } from "react";
 import type {
   Column,
   ColumnKeyMembership,
@@ -9,7 +9,7 @@ import type {
   Table,
 } from "../../domain/schema";
 import { generateSqliteDdl } from "../../domain/sqlite/generateDdl";
-import { type DialogKind, useActiveDialog } from "./ActiveDialogContext";
+import { useActiveDialog } from "./ActiveDialogContext";
 import { Canvas } from "./components/Canvas";
 import { ColumnDialog } from "./components/ColumnDialog";
 import { ConfirmDialog } from "./components/ConfirmDialog";
@@ -25,6 +25,7 @@ import {
 } from "./components/SidePanel";
 import { TableNameDialog } from "./components/TableNameDialog";
 import { Toolbar } from "./components/Toolbar";
+import { useDeleteKeyShortcut } from "./hooks/useDeleteKeyShortcut";
 
 const NO_COLUMNS: Column[] = [];
 const NO_NAMES: string[] = [];
@@ -139,28 +140,7 @@ export function MainScreenView({
     [selectedTable, selectedColumn],
   );
 
-  // Delete/Backspace opens the same confirm dialog as the side panel's
-  // delete button, rather than deleting immediately — every destructive
-  // action in this app is confirmation-gated, and keyboard delete is no
-  // exception. Ignored while a dialog is already open or focus is in a
-  // text field, so it doesn't interfere with typing. Relation and table
-  // selection are mutually exclusive (see MainScreen), so which dialog to
-  // open is unambiguous.
-  useEffect(() => {
-    function handleKeyDown(event: KeyboardEvent) {
-      if (shouldIgnoreKeyboardDelete(activeDialog, selectedTableId, selectedRelationId)) {
-        return;
-      }
-      if (isTextInputElement(document.activeElement)) {
-        return;
-      }
-      if (event.key === "Delete" || event.key === "Backspace") {
-        openDialog(selectedRelationId !== null ? "deleteRelation" : "deleteTable");
-      }
-    }
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [activeDialog, selectedTableId, selectedRelationId, openDialog]);
+  useDeleteKeyShortcut({ tableId: selectedTableId, relationId: selectedRelationId });
 
   return (
     <div className="flex h-svh flex-col overflow-hidden">
@@ -404,22 +384,6 @@ export function MainScreenView({
         onClose={closeDialog}
       />
     </div>
-  );
-}
-
-function shouldIgnoreKeyboardDelete(
-  activeDialog: DialogKind | null,
-  selectedTableId: string | null,
-  selectedRelationId: string | null,
-): boolean {
-  return activeDialog !== null || (selectedTableId === null && selectedRelationId === null);
-}
-
-function isTextInputElement(element: Element | null): boolean {
-  return (
-    element instanceof HTMLInputElement ||
-    element instanceof HTMLTextAreaElement ||
-    element instanceof HTMLSelectElement
   );
 }
 
