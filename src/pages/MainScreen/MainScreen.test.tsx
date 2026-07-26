@@ -122,6 +122,25 @@ describe("MainScreen", () => {
     );
   });
 
+  it("clears the table selection when switching to another schema", async () => {
+    await runRestored();
+    await userEvent.click(screen.getByRole("button", { name: "Add Table" }));
+    const newTableDialog = screen.getByRole("dialog", { name: "New Table" });
+    await userEvent.type(within(newTableDialog).getByLabelText("Table name"), "users");
+    await userEvent.click(within(newTableDialog).getByRole("button", { name: "Create" }));
+    await userEvent.click(await screen.findByRole("button", { name: "Table users" }));
+    const sidePanel = screen.getByRole("complementary", { name: "Side panel" });
+    expect(within(sidePanel).getByRole("heading", { name: "Table" })).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole("button", { name: "Blog Schema" }));
+    await userEvent.click(screen.getByRole("menuitem", { name: "Shop Schema" }));
+
+    await waitFor(() =>
+      expect(within(sidePanel).queryByRole("heading", { name: "Table" })).not.toBeInTheDocument(),
+    );
+    expect(within(sidePanel).getByText("Shop Schema")).toBeInTheDocument();
+  });
+
   it("renames the current schema through the rename dialog", async () => {
     await runRestored();
 

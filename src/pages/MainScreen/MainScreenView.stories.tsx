@@ -1,33 +1,8 @@
-import type { Decorator, Meta, StoryObj } from "@storybook/react-vite";
-import { fn } from "storybook/test";
-import type { ColumnKeyMembership } from "../../domain/schema";
-import { ActiveDialogProvider } from "./ActiveDialogContext";
-import { MainScreenView } from "./MainScreenView";
-import { NotificationProvider } from "./NotificationContext";
-
-const NO_KEY_MEMBERSHIP: ColumnKeyMembership = { PRIMARY_KEY: false, UNIQUE: false, INDEX: false };
-
-// Context state is seeded per story via `parameters.notification` / `parameters.dialog`.
-const withProviders: Decorator = (Story, { parameters }) => (
-  <NotificationProvider initialNotification={parameters.notification ?? null}>
-    <ActiveDialogProvider initialDialog={parameters.dialog ?? null}>
-      <Story />
-    </ActiveDialogProvider>
-  </NotificationProvider>
-);
-
-const savedSchemas = [
-  {
-    id: "0b54b945-13c9-4d38-9ba6-b81bbe1cbc21",
-    name: "Blog Schema",
-    updatedAt: new Date("2026-07-01T09:00:00.000Z"),
-  },
-  {
-    id: "3f2b5c0a-88d1-4f4a-9ce6-64f19f0f9be3",
-    name: "Shop Schema",
-    updatedAt: new Date("2026-07-02T09:00:00.000Z"),
-  },
-];
+import type { Meta, StoryObj } from "@storybook/react-vite";
+import { useState } from "react";
+import type { Schema } from "../../domain/schema";
+import { createFakeSchemaRepository } from "../../test/fakeSchemaRepository";
+import MainScreen, { type MainScreenSeed } from "./MainScreen";
 
 const usersTable = {
   id: "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12",
@@ -94,289 +69,206 @@ const postsTable = {
   ],
 };
 
-const tables = [usersTable];
-const tablesWithoutPrimaryKey = [{ ...usersTable, keys: [] }];
-const tablesWithRelation = [usersTable, postsTable];
+const blogSchema: Schema = {
+  id: "0b54b945-13c9-4d38-9ba6-b81bbe1cbc21",
+  name: "Blog Schema",
+  tables: [],
+  createdAt: new Date("2026-07-01T09:00:00.000Z"),
+  updatedAt: new Date("2026-07-01T09:00:00.000Z"),
+};
+
+// A second saved schema, so the toolbar's schema menu has something to
+// switch to. Never the current schema in these stories.
+const shopSchema: Schema = {
+  id: "3f2b5c0a-88d1-4f4a-9ce6-64f19f0f9be3",
+  name: "Shop Schema",
+  tables: [],
+  createdAt: new Date("2026-07-02T09:00:00.000Z"),
+  updatedAt: new Date("2026-07-02T09:00:00.000Z"),
+};
+
+const withUsers: Schema = { ...blogSchema, tables: [usersTable] };
+const withUsersLackingPrimaryKey: Schema = {
+  ...blogSchema,
+  tables: [{ ...usersTable, keys: [] }],
+};
+const withRelation: Schema = { ...blogSchema, tables: [usersTable, postsTable] };
+
+// The view reads the schema workspace, the selection, the active dialog and
+// the notification from its page, so stories seed the page rather than the
+// view. Every derived value the view shows — key membership, primary-key
+// availability, relation labels — is then computed the way the running app
+// computes it, instead of being hand-written per story.
+//
+// A fresh seeded repository per mount keeps story runs isolated from each
+// other while rendering fixed, deterministic data.
+function SeededMainScreen({ initialSchema = blogSchema, ...seed }: MainScreenSeed) {
+  const [repository] = useState(() =>
+    createFakeSchemaRepository({
+      schemas: [initialSchema, shopSchema],
+      lastSchemaId: initialSchema.id,
+    }),
+  );
+  return <MainScreen repository={repository} initialSchema={initialSchema} {...seed} />;
+}
 
 const meta = {
   title: "pages/MainScreen/MainScreenView",
-  component: MainScreenView,
+  component: MainScreen,
   parameters: {
     layout: "fullscreen",
   },
   args: {
-    schemaName: "Blog Schema",
-    savedSchemas,
-    currentSchemaId: savedSchemas[0].id,
-    tables: [],
-    tableCount: 0,
-    createdDate: "2026-07-01",
-    selectedTableId: null,
-    selectedTable: null,
-    selectedColumn: null,
-    selectedKey: null,
-    selectedRelationId: null,
-    selectedForeignKey: null,
-    selectedRelationOwnerTable: null,
-    relations: [],
-    columnKeyMembership: NO_KEY_MEMBERSHIP,
-    columnKeyMembershipDisabled: NO_KEY_MEMBERSHIP,
-    primaryKeyDisabled: false,
-    onToggleSidePanel: fn(),
-    onSelectSchema: fn(),
-    onCreateSchema: fn(),
-    onRenameSchema: fn(),
-    onDeleteSchema: fn(),
-    onSelectTable: fn(),
-    onSelectColumn: fn(),
-    onSelectKey: fn(),
-    onSelectRelation: fn(),
-    onCreateTable: fn(),
-    onUpdateTableName: fn(),
-    onUpdateTableComment: fn(),
-    onMoveTable: fn(),
-    onRemoveTable: fn(),
-    onAddColumn: fn(),
-    onUpdateColumn: fn(),
-    onRemoveColumn: fn(),
-    onSetColumnKeyMembership: fn(),
-    onAddKey: fn(),
-    onUpdateKey: fn(),
-    onRemoveKey: fn(),
-    onAddForeignKey: fn(),
-    onRemoveForeignKey: fn(),
+    initialSchema: blogSchema,
   },
-  decorators: [withProviders],
-} satisfies Meta<typeof MainScreenView>;
+  render: ({ repository: _repository, ...seed }) => <SeededMainScreen {...seed} />,
+} satisfies Meta<typeof MainScreen>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {
-  args: {
-    isSidePanelOpen: true,
-  },
-};
+export const Default: Story = {};
 
 export const SidePanelClosed: Story = {
   args: {
-    isSidePanelOpen: false,
+    initialSidePanelOpen: false,
   },
 };
 
 export const WithNotification: Story = {
   args: {
-    isSidePanelOpen: true,
-  },
-  parameters: {
-    notification: "Cannot delete column: referenced by a foreign key",
+    initialNotification: "Cannot delete column: referenced by a foreign key",
   },
 };
 
 export const CreateSchemaDialogOpen: Story = {
   args: {
-    isSidePanelOpen: true,
-  },
-  parameters: {
-    dialog: "createSchema",
+    initialDialog: "createSchema",
   },
 };
 
 export const RenameSchemaDialogOpen: Story = {
   args: {
-    isSidePanelOpen: true,
-  },
-  parameters: {
-    dialog: "renameSchema",
+    initialDialog: "renameSchema",
   },
 };
 
 export const DeleteSchemaDialogOpen: Story = {
   args: {
-    isSidePanelOpen: true,
-  },
-  parameters: {
-    dialog: "deleteSchema",
+    initialDialog: "deleteSchema",
   },
 };
 
 export const CreateTableDialogOpen: Story = {
   args: {
-    isSidePanelOpen: true,
-  },
-  parameters: {
-    dialog: "createTable",
+    initialDialog: "createTable",
   },
 };
 
 export const TableSelected: Story = {
   args: {
-    isSidePanelOpen: true,
-    tables,
-    tableCount: tables.length,
-    selectedTableId: tables[0]?.id ?? null,
-    selectedTable: tables[0] ?? null,
+    initialSchema: withUsers,
+    initialSelection: { tableId: usersTable.id },
   },
 };
 
 export const DeleteTableDialogOpen: Story = {
   args: {
-    isSidePanelOpen: true,
-    tables,
-    tableCount: tables.length,
-    selectedTableId: tables[0]?.id ?? null,
-    selectedTable: tables[0] ?? null,
-  },
-  parameters: {
-    dialog: "deleteTable",
+    initialSchema: withUsers,
+    initialSelection: { tableId: usersTable.id },
+    initialDialog: "deleteTable",
   },
 };
 
 export const AddColumnDialogOpen: Story = {
   args: {
-    isSidePanelOpen: true,
-    tables,
-    tableCount: tables.length,
-    selectedTableId: tables[0]?.id ?? null,
-    selectedTable: tables[0] ?? null,
-    columnKeyMembershipDisabled: { PRIMARY_KEY: true, UNIQUE: false, INDEX: false },
-  },
-  parameters: {
-    dialog: "addColumn",
+    initialSchema: withUsers,
+    initialSelection: { tableId: usersTable.id },
+    initialDialog: "addColumn",
   },
 };
 
 export const AddColumnDialogOpenPrimaryKeyAvailable: Story = {
   args: {
-    isSidePanelOpen: true,
-    tables: tablesWithoutPrimaryKey,
-    tableCount: tablesWithoutPrimaryKey.length,
-    selectedTableId: tablesWithoutPrimaryKey[0]?.id ?? null,
-    selectedTable: tablesWithoutPrimaryKey[0] ?? null,
-  },
-  parameters: {
-    dialog: "addColumn",
+    initialSchema: withUsersLackingPrimaryKey,
+    initialSelection: { tableId: usersTable.id },
+    initialDialog: "addColumn",
   },
 };
 
 export const EditColumnDialogOpen: Story = {
   args: {
-    isSidePanelOpen: true,
-    tables,
-    tableCount: tables.length,
-    selectedTableId: tables[0]?.id ?? null,
-    selectedTable: tables[0] ?? null,
-    selectedColumn: tables[0]?.columns[0] ?? null,
-    columnKeyMembershipDisabled: { PRIMARY_KEY: true, UNIQUE: false, INDEX: false },
-  },
-  parameters: {
-    dialog: "editColumn",
+    initialSchema: withUsers,
+    initialSelection: { tableId: usersTable.id, columnId: usersTable.columns[0].id },
+    initialDialog: "editColumn",
   },
 };
 
 export const EditPrimaryKeyColumnDialogOpen: Story = {
   args: {
-    isSidePanelOpen: true,
-    tables,
-    tableCount: tables.length,
-    selectedTableId: tables[0]?.id ?? null,
-    selectedTable: tables[0] ?? null,
-    selectedColumn: tables[0]?.columns[1] ?? null,
-    columnKeyMembership: { PRIMARY_KEY: true, UNIQUE: false, INDEX: false },
-  },
-  parameters: {
-    dialog: "editColumn",
+    initialSchema: withUsers,
+    initialSelection: { tableId: usersTable.id, columnId: usersTable.columns[1].id },
+    initialDialog: "editColumn",
   },
 };
 
 export const DeleteColumnDialogOpen: Story = {
   args: {
-    isSidePanelOpen: true,
-    tables,
-    tableCount: tables.length,
-    selectedTableId: tables[0]?.id ?? null,
-    selectedTable: tables[0] ?? null,
-    selectedColumn: tables[0]?.columns[0] ?? null,
-  },
-  parameters: {
-    dialog: "deleteColumn",
+    initialSchema: withUsers,
+    initialSelection: { tableId: usersTable.id, columnId: usersTable.columns[0].id },
+    initialDialog: "deleteColumn",
   },
 };
 
 export const AddKeyDialogOpen: Story = {
   args: {
-    isSidePanelOpen: true,
-    tables,
-    tableCount: tables.length,
-    selectedTableId: tables[0]?.id ?? null,
-    selectedTable: tables[0] ?? null,
-    primaryKeyDisabled: true,
-  },
-  parameters: {
-    dialog: "addKey",
+    initialSchema: withUsers,
+    initialSelection: { tableId: usersTable.id },
+    initialDialog: "addKey",
   },
 };
 
 export const EditKeyDialogOpen: Story = {
   args: {
-    isSidePanelOpen: true,
-    tables,
-    tableCount: tables.length,
-    selectedTableId: tables[0]?.id ?? null,
-    selectedTable: tables[0] ?? null,
-    selectedKey: tables[0]?.keys[0] ?? null,
-  },
-  parameters: {
-    dialog: "editKey",
+    initialSchema: withUsers,
+    initialSelection: { tableId: usersTable.id, keyId: usersTable.keys[0].id },
+    initialDialog: "editKey",
   },
 };
 
 export const DeleteKeyDialogOpen: Story = {
   args: {
-    isSidePanelOpen: true,
-    tables,
-    tableCount: tables.length,
-    selectedTableId: tables[0]?.id ?? null,
-    selectedTable: tables[0] ?? null,
-    selectedKey: tables[0]?.keys[0] ?? null,
-  },
-  parameters: {
-    dialog: "deleteKey",
+    initialSchema: withUsers,
+    initialSelection: { tableId: usersTable.id, keyId: usersTable.keys[0].id },
+    initialDialog: "deleteKey",
   },
 };
 
 export const TableWithRelationSelected: Story = {
   args: {
-    isSidePanelOpen: true,
-    tables: tablesWithRelation,
-    tableCount: tablesWithRelation.length,
-    selectedTableId: postsTable.id,
-    selectedTable: postsTable,
-    relations: [{ id: postsTable.foreignKeys[0].id, label: "user_id → users.id" }],
+    initialSchema: withRelation,
+    initialSelection: { tableId: postsTable.id },
+  },
+};
+
+export const RelationSelected: Story = {
+  args: {
+    initialSchema: withRelation,
+    initialSelection: { tableId: postsTable.id, relationId: postsTable.foreignKeys[0].id },
   },
 };
 
 export const ExportSqlDialogOpen: Story = {
   args: {
-    isSidePanelOpen: true,
-    tables,
-    tableCount: tables.length,
-  },
-  parameters: {
-    dialog: "exportSql",
+    initialSchema: withUsers,
+    initialDialog: "exportSql",
   },
 };
 
 export const DeleteRelationDialogOpen: Story = {
   args: {
-    isSidePanelOpen: true,
-    tables: tablesWithRelation,
-    tableCount: tablesWithRelation.length,
-    selectedRelationId: postsTable.foreignKeys[0].id,
-    selectedForeignKey: postsTable.foreignKeys[0],
-    selectedRelationOwnerTable: postsTable,
-  },
-  parameters: {
-    dialog: "deleteRelation",
+    initialSchema: withRelation,
+    initialSelection: { tableId: postsTable.id, relationId: postsTable.foreignKeys[0].id },
+    initialDialog: "deleteRelation",
   },
 };

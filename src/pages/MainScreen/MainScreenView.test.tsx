@@ -1,11 +1,11 @@
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { fn } from "storybook/test";
 import { composeStories } from "@storybook/react-vite";
 import * as stories from "./MainScreenView.stories";
 
 const {
   Default,
+  SidePanelClosed,
   WithNotification,
   CreateSchemaDialogOpen,
   RenameSchemaDialogOpen,
@@ -22,6 +22,7 @@ const {
   EditKeyDialogOpen,
   DeleteKeyDialogOpen,
   TableWithRelationSelected,
+  RelationSelected,
   ExportSqlDialogOpen,
   DeleteRelationDialogOpen,
 } = composeStories(stories);
@@ -31,6 +32,19 @@ describe("MainScreenView", () => {
     render(<Default />);
     expect(screen.getByRole("banner")).toBeInTheDocument();
     expect(screen.getByRole("main", { name: "Canvas" })).toBeInTheDocument();
+    expect(screen.getByRole("complementary", { name: "Side panel" })).toBeInTheDocument();
+  });
+
+  it("takes the side panel out of the accessibility tree while it is closed", () => {
+    render(<SidePanelClosed />);
+    expect(screen.queryByRole("complementary", { name: "Side panel" })).not.toBeInTheDocument();
+  });
+
+  it("reopens the side panel from the toolbar toggle", async () => {
+    render(<SidePanelClosed />);
+
+    await userEvent.click(screen.getByRole("button", { name: "Toggle side panel" }));
+
     expect(screen.getByRole("complementary", { name: "Side panel" })).toBeInTheDocument();
   });
 
@@ -133,41 +147,28 @@ describe("MainScreenView", () => {
     expect(screen.getByText('Delete column "email"? This cannot be undone.')).toBeInTheDocument();
   });
 
-  it("sets the column's key membership together with the column when checked on add", async () => {
-    const onAddColumn = fn();
-    const onSetColumnKeyMembership = fn();
-    render(
-      <AddColumnDialogOpenPrimaryKeyAvailable
-        onAddColumn={onAddColumn}
-        onSetColumnKeyMembership={onSetColumnKeyMembership}
-      />,
-    );
+  it("adds the column and its primary key together when checked on add", async () => {
+    render(<AddColumnDialogOpenPrimaryKeyAvailable />);
     const dialog = screen.getByRole("dialog", { name: "Add Column" });
     await userEvent.type(within(dialog).getByLabelText("Name"), "code");
     await userEvent.click(within(dialog).getByLabelText("Primary Key"));
     await userEvent.click(within(dialog).getByRole("button", { name: "Add" }));
 
-    expect(onAddColumn).toHaveBeenCalledOnce();
-    const [, , generatedColumnId] = onAddColumn.mock.calls[0] ?? [];
-    expect(onSetColumnKeyMembership).toHaveBeenCalledExactlyOnceWith(
-      "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12",
-      generatedColumnId,
-      { PRIMARY_KEY: true, UNIQUE: false, INDEX: false },
-    );
+    const sidePanel = screen.getByRole("complementary", { name: "Side panel" });
+    expect(within(sidePanel).getByText("code")).toBeInTheDocument();
+    expect(within(sidePanel).getByText("PRIMARY KEY (code)")).toBeInTheDocument();
   });
 
-  it("sets the column's key membership when a checkbox is toggled on edit", async () => {
-    const onSetColumnKeyMembership = fn();
-    render(<EditPrimaryKeyColumnDialogOpen onSetColumnKeyMembership={onSetColumnKeyMembership} />);
+  it("removes the column's primary key when the checkbox is unticked on edit", async () => {
+    render(<EditPrimaryKeyColumnDialogOpen />);
+    const sidePanel = screen.getByRole("complementary", { name: "Side panel" });
+    expect(within(sidePanel).getByText("PRIMARY KEY (id)")).toBeInTheDocument();
+
     const dialog = screen.getByRole("dialog", { name: "Edit Column" });
     await userEvent.click(within(dialog).getByLabelText("Primary Key"));
     await userEvent.click(within(dialog).getByRole("button", { name: "Save" }));
 
-    expect(onSetColumnKeyMembership).toHaveBeenCalledExactlyOnceWith(
-      "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12",
-      "e2b3c4d5-6e7f-4a8b-9c0d-1e2f3a4b5c6d",
-      { PRIMARY_KEY: false, UNIQUE: false, INDEX: false },
-    );
+    expect(within(sidePanel).queryByText("PRIMARY KEY (id)")).not.toBeInTheDocument();
   });
 
   it("shows the add key dialog with the table's columns while activeDialog is addKey", () => {
@@ -223,7 +224,7 @@ describe("MainScreenView", () => {
   });
 
   it("opens the delete relation confirmation when Delete is pressed while a relation is selected", async () => {
-    render(<TableWithRelationSelected selectedRelationId="c1d2e3f4-5a6b-4c7d-8e9f-0a1b2c3d4e5f" />);
+    render(<RelationSelected />);
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
 
     await userEvent.keyboard("{Delete}");
@@ -231,22 +232,17 @@ describe("MainScreenView", () => {
     expect(screen.getByRole("dialog", { name: "Delete Relation" })).toBeInTheDocument();
   });
 
-  it("calls onRemoveForeignKey and clears the relation selection on confirm", async () => {
-    const onRemoveForeignKey = fn();
-    const onSelectRelation = fn();
-    render(
-      <DeleteRelationDialogOpen
-        onRemoveForeignKey={onRemoveForeignKey}
-        onSelectRelation={onSelectRelation}
-      />,
-    );
+  it("removes the relation and clears the relation selection on confirm", async () => {
+    render(<DeleteRelationDialogOpen />);
+    const sidePanel = screen.getByRole("complementary", { name: "Side panel" });
+    expect(within(sidePanel).getByText("user_id → users.id")).toBeInTheDocument();
 
     await userEvent.click(screen.getByRole("button", { name: "Delete" }));
 
-    expect(onRemoveForeignKey).toHaveBeenCalledExactlyOnceWith(
-      "e5c3fb8c-9c97-4f5e-d2cf-5f8f3d8c7b23",
-      "c1d2e3f4-5a6b-4c7d-8e9f-0a1b2c3d4e5f",
-    );
-    expect(onSelectRelation).toHaveBeenCalledExactlyOnceWith(null);
+    expect(within(sidePanel).queryByText("user_id → users.id")).not.toBeInTheDocument();
+    // The relation selection is reset, so the next Delete acts on the table
+    // that is still selected rather than reopening the stale relation.
+    await userEvent.keyboard("{Delete}");
+    expect(screen.getByRole("dialog", { name: "Delete Table" })).toBeInTheDocument();
   });
 });

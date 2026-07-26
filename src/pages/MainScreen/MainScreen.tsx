@@ -1,41 +1,61 @@
 import { useMemo, useState } from "react";
-import { format } from "date-fns";
 import {
   EMPTY_COLUMN_KEY_MEMBERSHIP,
   type ForeignKey,
   getColumnKeyMembership,
   getColumnKeyMembershipDisabled,
   hasConflictingPrimaryKey,
+  type Schema,
   type Table,
 } from "../../domain/schema";
 import type { SchemaRepository } from "../../domain/schemaRepository";
 import { createLocalStorageSchemaRepository } from "../../infrastructure/localStorageSchemaRepository";
-import { ActiveDialogProvider } from "./ActiveDialogContext";
+import { ActiveDialogProvider, type DialogKind } from "./ActiveDialogContext";
 import { describeForeignKey, type RelationSummary } from "./components/SidePanel";
 import { MainScreenView } from "./MainScreenView";
 import { NotificationProvider } from "./NotificationContext";
-import {
-  SchemaWorkspaceProvider,
-  useCurrentSchema,
-  useSavedSchemas,
-  useSchemaActions,
-  useTables,
-} from "./SchemaWorkspaceContext";
+import { SchemaWorkspaceProvider, useCurrentSchema, useTables } from "./SchemaWorkspaceContext";
 
 const defaultRepository = createLocalStorageSchemaRepository();
 const NO_RELATIONS: RelationSummary[] = [];
 
-type MainScreenProps = {
+/** Page state a story or test can start from; all unset in the app. */
+export type MainScreenSeed = {
+  initialSchema?: Schema;
+  initialSelection?: InitialSelection;
+  initialDialog?: DialogKind | null;
+  initialNotification?: string | null;
+  initialSidePanelOpen?: boolean;
+};
+
+type InitialSelection = {
+  tableId?: string;
+  columnId?: string;
+  keyId?: string;
+  relationId?: string;
+};
+
+type MainScreenProps = MainScreenSeed & {
   /** Injection point for tests and stories; the app uses localStorage. */
   repository?: SchemaRepository;
 };
 
-function MainScreen({ repository = defaultRepository }: MainScreenProps) {
+function MainScreen({
+  repository = defaultRepository,
+  initialSchema,
+  initialSelection,
+  initialDialog,
+  initialNotification,
+  initialSidePanelOpen,
+}: MainScreenProps) {
   return (
-    <NotificationProvider>
-      <ActiveDialogProvider>
-        <SchemaWorkspaceProvider repository={repository}>
-          <MainScreenContent />
+    <NotificationProvider initialNotification={initialNotification}>
+      <ActiveDialogProvider initialDialog={initialDialog}>
+        <SchemaWorkspaceProvider repository={repository} initialSchema={initialSchema}>
+          <MainScreenContent
+            initialSelection={initialSelection}
+            initialSidePanelOpen={initialSidePanelOpen}
+          />
         </SchemaWorkspaceProvider>
       </ActiveDialogProvider>
     </NotificationProvider>
@@ -44,36 +64,32 @@ function MainScreen({ repository = defaultRepository }: MainScreenProps) {
 
 export default MainScreen;
 
-function MainScreenContent() {
-  const [isSidePanelOpen, setIsSidePanelOpen] = useState(true);
-  const [selectedTableId, setSelectedTableId] = useState<string | null>(null);
-  const [selectedColumnId, setSelectedColumnId] = useState<string | null>(null);
-  const [selectedKeyId, setSelectedKeyId] = useState<string | null>(null);
-  const [selectedRelationId, setSelectedRelationId] = useState<string | null>(null);
-  const [selectedSchemaId, setSelectedSchemaId] = useState<string | null | undefined>(undefined);
-  const currentSchema = useCurrentSchema();
-  const savedSchemas = useSavedSchemas();
-  const {
-    createSchema,
-    selectSchema,
-    renameSchema,
-    deleteCurrentSchema,
-    createTable,
-    renameTable,
-    updateTableComment,
-    moveTable,
-    removeTable,
-    addColumn,
-    updateColumn,
-    removeColumn,
-    setColumnKeyMembership,
-    addKey,
-    updateKey,
-    removeKey,
-    addForeignKey,
-    removeForeignKey,
-  } = useSchemaActions();
+type MainScreenContentProps = {
+  initialSelection?: InitialSelection;
+  initialSidePanelOpen?: boolean;
+};
 
+function MainScreenContent({ initialSelection, initialSidePanelOpen }: MainScreenContentProps) {
+  const currentSchema = useCurrentSchema();
+  const [isSidePanelOpen, setIsSidePanelOpen] = useState(initialSidePanelOpen ?? true);
+  const [selectedTableId, setSelectedTableId] = useState<string | null>(
+    initialSelection?.tableId ?? null,
+  );
+  const [selectedColumnId, setSelectedColumnId] = useState<string | null>(
+    initialSelection?.columnId ?? null,
+  );
+  const [selectedKeyId, setSelectedKeyId] = useState<string | null>(
+    initialSelection?.keyId ?? null,
+  );
+  const [selectedRelationId, setSelectedRelationId] = useState<string | null>(
+    initialSelection?.relationId ?? null,
+  );
+  // Seeded from the workspace rather than starting undefined, so a seeded
+  // schema does not read as a schema switch and wipe the seeded selection
+  // on the first render.
+  const [selectedSchemaId, setSelectedSchemaId] = useState<string | null | undefined>(
+    () => currentSchema?.id,
+  );
   if (currentSchema?.id !== selectedSchemaId) {
     setSelectedSchemaId(currentSchema?.id ?? null);
     setSelectedTableId(null);
@@ -117,12 +133,6 @@ function MainScreenContent() {
 
   return (
     <MainScreenView
-      schemaName={currentSchema?.name ?? "—"}
-      savedSchemas={savedSchemas}
-      currentSchemaId={currentSchema?.id ?? null}
-      tables={tables}
-      tableCount={tables.length}
-      createdDate={currentSchema === null ? "—" : format(currentSchema.createdAt, "yyyy-MM-dd")}
       selectedTableId={selectedTableId}
       selectedTable={selectedTable}
       selectedColumn={selectedColumn}
@@ -136,10 +146,6 @@ function MainScreenContent() {
       primaryKeyDisabled={keyDialogPrimaryKeyDisabled}
       isSidePanelOpen={isSidePanelOpen}
       onToggleSidePanel={() => setIsSidePanelOpen((prev) => !prev)}
-      onSelectSchema={selectSchema}
-      onCreateSchema={createSchema}
-      onRenameSchema={renameSchema}
-      onDeleteSchema={deleteCurrentSchema}
       onSelectTable={(id) => {
         setSelectedTableId(id);
         setSelectedColumnId(null);
@@ -148,20 +154,6 @@ function MainScreenContent() {
       onSelectColumn={setSelectedColumnId}
       onSelectKey={setSelectedKeyId}
       onSelectRelation={setSelectedRelationId}
-      onCreateTable={createTable}
-      onUpdateTableName={renameTable}
-      onUpdateTableComment={updateTableComment}
-      onMoveTable={moveTable}
-      onRemoveTable={removeTable}
-      onAddColumn={addColumn}
-      onUpdateColumn={updateColumn}
-      onRemoveColumn={removeColumn}
-      onSetColumnKeyMembership={setColumnKeyMembership}
-      onAddKey={addKey}
-      onUpdateKey={updateKey}
-      onRemoveKey={removeKey}
-      onAddForeignKey={addForeignKey}
-      onRemoveForeignKey={removeForeignKey}
     />
   );
 }

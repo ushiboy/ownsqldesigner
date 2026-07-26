@@ -1,13 +1,6 @@
 import { useMemo } from "react";
-import type {
-  Column,
-  ColumnKeyMembership,
-  ForeignKey,
-  Key,
-  Position,
-  SchemaSummary,
-  Table,
-} from "../../domain/schema";
+import { format } from "date-fns";
+import type { Column, ColumnKeyMembership, ForeignKey, Key, Table } from "../../domain/schema";
 import { generateSqliteDdl } from "../../domain/sqlite/generateDdl";
 import { useActiveDialog } from "./ActiveDialogContext";
 import { Canvas } from "./components/Canvas";
@@ -25,18 +18,19 @@ import {
 } from "./components/SidePanel";
 import { TableNameDialog } from "./components/TableNameDialog";
 import { Toolbar } from "./components/Toolbar";
+import {
+  useCurrentSchema,
+  useSavedSchemas,
+  useSchemaActions,
+  useTables,
+} from "./SchemaWorkspaceContext";
 import { useDeleteKeyShortcut } from "./hooks/useDeleteKeyShortcut";
 
 const NO_COLUMNS: Column[] = [];
 const NO_NAMES: string[] = [];
+const NO_VALUE = "—";
 
 type MainScreenViewProps = {
-  schemaName: string;
-  savedSchemas: SchemaSummary[];
-  currentSchemaId: string | null;
-  tables: Table[];
-  tableCount: number;
-  createdDate: string;
   selectedTableId: string | null;
   selectedTable: Table | null;
   selectedColumn: Column | null;
@@ -50,41 +44,13 @@ type MainScreenViewProps = {
   primaryKeyDisabled: boolean;
   isSidePanelOpen: boolean;
   onToggleSidePanel: () => void;
-  onSelectSchema: (id: string) => void;
-  onCreateSchema: (name: string) => void;
-  onRenameSchema: (name: string) => void;
-  onDeleteSchema: () => void;
   onSelectTable: (id: string | null) => void;
   onSelectColumn: (id: string | null) => void;
   onSelectKey: (id: string | null) => void;
   onSelectRelation: (id: string | null) => void;
-  onCreateTable: (name: string) => void;
-  onUpdateTableName: (tableId: string, name: string) => void;
-  onUpdateTableComment: (tableId: string, comment: string) => void;
-  onMoveTable: (tableId: string, position: Position) => void;
-  onRemoveTable: (tableId: string) => void;
-  onAddColumn: (tableId: string, fields: Omit<Column, "id">, id?: string) => void;
-  onUpdateColumn: (tableId: string, columnId: string, fields: Omit<Column, "id">) => void;
-  onRemoveColumn: (tableId: string, columnId: string) => void;
-  onSetColumnKeyMembership: (
-    tableId: string,
-    columnId: string,
-    membership: ColumnKeyMembership,
-  ) => void;
-  onAddKey: (tableId: string, fields: Omit<Key, "id">) => void;
-  onUpdateKey: (tableId: string, keyId: string, fields: Omit<Key, "id">) => void;
-  onRemoveKey: (tableId: string, keyId: string) => void;
-  onAddForeignKey: (tableId: string, fields: Omit<ForeignKey, "id">) => void;
-  onRemoveForeignKey: (tableId: string, foreignKeyId: string) => void;
 };
 
 export function MainScreenView({
-  schemaName,
-  savedSchemas,
-  currentSchemaId,
-  tables,
-  tableCount,
-  createdDate,
   selectedTableId,
   selectedTable,
   selectedColumn,
@@ -98,31 +64,45 @@ export function MainScreenView({
   primaryKeyDisabled,
   isSidePanelOpen,
   onToggleSidePanel,
-  onSelectSchema,
-  onCreateSchema,
-  onRenameSchema,
-  onDeleteSchema,
   onSelectTable,
   onSelectColumn,
   onSelectKey,
   onSelectRelation,
-  onCreateTable,
-  onUpdateTableName,
-  onUpdateTableComment,
-  onMoveTable,
-  onRemoveTable,
-  onAddColumn,
-  onUpdateColumn,
-  onRemoveColumn,
-  onSetColumnKeyMembership,
-  onAddKey,
-  onUpdateKey,
-  onRemoveKey,
-  onAddForeignKey,
-  onRemoveForeignKey,
 }: MainScreenViewProps) {
   const { activeDialog, openDialog, closeDialog } = useActiveDialog();
-  const ddl = useMemo(() => generateSqliteDdl(tables), [tables]);
+  const currentSchema = useCurrentSchema();
+  const savedSchemas = useSavedSchemas();
+  const tables = useTables();
+  const {
+    createSchema: onCreateSchema,
+    selectSchema: onSelectSchema,
+    renameSchema: onRenameSchema,
+    deleteCurrentSchema: onDeleteSchema,
+    createTable: onCreateTable,
+    renameTable: onUpdateTableName,
+    updateTableComment: onUpdateTableComment,
+    moveTable: onMoveTable,
+    removeTable: onRemoveTable,
+    addColumn: onAddColumn,
+    updateColumn: onUpdateColumn,
+    removeColumn: onRemoveColumn,
+    setColumnKeyMembership: onSetColumnKeyMembership,
+    addKey: onAddKey,
+    updateKey: onUpdateKey,
+    removeKey: onRemoveKey,
+    addForeignKey: onAddForeignKey,
+    removeForeignKey: onRemoveForeignKey,
+  } = useSchemaActions();
+
+  const schemaName = currentSchema?.name ?? NO_VALUE;
+  const createdDate =
+    currentSchema === null ? NO_VALUE : format(currentSchema.createdAt, "yyyy-MM-dd");
+  // Generated only while the export dialog is open: the dialog is closed
+  // for nearly every table mutation that would otherwise trigger this.
+  const ddl = useMemo(
+    () => (activeDialog === "exportSql" ? generateSqliteDdl(tables) : ""),
+    [activeDialog, tables],
+  );
   const tableNames = useMemo(() => tables.map((table) => table.name), [tables]);
   const siblingTableNames = useMemo(
     () => tables.filter((table) => table.id !== selectedTableId).map((table) => table.name),
@@ -147,7 +127,7 @@ export function MainScreenView({
       <Toolbar
         schemaName={schemaName}
         savedSchemas={savedSchemas}
-        currentSchemaId={currentSchemaId}
+        currentSchemaId={currentSchema?.id ?? null}
         onSelectSchema={onSelectSchema}
         isSidePanelOpen={isSidePanelOpen}
         onToggleSidePanel={onToggleSidePanel}
@@ -168,7 +148,7 @@ export function MainScreenView({
         <SidePanel
           isOpen={isSidePanelOpen}
           schemaName={schemaName}
-          tableCount={tableCount}
+          tableCount={tables.length}
           createdDate={createdDate}
           selectedTable={selectedTable}
           existingTableNames={siblingTableNames}
