@@ -25,14 +25,11 @@ import {
   updateColumn,
   updateKey,
   updateTableComment,
-} from "../../domain/schema";
-import type { SchemaRepository } from "../../domain/schemaRepository";
-import { useNotification } from "./NotificationContext";
+} from "../../../domain/schema";
+import type { SchemaRepository } from "../../../domain/schemaRepository";
+import { useNotification } from "../NotificationContext";
 
-type SchemaWorkspace = {
-  /** null only during the initial async restore tick. */
-  currentSchema: Schema | null;
-  savedSchemas: SchemaSummary[];
+export type SchemaActions = {
   createSchema: (name: string) => void;
   selectSchema: (id: string) => void;
   renameSchema: (name: string) => void;
@@ -57,16 +54,32 @@ type SchemaWorkspace = {
   removeForeignKey: (tableId: string, foreignKeyId: string) => void;
 };
 
-export function useSchemaWorkspace(repository: SchemaRepository): SchemaWorkspace {
-  const [currentSchema, setCurrentSchema] = useState<Schema | null>(null);
+export type SchemaWorkspace = SchemaActions & {
+  /** null only during the initial async restore tick. */
+  currentSchema: Schema | null;
+  savedSchemas: SchemaSummary[];
+};
+
+export function useSchemaWorkspace(
+  repository: SchemaRepository,
+  initialSchema?: Schema,
+): SchemaWorkspace {
+  // Frozen at mount so the two effects below stay correct even if the
+  // caller hands over a fresh object identity on a later render.
+  const [seededSchema] = useState(initialSchema);
+  const [currentSchema, setCurrentSchema] = useState<Schema | null>(seededSchema ?? null);
   const [savedSchemas, setSavedSchemas] = useState<SchemaSummary[]>([]);
   // Failures surface through the notification context; each successful
   // operation clears any stale message.
   const { notify, dismissNotification } = useNotification();
 
   // Startup restore: the last-edited schema, or a fresh blank one on the
-  // first visit (or when the last-edited pointer dangles).
+  // first visit (or when the last-edited pointer dangles). A seeded
+  // workspace skips it, so the seed survives past the first tick.
   useEffect(() => {
+    if (seededSchema !== undefined) {
+      return;
+    }
     let cancelled = false;
     (async () => {
       const lastSchemaId = await repository.loadLastSchemaId();
@@ -78,7 +91,7 @@ export function useSchemaWorkspace(repository: SchemaRepository): SchemaWorkspac
     return () => {
       cancelled = true;
     };
-  }, [repository]);
+  }, [repository, seededSchema]);
 
   // The single auto-save path: every mutation flows through currentSchema.
   useEffect(() => {
@@ -87,8 +100,13 @@ export function useSchemaWorkspace(repository: SchemaRepository): SchemaWorkspac
     }
     let cancelled = false;
     (async () => {
-      await repository.save(currentSchema);
-      await repository.saveLastSchemaId(currentSchema.id);
+      // A still-untouched seed is by definition already persisted, so it is
+      // not written straight back; the summary list is still refreshed so
+      // the schema menu has the same contents it would have in the app.
+      if (currentSchema !== seededSchema) {
+        await repository.save(currentSchema);
+        await repository.saveLastSchemaId(currentSchema.id);
+      }
       const summaries = await repository.list();
       if (!cancelled) {
         setSavedSchemas(summaries);
@@ -97,7 +115,7 @@ export function useSchemaWorkspace(repository: SchemaRepository): SchemaWorkspac
     return () => {
       cancelled = true;
     };
-  }, [repository, currentSchema]);
+  }, [repository, currentSchema, seededSchema]);
 
   return {
     currentSchema,

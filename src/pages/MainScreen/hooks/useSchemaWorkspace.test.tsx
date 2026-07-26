@@ -1,9 +1,15 @@
 import { act, renderHook, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
-import { addColumn, addForeignKey, addKey, createSchema, createTable } from "../../domain/schema";
-import type { SchemaRepository } from "../../domain/schemaRepository";
-import { createFakeSchemaRepository } from "../../test/fakeSchemaRepository";
-import { NotificationProvider, useNotification } from "./NotificationContext";
+import {
+  addColumn,
+  addForeignKey,
+  addKey,
+  createSchema,
+  createTable,
+} from "../../../domain/schema";
+import type { SchemaRepository } from "../../../domain/schemaRepository";
+import { createFakeSchemaRepository } from "../../../test/fakeSchemaRepository";
+import { NotificationProvider, useNotification } from "../NotificationContext";
 import { useSchemaWorkspace } from "./useSchemaWorkspace";
 
 const wrapper = ({ children }: { children: ReactNode }) => (

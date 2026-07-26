@@ -14,10 +14,15 @@ import { ActiveDialogProvider } from "./ActiveDialogContext";
 import { describeForeignKey, type RelationSummary } from "./components/SidePanel";
 import { MainScreenView } from "./MainScreenView";
 import { NotificationProvider } from "./NotificationContext";
-import { useSchemaWorkspace } from "./useSchemaWorkspace";
+import {
+  SchemaWorkspaceProvider,
+  useCurrentSchema,
+  useSavedSchemas,
+  useSchemaActions,
+  useTables,
+} from "./SchemaWorkspaceContext";
 
 const defaultRepository = createLocalStorageSchemaRepository();
-const NO_TABLES: Table[] = [];
 const NO_RELATIONS: RelationSummary[] = [];
 
 type MainScreenProps = {
@@ -29,7 +34,9 @@ function MainScreen({ repository = defaultRepository }: MainScreenProps) {
   return (
     <NotificationProvider>
       <ActiveDialogProvider>
-        <MainScreenContent repository={repository} />
+        <SchemaWorkspaceProvider repository={repository}>
+          <MainScreenContent />
+        </SchemaWorkspaceProvider>
       </ActiveDialogProvider>
     </NotificationProvider>
   );
@@ -37,20 +44,16 @@ function MainScreen({ repository = defaultRepository }: MainScreenProps) {
 
 export default MainScreen;
 
-type MainScreenContentProps = {
-  repository: SchemaRepository;
-};
-
-function MainScreenContent({ repository }: MainScreenContentProps) {
+function MainScreenContent() {
   const [isSidePanelOpen, setIsSidePanelOpen] = useState(true);
   const [selectedTableId, setSelectedTableId] = useState<string | null>(null);
   const [selectedColumnId, setSelectedColumnId] = useState<string | null>(null);
   const [selectedKeyId, setSelectedKeyId] = useState<string | null>(null);
   const [selectedRelationId, setSelectedRelationId] = useState<string | null>(null);
   const [selectedSchemaId, setSelectedSchemaId] = useState<string | null | undefined>(undefined);
+  const currentSchema = useCurrentSchema();
+  const savedSchemas = useSavedSchemas();
   const {
-    currentSchema,
-    savedSchemas,
     createSchema,
     selectSchema,
     renameSchema,
@@ -69,7 +72,7 @@ function MainScreenContent({ repository }: MainScreenContentProps) {
     removeKey,
     addForeignKey,
     removeForeignKey,
-  } = useSchemaWorkspace(repository);
+  } = useSchemaActions();
 
   if (currentSchema?.id !== selectedSchemaId) {
     setSelectedSchemaId(currentSchema?.id ?? null);
@@ -79,7 +82,7 @@ function MainScreenContent({ repository }: MainScreenContentProps) {
     setSelectedRelationId(null);
   }
 
-  const tables = currentSchema?.tables ?? NO_TABLES;
+  const tables = useTables();
   const selectedTable = tables.find((table) => table.id === selectedTableId) ?? null;
   const selectedColumn =
     selectedTable?.columns.find((column) => column.id === selectedColumnId) ?? null;
