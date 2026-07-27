@@ -40,13 +40,13 @@ The Phase column gives a rough implementation order: Phase 1 = core MVP, Phase 2
 
 ### Keys and relations
 
-| ID      | Requirement                                                                                                                 | Phase |
-| ------- | --------------------------------------------------------------------------------------------------------------------------- | ----- |
-| REQ-013 | Define PRIMARY KEY / UNIQUE / INDEX keys, including composite keys ([0007](design/0007-table-key-management.md))            | 1     |
-| REQ-014 | Create and remove foreign-key relations by connecting existing columns ([0009](design/0009-foreign-key-relations.md))       | 1     |
-| REQ-015 | Render relation connectors (curved, auto-routed) with highlight on selection ([0009](design/0009-foreign-key-relations.md)) | 1     |
-| REQ-016 | Auto-generate a child column when creating a foreign key (configurable naming pattern)                                      | 2     |
-| REQ-017 | Propagate parent column type changes to connected child columns                                                             | 2     |
+| ID      | Requirement                                                                                                                                         | Phase |
+| ------- | --------------------------------------------------------------------------------------------------------------------------------------------------- | ----- |
+| REQ-013 | Define PRIMARY KEY / UNIQUE / INDEX keys, including composite keys ([0007](design/0007-table-key-management.md))                                    | 1     |
+| REQ-014 | Create and remove foreign-key relations by connecting existing columns ([0009](design/0009-foreign-key-relations.md))                               | 1     |
+| REQ-015 | Render relation connectors (curved, auto-routed) with highlight on selection ([0009](design/0009-foreign-key-relations.md))                         | 1     |
+| REQ-016 | Auto-generate a child column when creating a foreign key (configurable naming pattern) ([0012](design/0012-foreign-key-child-column-generation.md)) | 2     |
+| REQ-017 | Propagate parent column type changes to connected child columns                                                                                     | 2     |
 
 ### Integrity and validation
 

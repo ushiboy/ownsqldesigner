@@ -21,3 +21,11 @@ export function columnIdFromHandle(handleId: string | null | undefined): string 
   }
   return null;
 }
+
+/** Like `columnIdFromHandle`, but `null` unless `handleId` is specifically a source handle. */
+export function sourceColumnIdFromHandle(handleId: string | null | undefined): string | null {
+  if (handleId === null || handleId === undefined || !handleId.startsWith(SOURCE_PREFIX)) {
+    return null;
+  }
+  return handleId.slice(SOURCE_PREFIX.length);
+}

@@ -11,6 +11,7 @@ import {
   type Table,
   addColumn,
   addForeignKey,
+  addForeignKeyWithNewColumn,
   addKey,
   createSchema,
   createTable,
@@ -51,6 +52,11 @@ export type SchemaActions = {
   updateKey: (tableId: string, keyId: string, fields: Omit<Key, "id">) => void;
   removeKey: (tableId: string, keyId: string) => void;
   addForeignKey: (tableId: string, fields: Omit<ForeignKey, "id">) => void;
+  addForeignKeyWithNewColumn: (
+    childTableId: string,
+    referencedTableId: string,
+    referencedColumnId: string,
+  ) => void;
   removeForeignKey: (tableId: string, foreignKeyId: string) => void;
 };
 
@@ -246,6 +252,14 @@ export function useSchemaWorkspace(
     addForeignKey: (tableId, fields) => {
       dismissNotification();
       setCurrentSchema((prev) => (prev === null ? prev : addForeignKey(prev, tableId, fields)));
+    },
+    addForeignKeyWithNewColumn: (childTableId, referencedTableId, referencedColumnId) => {
+      dismissNotification();
+      setCurrentSchema((prev) =>
+        prev === null
+          ? prev
+          : addForeignKeyWithNewColumn(prev, childTableId, referencedTableId, referencedColumnId),
+      );
     },
     removeForeignKey: (tableId, foreignKeyId) => {
       dismissNotification();

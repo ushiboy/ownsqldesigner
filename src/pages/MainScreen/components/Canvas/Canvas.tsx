@@ -1,6 +1,6 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { Background, ReactFlow, useNodesState } from "@xyflow/react";
-import type { Connection, Edge } from "@xyflow/react";
+import type { Connection, Edge, HandleType } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import {
   type ForeignKey,
@@ -8,8 +8,14 @@ import {
   type Position,
   type Table,
 } from "../../../../domain/schema";
+import { resolveForeignKeyDrop } from "./connectionEnd";
 import { selectCommittedMoves } from "./nodeChanges";
-import { columnIdFromHandle, sourceHandleId, targetHandleId } from "./TableNode/columnHandleId";
+import {
+  columnIdFromHandle,
+  sourceColumnIdFromHandle,
+  sourceHandleId,
+  targetHandleId,
+} from "./TableNode/columnHandleId";
 import { TableNode, type TableNodeType } from "./TableNode";
 
 const nodeTypes = { table: TableNode };
@@ -24,6 +30,11 @@ type CanvasProps = {
   onSelectRelation: (id: string | null) => void;
   onMoveTable: (tableId: string, position: Position) => void;
   onAddForeignKey: (tableId: string, fields: Omit<ForeignKey, "id">) => void;
+  onAddForeignKeyWithNewColumn: (
+    childTableId: string,
+    referencedTableId: string,
+    referencedColumnId: string,
+  ) => void;
 };
 
 export function Canvas({
@@ -34,6 +45,7 @@ export function Canvas({
   onSelectRelation,
   onMoveTable,
   onAddForeignKey,
+  onAddForeignKeyWithNewColumn,
 }: CanvasProps) {
   // With fully controlled `nodes`, React Flow doesn't move a dragged node
   // on its own — without local state applying intermediate drag ticks, it
@@ -45,6 +57,12 @@ export function Canvas({
     tablesToNodes(tables, selectedTableId),
   );
   const edges = tablesToEdges(tables, selectedRelationId);
+  // Set in onConnectStart, read in isValidConnection (both fire mid-drag,
+  // outside React's render cycle) to reject completing a normal connection
+  // when a drag started from a key handle — that direction is handled
+  // entirely by onConnectEnd's own drop resolution instead (see
+  // docs/design/0012-foreign-key-child-column-generation.md).
+  const dragStartHandleTypeRef = useRef<HandleType | null>(null);
 
   useEffect(() => {
     setNodes(tablesToNodes(tables, selectedTableId));
@@ -83,7 +101,48 @@ export function Canvas({
             });
           }
         }}
-        isValidConnection={(connection) => isValidForeignKeyConnection(tables, connection)}
+        onConnectStart={(_, { handleType }) => {
+          dragStartHandleTypeRef.current = handleType;
+        }}
+        isValidConnection={(connection) =>
+          dragStartHandleTypeRef.current !== "target" &&
+          isValidForeignKeyConnection(tables, connection)
+        }
+        onConnectEnd={(event, connectionState) => {
+          dragStartHandleTypeRef.current = null;
+          // xyflow's own connection state can't tell "dropped on a table's
+          // body" from "dropped on the empty pane" (toNode is only set from
+          // a hit-tested handle), and isValidConnection above always rejects
+          // this drag direction — resolving the drop needs DOM lookups of
+          // the node and, separately, the column handle under the pointer.
+          const dropTableId =
+            event.target instanceof Element
+              ? (event.target.closest(".react-flow__node")?.getAttribute("data-id") ?? null)
+              : null;
+          const dropColumnId =
+            event.target instanceof Element
+              ? sourceColumnIdFromHandle(
+                  event.target.closest(".react-flow__handle")?.getAttribute("data-handleid"),
+                )
+              : null;
+          const drop = resolveForeignKeyDrop(connectionState, dropTableId, dropColumnId);
+          if (drop === null) {
+            return;
+          }
+          if (drop.kind === "existingColumn") {
+            onAddForeignKey(drop.childTableId, {
+              columnId: drop.columnId,
+              referencedTableId: drop.referencedTableId,
+              referencedColumnId: drop.referencedColumnId,
+            });
+          } else {
+            onAddForeignKeyWithNewColumn(
+              drop.childTableId,
+              drop.referencedTableId,
+              drop.referencedColumnId,
+            );
+          }
+        }}
         onEdgeClick={(_, edge) => {
           onSelectTable(null);
           onSelectRelation(edge.id);

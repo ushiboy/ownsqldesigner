@@ -1,6 +1,7 @@
 import {
   addColumn,
   addForeignKey,
+  addForeignKeyWithNewColumn,
   addKey,
   createSchema,
   createTable,
@@ -1504,6 +1505,8 @@ const USERS_EMAIL_COLUMN_ID = "44444444-4444-4444-8444-444444444444";
 const POSTS_TABLE_ID = "55555555-5555-4555-8555-555555555555";
 const POSTS_USER_ID_COLUMN_ID = "66666666-6666-4666-8666-666666666666";
 const POSTS_FOREIGN_KEY_ID = "77777777-7777-4777-8777-777777777777";
+const POSTS_NEW_COLUMN_ID = "88888888-8888-4888-8888-888888888888";
+const POSTS_NEW_FOREIGN_KEY_ID = "99999999-9999-4999-8999-999999999999";
 
 function buildTwoTableSchema(): Schema {
   const withUsersTable = createTable(
@@ -1708,6 +1711,128 @@ describe("addForeignKey", () => {
 
   it("produces a document that passes runtime validation", () => {
     const updated = addForeignKey(original, POSTS_TABLE_ID, fields);
+
+    expect(schemaSchema.safeParse(updated).success).toBe(true);
+  });
+});
+
+describe("addForeignKeyWithNewColumn", () => {
+  const original = buildTwoTableSchema();
+
+  it("creates a new child column and a foreign key referencing it in one call", () => {
+    const updated = addForeignKeyWithNewColumn(
+      original,
+      POSTS_TABLE_ID,
+      USERS_TABLE_ID,
+      USERS_ID_COLUMN_ID,
+      {
+        columnId: POSTS_NEW_COLUMN_ID,
+        foreignKeyId: POSTS_NEW_FOREIGN_KEY_ID,
+        now: new Date("2026-07-19T09:00:00.000Z"),
+      },
+    );
+
+    const posts = getTable(updated, POSTS_TABLE_ID);
+    expect(posts.columns.at(-1)).toEqual({
+      id: POSTS_NEW_COLUMN_ID,
+      name: "users_id",
+      type: "INTEGER",
+      size: "",
+      defaultValue: "",
+      nullable: true,
+      autoIncrement: false,
+      comment: "",
+    });
+    expect(posts.foreignKeys).toEqual([
+      {
+        id: POSTS_NEW_FOREIGN_KEY_ID,
+        columnId: POSTS_NEW_COLUMN_ID,
+        referencedTableId: USERS_TABLE_ID,
+        referencedColumnId: USERS_ID_COLUMN_ID,
+      },
+    ]);
+    expect(updated.updatedAt).toEqual(new Date("2026-07-19T09:00:00.000Z"));
+  });
+
+  it("auto-suffixes the generated name on collision", () => {
+    const withExistingColumn = addColumn(
+      original,
+      POSTS_TABLE_ID,
+      { ...columnFields, name: "users_id" },
+      { now: new Date("2026-07-18T09:00:00.000Z") },
+    );
+
+    const updated = addForeignKeyWithNewColumn(
+      withExistingColumn,
+      POSTS_TABLE_ID,
+      USERS_TABLE_ID,
+      USERS_ID_COLUMN_ID,
+      { now: new Date("2026-07-19T09:00:00.000Z") },
+    );
+
+    expect(getTable(updated, POSTS_TABLE_ID).columns.at(-1)?.name).toBe("users_id_2");
+  });
+
+  it("is a no-op when the child table id is unknown", () => {
+    const updated = addForeignKeyWithNewColumn(
+      original,
+      "unknown-id",
+      USERS_TABLE_ID,
+      USERS_ID_COLUMN_ID,
+    );
+
+    expect(updated).toBe(original);
+  });
+
+  it("is a no-op when the referenced table is unknown", () => {
+    const updated = addForeignKeyWithNewColumn(
+      original,
+      POSTS_TABLE_ID,
+      "unknown-id",
+      USERS_ID_COLUMN_ID,
+    );
+
+    expect(updated).toBe(original);
+  });
+
+  it("is a no-op when the referenced column is not a PRIMARY KEY or UNIQUE column (REQ-020)", () => {
+    const updated = addForeignKeyWithNewColumn(
+      original,
+      POSTS_TABLE_ID,
+      USERS_TABLE_ID,
+      USERS_EMAIL_COLUMN_ID,
+    );
+
+    expect(updated).toBe(original);
+  });
+
+  it("succeeds for a self-reference (child and referenced table are the same)", () => {
+    const updated = addForeignKeyWithNewColumn(
+      original,
+      USERS_TABLE_ID,
+      USERS_TABLE_ID,
+      USERS_ID_COLUMN_ID,
+      { now: new Date("2026-07-19T09:00:00.000Z") },
+    );
+
+    const users = getTable(updated, USERS_TABLE_ID);
+    expect(users.columns.at(-1)?.name).toBe("users_id");
+    expect(users.foreignKeys).toHaveLength(1);
+  });
+
+  it("does not mutate the input schema", () => {
+    addForeignKeyWithNewColumn(original, POSTS_TABLE_ID, USERS_TABLE_ID, USERS_ID_COLUMN_ID);
+
+    expect(getTable(original, POSTS_TABLE_ID).foreignKeys).toEqual([]);
+  });
+
+  it("produces a document that passes runtime validation", () => {
+    const updated = addForeignKeyWithNewColumn(
+      original,
+      POSTS_TABLE_ID,
+      USERS_TABLE_ID,
+      USERS_ID_COLUMN_ID,
+    );
 
     expect(schemaSchema.safeParse(updated).success).toBe(true);
   });

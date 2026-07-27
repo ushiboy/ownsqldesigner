@@ -63,6 +63,7 @@ export function MainScreenView({
     updateTableComment: onUpdateTableComment,
     moveTable: onMoveTable,
     addForeignKey: onAddForeignKey,
+    addForeignKeyWithNewColumn: onAddForeignKeyWithNewColumn,
   } = useSchemaActions();
 
   const schemaName = currentSchema?.name ?? NO_VALUE;
@@ -96,6 +97,7 @@ export function MainScreenView({
             onSelectRelation={selectRelation}
             onMoveTable={onMoveTable}
             onAddForeignKey={onAddForeignKey}
+            onAddForeignKeyWithNewColumn={onAddForeignKeyWithNewColumn}
           />
         </main>
         <SidePanel

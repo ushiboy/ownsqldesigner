@@ -91,6 +91,7 @@ const meta = {
     onSelectRelation: fn(),
     onMoveTable: fn(),
     onAddForeignKey: fn(),
+    onAddForeignKeyWithNewColumn: fn(),
   },
   decorators: [
     (Story) => (

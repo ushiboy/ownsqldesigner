@@ -725,6 +725,35 @@ describe("useSchemaWorkspace", () => {
     expect(persisted?.updatedAt.getTime()).toBeGreaterThan(blog.updatedAt.getTime());
   });
 
+  it("adds a foreign key with a new child column, bumps updatedAt, and persists it", async () => {
+    const blog = buildBlogWithReferenceableColumn();
+    const repository = createFakeSchemaRepository({ schemas: [blog], lastSchemaId: blog.id });
+    const { result } = renderWorkspace(repository);
+    await waitFor(() => {
+      expect(result.current.workspace.currentSchema).not.toBeNull();
+    });
+
+    act(() => {
+      result.current.workspace.addForeignKeyWithNewColumn(
+        "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12",
+        "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12",
+        "f1a2b3c4-5d6e-4f7a-8b9c-0d1e2f3a4b5c",
+      );
+    });
+
+    await waitFor(() => {
+      expect(result.current.workspace.currentSchema?.tables[0]?.foreignKeys).toHaveLength(1);
+    });
+    const persisted = await repository.load(blog.id);
+    expect(persisted?.tables[0]?.columns).toEqual(
+      result.current.workspace.currentSchema?.tables[0]?.columns,
+    );
+    expect(persisted?.tables[0]?.foreignKeys).toEqual(
+      result.current.workspace.currentSchema?.tables[0]?.foreignKeys,
+    );
+    expect(persisted?.updatedAt.getTime()).toBeGreaterThan(blog.updatedAt.getTime());
+  });
+
   it("removes a foreign key from a table, bumps updatedAt, and persists it", async () => {
     const blog = addForeignKey(
       buildBlogWithReferenceableColumn(),
