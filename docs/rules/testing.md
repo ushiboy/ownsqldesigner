@@ -24,6 +24,7 @@ Choose the testing style by the kind of code:
 - Co-locate tests and stories with the source file: `Table.tsx` → `Table.test.tsx` + `Table.stories.tsx`. Never create `__tests__/` directories.
 - Name test files `<Name>.test.ts(x)` and story files `<Name>.stories.tsx`.
 - Use `describe("<ComponentOrFunctionName>", ...)` with behavior-phrased `it("...")` blocks.
+- Within a test file, put shared helper functions (fixture builders, etc.) before the `describe` block(s) that use them, ordered by their own internal dependencies — then the specs. This is the reverse of [Code Organization](code-organization.md)'s rule for regular source files (helpers go at the bottom there): a test file reads top-to-bottom as setup followed by scenarios, not public API followed by implementation.
 
 ### UI components and pages
 
