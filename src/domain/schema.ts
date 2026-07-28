@@ -524,6 +524,14 @@ export function hasConflictingPrimaryKey(
   );
 }
 
+/** Whether the table has a primary key, inline (autoIncrement) or as a PRIMARY_KEY key. */
+export function hasPrimaryKey(table: Table): boolean {
+  return (
+    table.keys.some((key) => key.type === "PRIMARY_KEY") ||
+    table.columns.some((column) => column.autoIncrement)
+  );
+}
+
 /** Whether each key type is a single-column key solely owned by `columnId` (`null` for a not-yet-created column). */
 export type ColumnKeyMembership = Record<KeyType, boolean>;
 

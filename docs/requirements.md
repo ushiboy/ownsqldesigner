@@ -59,7 +59,7 @@ The Phase column gives a rough implementation order: Phase 1 = core MVP, Phase 2
 | REQ-022 | A table has at most one PRIMARY KEY; a key has at least one column ([0007](design/0007-table-key-management.md))                                                                         | 1     |
 | REQ-023 | When an edit violates an integrity rule, the UI shows why it was rejected ([0001](design/0001-main-screen.md), [0010](design/0010-name-validation-and-sql-export.md))                    | 1     |
 | REQ-033 | Auto-increment is allowed only where the dialect permits it (SQLite: a single INTEGER PRIMARY KEY column) ([0007](design/0007-table-key-management.md))                                  | 1     |
-| REQ-034 | Validation warnings (e.g. a table without a primary key) are visible before SQL export                                                                                                   | 2     |
+| REQ-034 | Validation warnings (e.g. a table without a primary key) are visible before SQL export ([0010](design/0010-name-validation-and-sql-export.md))                                           | 2     |
 
 ### Input / output and persistence (browser-only)
 

@@ -6,32 +6,61 @@ type ExportSqlDialogProps = {
   open: boolean;
   /** Generated DDL for the current schema; "" when there are no tables. */
   ddl: string;
+  /** Names of tables with no primary key (REQ-034); advisory only, never blocks export. */
+  tablesWithoutPrimaryKey: string[];
   /** Used to derive the downloaded file's name. */
   schemaName: string;
   onClose: () => void;
 };
 
-export function ExportSqlDialog({ open, ddl, schemaName, onClose }: ExportSqlDialogProps) {
+export function ExportSqlDialog({
+  open,
+  ddl,
+  tablesWithoutPrimaryKey,
+  schemaName,
+  onClose,
+}: ExportSqlDialogProps) {
   return (
     <Dialog open={open} title="Export SQL" onClose={onClose} size="large">
-      <ExportSqlContent ddl={ddl} schemaName={schemaName} onClose={onClose} />
+      <ExportSqlContent
+        ddl={ddl}
+        tablesWithoutPrimaryKey={tablesWithoutPrimaryKey}
+        schemaName={schemaName}
+        onClose={onClose}
+      />
     </Dialog>
   );
 }
 
 type ExportSqlContentProps = {
   ddl: string;
+  tablesWithoutPrimaryKey: string[];
   schemaName: string;
   onClose: () => void;
 };
 
 // Mounted only while the dialog is open, so the "Copied" state resets each time.
-function ExportSqlContent({ ddl, schemaName, onClose }: ExportSqlContentProps) {
+function ExportSqlContent({
+  ddl,
+  tablesWithoutPrimaryKey,
+  schemaName,
+  onClose,
+}: ExportSqlContentProps) {
   const [copied, setCopied] = useState(false);
   const hasTables = ddl !== "";
 
   return (
     <>
+      {tablesWithoutPrimaryKey.length > 0 && (
+        <output className="mt-4 block rounded-md border border-edge bg-danger-bg px-3 py-2 text-[13px] text-danger">
+          <p className="font-medium">Tables with no primary key:</p>
+          <ul className="mt-1 list-disc pl-5">
+            {tablesWithoutPrimaryKey.map((name) => (
+              <li key={name}>{name}</li>
+            ))}
+          </ul>
+        </output>
+      )}
       {hasTables ? (
         <textarea
           readOnly

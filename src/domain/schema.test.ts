@@ -8,6 +8,7 @@ import {
   getColumnKeyMembership,
   getColumnKeyMembershipDisabled,
   getReferenceableColumns,
+  hasPrimaryKey,
   isColumnNameAvailable,
   isNameTaken,
   isReferenceableColumn,
@@ -1570,6 +1571,52 @@ describe("isReferenceableColumn / getReferenceableColumns", () => {
   it("is false for a column with no PRIMARY KEY or UNIQUE membership", () => {
     const users = getTable(schema, USERS_TABLE_ID);
     expect(isReferenceableColumn(users, USERS_EMAIL_COLUMN_ID)).toBe(false);
+  });
+});
+
+describe("hasPrimaryKey", () => {
+  const schema = buildTwoTableSchema();
+
+  it("is true for a table with a PRIMARY_KEY key", () => {
+    const users = getTable(schema, USERS_TABLE_ID);
+    expect(hasPrimaryKey(users)).toBe(true);
+  });
+
+  it("is false for a table with no PRIMARY_KEY key and no autoIncrement column", () => {
+    const posts = getTable(schema, POSTS_TABLE_ID);
+    expect(hasPrimaryKey(posts)).toBe(false);
+  });
+
+  it("is true for a table whose sole INTEGER PRIMARY KEY column has autoIncrement set", () => {
+    const withPrimaryKeyOnIntegerColumn = addKey(
+      addColumn(
+        createTable(
+          createSchema("Blog Schema", {
+            id: "c3a1e96a-9a75-4d3c-b0ad-3d6e1b6a5f01",
+            now: new Date("2026-07-18T09:00:00.000Z"),
+          }),
+          "posts",
+          { id: "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12", now: new Date("2026-07-18T09:00:00.000Z") },
+        ),
+        "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12",
+        { ...columnFields, name: "id", type: "INTEGER" },
+        { id: "f1a2b3c4-5d6e-4f7a-8b9c-0d1e2f3a4b5c", now: new Date("2026-07-18T09:00:00.000Z") },
+      ),
+      "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12",
+      { type: "PRIMARY_KEY", columnIds: ["f1a2b3c4-5d6e-4f7a-8b9c-0d1e2f3a4b5c"] },
+      { id: "b1c2d3e4-5f6a-4b7c-8d9e-0f1a2b3c4d5e", now: new Date("2026-07-18T09:00:00.000Z") },
+    );
+    const withAutoIncrement = updateColumn(
+      withPrimaryKeyOnIntegerColumn,
+      "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12",
+      "f1a2b3c4-5d6e-4f7a-8b9c-0d1e2f3a4b5c",
+      { ...columnFields, name: "id", type: "INTEGER", autoIncrement: true },
+      { now: new Date("2026-07-19T09:00:00.000Z") },
+    );
+
+    expect(hasPrimaryKey(getTable(withAutoIncrement, "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12"))).toBe(
+      true,
+    );
   });
 });
 

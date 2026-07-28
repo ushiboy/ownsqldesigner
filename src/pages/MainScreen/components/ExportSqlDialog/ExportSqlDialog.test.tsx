@@ -9,7 +9,7 @@ vi.mock("file-saver", () => ({
   saveAs: vi.fn<(data: Blob | string, filename?: string) => void>(),
 }));
 
-const { Open, Empty } = composeStories(stories);
+const { Open, Empty, WithWarning } = composeStories(stories);
 
 // jsdom does not implement the Clipboard API.
 function mockClipboard() {
@@ -44,6 +44,19 @@ describe("ExportSqlDialog", () => {
       "CREATE TABLE users (\n  id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,\n  email TEXT NOT NULL\n);",
     );
     expect(screen.getByRole("button", { name: "Copied" })).toBeInTheDocument();
+  });
+
+  it("does not show a primary-key warning when every table has one", () => {
+    render(<Open />);
+    expect(screen.queryByText("Tables with no primary key:")).not.toBeInTheDocument();
+  });
+
+  it("shows tables missing a primary key as a warning, without disabling copy or download", () => {
+    render(<WithWarning />);
+    expect(screen.getByText("Tables with no primary key:")).toBeInTheDocument();
+    expect(screen.getByText("tags")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Copy to clipboard" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Download .sql" })).toBeEnabled();
   });
 
   it("shows a message and disables copy and download when there is nothing to export", () => {

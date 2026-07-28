@@ -1,10 +1,11 @@
 import { useMemo } from "react";
-import type {
-  Column,
-  ColumnKeyMembership,
-  ForeignKey,
-  Key,
-  Table,
+import {
+  hasPrimaryKey,
+  type Column,
+  type ColumnKeyMembership,
+  type ForeignKey,
+  type Key,
+  type Table,
 } from "../../../../domain/schema";
 import { generateSqliteDdl } from "../../../../domain/sqlite/generateDdl";
 import { useActiveDialog } from "../../ActiveDialogContext";
@@ -67,6 +68,14 @@ export function DialogHost({
   // for nearly every table mutation that would otherwise trigger this.
   const ddl = useMemo(
     () => (activeDialog === "exportSql" ? generateSqliteDdl(tables) : ""),
+    [activeDialog, tables],
+  );
+  // Same "only while the export dialog is open" scoping as `ddl` above.
+  const tablesWithoutPrimaryKey = useMemo(
+    () =>
+      activeDialog === "exportSql"
+        ? tables.filter((table) => !hasPrimaryKey(table)).map((table) => table.name)
+        : NO_NAMES,
     [activeDialog, tables],
   );
   const tableNames = useMemo(() => tables.map((table) => table.name), [tables]);
@@ -258,6 +267,7 @@ export function DialogHost({
       <ExportSqlDialog
         open={activeDialog === "exportSql"}
         ddl={ddl}
+        tablesWithoutPrimaryKey={tablesWithoutPrimaryKey}
         schemaName={schemaName}
         onClose={closeDialog}
       />

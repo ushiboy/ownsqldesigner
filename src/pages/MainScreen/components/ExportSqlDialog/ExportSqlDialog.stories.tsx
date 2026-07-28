@@ -5,11 +5,15 @@ import { ExportSqlDialog } from "./ExportSqlDialog";
 const SAMPLE_DDL =
   "CREATE TABLE users (\n  id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,\n  email TEXT NOT NULL\n);";
 
+const SAMPLE_DDL_WITHOUT_PRIMARY_KEY =
+  "CREATE TABLE users (\n  id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,\n  email TEXT NOT NULL\n);\n\nCREATE TABLE tags (\n  name TEXT NOT NULL\n);";
+
 const meta = {
   title: "pages/MainScreen/ExportSqlDialog",
   component: ExportSqlDialog,
   args: {
     schemaName: "Blog Schema",
+    tablesWithoutPrimaryKey: [],
     onClose: fn(),
   },
 } satisfies Meta<typeof ExportSqlDialog>;
@@ -28,5 +32,13 @@ export const Empty: Story = {
   args: {
     open: true,
     ddl: "",
+  },
+};
+
+export const WithWarning: Story = {
+  args: {
+    open: true,
+    ddl: SAMPLE_DDL_WITHOUT_PRIMARY_KEY,
+    tablesWithoutPrimaryKey: ["tags"],
   },
 };

@@ -2,7 +2,7 @@
 
 - **Status**: Implemented
 - **Created**: 2026-07-25
-- **Updated**: 2026-07-25
+- **Updated**: 2026-07-28
 
 ## Context
 
@@ -34,12 +34,12 @@ correctness prerequisite for REQ-026.
   feature's own rules).
 - Generate SQLite DDL (`CREATE TABLE` with keys and foreign-key constraints)
   for the current schema and let the user copy or download it (REQ-026).
+- Surface a passive, non-blocking warning inside the export dialog for any
+  table with no primary key (REQ-034).
 
 **Non-Goals**
 
 - Reserved-keyword rejection (e.g. a table named `order`) — see Open Questions.
-- REQ-034 (validation warnings before export, e.g. a table without a primary
-  key) — Phase 2; 0001 already reserved a slot for it inside this same dialog.
 - REQ-027 (schema file download/load) — a different requirement (downloading
   and loading the schema _JSON_, not the exported DDL) that 0001 already
   placed as a separate, later toolbar control. Only REQ-026's own DDL output
@@ -191,6 +191,33 @@ stub button now calls `openDialog("exportSql")`. `MainScreenView` computes
 `ddl` via `useMemo(() => generateSqliteDdl(tables), [tables])` and renders
 `ExportSqlDialog` alongside the other dialogs, passing `schemaName` through
 for the download filename.
+
+### REQ-034: primary-key warning
+
+`schema.ts` gains one predicate, placed next to `hasConflictingPrimaryKey`:
+
+```ts
+export function hasPrimaryKey(table: Table): boolean;
+```
+
+True for a `PRIMARY_KEY`-type key or an `autoIncrement` column — the same two
+conditions `generateDdl.ts`'s `generatePrimaryKeyConstraint` already checks
+internally to decide between an inline `PRIMARY KEY AUTOINCREMENT` and a
+table-level constraint, reused here instead of inventing a second notion of
+"has a PK".
+
+`DialogHost` computes `tablesWithoutPrimaryKey` (table names) the same way
+it already scopes `ddl` — only while `activeDialog === "exportSql"` — via
+`tables.filter((table) => !hasPrimaryKey(table)).map((table) => table.name)`,
+and passes it to `ExportSqlDialog` as a new prop.
+
+The dialog renders it as a static block above the DDL textarea, listing the
+affected table names, using the `--color-danger` / `--color-danger-bg`
+tokens already defined in `index.css` but unused elsewhere in the app. This
+follows neither of 0007/0009's two established patterns (UI-side prevention,
+or `NotificationContext` rejection) because REQ-034 is explicitly advisory:
+Copy/Download stay enabled regardless of warnings, so there's nothing to
+prevent or reject — a third, simpler category of "show it, don't act on it."
 
 ## Alternatives Considered
 
