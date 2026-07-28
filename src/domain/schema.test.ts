@@ -1507,6 +1507,15 @@ const POSTS_USER_ID_COLUMN_ID = "66666666-6666-4666-8666-666666666666";
 const POSTS_FOREIGN_KEY_ID = "77777777-7777-4777-8777-777777777777";
 const POSTS_NEW_COLUMN_ID = "88888888-8888-4888-8888-888888888888";
 const POSTS_NEW_FOREIGN_KEY_ID = "99999999-9999-4999-8999-999999999999";
+const POSTS_USER_ID_KEY_ID = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
+const COMMENTS_TABLE_ID = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
+const COMMENTS_POST_USER_ID_COLUMN_ID = "cccccccc-cccc-4ccc-8ccc-cccccccccccc";
+const CYCLE_X_TABLE_ID = "dddddddd-dddd-4ddd-8ddd-dddddddddddd";
+const CYCLE_COL_A_ID = "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee";
+const CYCLE_COL_A_KEY_ID = "ffffffff-ffff-4fff-8fff-ffffffffffff";
+const CYCLE_Y_TABLE_ID = "12121212-1212-4121-8121-121212121212";
+const CYCLE_COL_B_ID = "23232323-2323-4232-8232-232323232323";
+const CYCLE_COL_B_KEY_ID = "34343434-3434-4343-8343-343434343434";
 
 function buildTwoTableSchema(): Schema {
   const withUsersTable = createTable(
@@ -1918,5 +1927,193 @@ describe("REQ-021: foreign keys never dangle after table/column deletion", () =>
     });
 
     expect(getTable(updated, POSTS_TABLE_ID).foreignKeys).toEqual([]);
+  });
+});
+
+describe("REQ-017: updateColumn propagates type changes to foreign-key children", () => {
+  it("propagates a type change to a directly linked FK child column", () => {
+    const withForeignKey = addForeignKey(buildTwoTableSchema(), POSTS_TABLE_ID, {
+      columnId: POSTS_USER_ID_COLUMN_ID,
+      referencedTableId: USERS_TABLE_ID,
+      referencedColumnId: USERS_ID_COLUMN_ID,
+    });
+
+    const updated = updateColumn(
+      withForeignKey,
+      USERS_TABLE_ID,
+      USERS_ID_COLUMN_ID,
+      { ...columnFields, name: "id", type: "REAL" },
+      { now: new Date("2026-07-19T09:00:00.000Z") },
+    );
+
+    expect(
+      getTable(updated, POSTS_TABLE_ID).columns.find((c) => c.id === POSTS_USER_ID_COLUMN_ID),
+    ).toMatchObject({ type: "REAL" });
+    expect(updated.updatedAt).toEqual(new Date("2026-07-19T09:00:00.000Z"));
+  });
+
+  it("propagates transitively through a chain of foreign keys", () => {
+    const withUsersPostsFk = addForeignKey(buildTwoTableSchema(), POSTS_TABLE_ID, {
+      columnId: POSTS_USER_ID_COLUMN_ID,
+      referencedTableId: USERS_TABLE_ID,
+      referencedColumnId: USERS_ID_COLUMN_ID,
+    });
+    const withPostsUserIdUnique = addKey(
+      withUsersPostsFk,
+      POSTS_TABLE_ID,
+      { type: "UNIQUE", columnIds: [POSTS_USER_ID_COLUMN_ID] },
+      { id: POSTS_USER_ID_KEY_ID, now: new Date("2026-07-18T09:00:00.000Z") },
+    );
+    const withCommentsTable = createTable(withPostsUserIdUnique, "comments", {
+      id: COMMENTS_TABLE_ID,
+      now: new Date("2026-07-18T09:00:00.000Z"),
+    });
+    const original = addForeignKey(
+      addColumn(
+        withCommentsTable,
+        COMMENTS_TABLE_ID,
+        { ...columnFields, name: "post_user_id" },
+        { id: COMMENTS_POST_USER_ID_COLUMN_ID, now: new Date("2026-07-18T09:00:00.000Z") },
+      ),
+      COMMENTS_TABLE_ID,
+      {
+        columnId: COMMENTS_POST_USER_ID_COLUMN_ID,
+        referencedTableId: POSTS_TABLE_ID,
+        referencedColumnId: POSTS_USER_ID_COLUMN_ID,
+      },
+    );
+
+    const updated = updateColumn(
+      original,
+      USERS_TABLE_ID,
+      USERS_ID_COLUMN_ID,
+      { ...columnFields, name: "id", type: "REAL" },
+      { now: new Date("2026-07-19T09:00:00.000Z") },
+    );
+
+    expect(
+      getTable(updated, POSTS_TABLE_ID).columns.find((c) => c.id === POSTS_USER_ID_COLUMN_ID),
+    ).toMatchObject({ type: "REAL" });
+    expect(
+      getTable(updated, COMMENTS_TABLE_ID).columns.find(
+        (c) => c.id === COMMENTS_POST_USER_ID_COLUMN_ID,
+      ),
+    ).toMatchObject({ type: "REAL" });
+  });
+
+  it("terminates when propagation forms a reference cycle across two tables", () => {
+    const withXTable = createTable(
+      createSchema("Cycle Schema", {
+        id: "c3a1e96a-9a75-4d3c-b0ad-3d6e1b6a5f01",
+        now: new Date("2026-07-18T09:00:00.000Z"),
+      }),
+      "x",
+      { id: CYCLE_X_TABLE_ID, now: new Date("2026-07-18T09:00:00.000Z") },
+    );
+    const withColAPrimaryKey = addKey(
+      addColumn(
+        withXTable,
+        CYCLE_X_TABLE_ID,
+        { ...columnFields, name: "col_a", type: "INTEGER" },
+        { id: CYCLE_COL_A_ID, now: new Date("2026-07-18T09:00:00.000Z") },
+      ),
+      CYCLE_X_TABLE_ID,
+      { type: "PRIMARY_KEY", columnIds: [CYCLE_COL_A_ID] },
+      { id: CYCLE_COL_A_KEY_ID, now: new Date("2026-07-18T09:00:00.000Z") },
+    );
+    const withYTable = createTable(withColAPrimaryKey, "y", {
+      id: CYCLE_Y_TABLE_ID,
+      now: new Date("2026-07-18T09:00:00.000Z"),
+    });
+    const withColBUnique = addKey(
+      addColumn(
+        withYTable,
+        CYCLE_Y_TABLE_ID,
+        { ...columnFields, name: "col_b", type: "INTEGER" },
+        { id: CYCLE_COL_B_ID, now: new Date("2026-07-18T09:00:00.000Z") },
+      ),
+      CYCLE_Y_TABLE_ID,
+      { type: "UNIQUE", columnIds: [CYCLE_COL_B_ID] },
+      { id: CYCLE_COL_B_KEY_ID, now: new Date("2026-07-18T09:00:00.000Z") },
+    );
+    const withYtoXForeignKey = addForeignKey(withColBUnique, CYCLE_Y_TABLE_ID, {
+      columnId: CYCLE_COL_B_ID,
+      referencedTableId: CYCLE_X_TABLE_ID,
+      referencedColumnId: CYCLE_COL_A_ID,
+    });
+    const original = addForeignKey(withYtoXForeignKey, CYCLE_X_TABLE_ID, {
+      columnId: CYCLE_COL_A_ID,
+      referencedTableId: CYCLE_Y_TABLE_ID,
+      referencedColumnId: CYCLE_COL_B_ID,
+    });
+
+    const updated = updateColumn(
+      original,
+      CYCLE_X_TABLE_ID,
+      CYCLE_COL_A_ID,
+      { ...columnFields, name: "col_a", type: "TEXT" },
+      { now: new Date("2026-07-19T09:00:00.000Z") },
+    );
+
+    expect(
+      getTable(updated, CYCLE_X_TABLE_ID).columns.find((c) => c.id === CYCLE_COL_A_ID),
+    ).toMatchObject({ type: "TEXT" });
+    expect(
+      getTable(updated, CYCLE_Y_TABLE_ID).columns.find((c) => c.id === CYCLE_COL_B_ID),
+    ).toMatchObject({ type: "TEXT" });
+  });
+
+  it("does not touch other tables when the column's type does not change", () => {
+    const withForeignKey = addForeignKey(buildTwoTableSchema(), POSTS_TABLE_ID, {
+      columnId: POSTS_USER_ID_COLUMN_ID,
+      referencedTableId: USERS_TABLE_ID,
+      referencedColumnId: USERS_ID_COLUMN_ID,
+    });
+    const postsBefore = getTable(withForeignKey, POSTS_TABLE_ID);
+
+    const updated = updateColumn(
+      withForeignKey,
+      USERS_TABLE_ID,
+      USERS_ID_COLUMN_ID,
+      { ...columnFields, name: "id", type: "INTEGER", nullable: false },
+      { now: new Date("2026-07-19T09:00:00.000Z") },
+    );
+
+    expect(getTable(updated, POSTS_TABLE_ID)).toBe(postsBefore);
+  });
+
+  it("does not affect other tables when there is no foreign key relationship", () => {
+    const original = buildTwoTableSchema();
+    const postsBefore = getTable(original, POSTS_TABLE_ID);
+
+    const updated = updateColumn(
+      original,
+      USERS_TABLE_ID,
+      USERS_ID_COLUMN_ID,
+      { ...columnFields, name: "id", type: "REAL" },
+      { now: new Date("2026-07-19T09:00:00.000Z") },
+    );
+
+    expect(getTable(updated, POSTS_TABLE_ID)).toBe(postsBefore);
+  });
+
+  it("does not mutate the input schema when propagating a type change", () => {
+    const original = addForeignKey(buildTwoTableSchema(), POSTS_TABLE_ID, {
+      columnId: POSTS_USER_ID_COLUMN_ID,
+      referencedTableId: USERS_TABLE_ID,
+      referencedColumnId: USERS_ID_COLUMN_ID,
+    });
+
+    updateColumn(
+      original,
+      USERS_TABLE_ID,
+      USERS_ID_COLUMN_ID,
+      { ...columnFields, name: "id", type: "REAL" },
+      { now: new Date("2026-07-19T09:00:00.000Z") },
+    );
+
+    expect(
+      getTable(original, POSTS_TABLE_ID).columns.find((c) => c.id === POSTS_USER_ID_COLUMN_ID),
+    ).toMatchObject({ type: "TEXT" });
   });
 });

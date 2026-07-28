@@ -269,18 +269,23 @@ export function updateColumn(
     return schema;
   }
   const { now = new Date() } = options;
+  const originalType = targetTable?.columns.find((column) => column.id === columnId)?.type;
+  const tables = schema.tables.map((table) =>
+    table.id === tableId
+      ? withNormalizedAutoIncrement({
+          ...table,
+          columns: table.columns.map((column) =>
+            column.id === columnId ? { id: columnId, ...fields } : column,
+          ),
+        })
+      : table,
+  );
   return {
     ...schema,
-    tables: schema.tables.map((table) =>
-      table.id === tableId
-        ? withNormalizedAutoIncrement({
-            ...table,
-            columns: table.columns.map((column) =>
-              column.id === columnId ? { id: columnId, ...fields } : column,
-            ),
-          })
-        : table,
-    ),
+    tables:
+      originalType !== fields.type
+        ? propagateColumnTypeChange(tables, columnId, fields.type)
+        : tables,
     updatedAt: now,
   };
 }
@@ -782,6 +787,44 @@ function removeForeignKeysInvolvingColumn(tables: Table[], columnId: string): Ta
       (fk) => fk.columnId !== columnId && fk.referencedColumnId !== columnId,
     ),
   }));
+}
+
+/**
+ * Cascades a type change (REQ-017) to every FK child column reachable from
+ * `columnId`, transitively through further FK chains. A column is only
+ * enqueued once its type actually flips to `type`, so a column already at
+ * `type` is never reprocessed — this doubles as cycle protection without a
+ * separate visited-set.
+ */
+function propagateColumnTypeChange(tables: Table[], columnId: string, type: ColumnType): Table[] {
+  let result = tables;
+  const queue = [columnId];
+  while (queue.length > 0) {
+    const currentColumnId = queue.shift() as string;
+    const changedChildColumnIds: string[] = [];
+    result = result.map((table) => {
+      const childColumnIds = new Set(
+        table.foreignKeys
+          .filter((fk) => fk.referencedColumnId === currentColumnId)
+          .map((fk) => fk.columnId),
+      );
+      if (childColumnIds.size === 0) {
+        return table;
+      }
+      let changed = false;
+      const columns = table.columns.map((column) => {
+        if (childColumnIds.has(column.id) && column.type !== type) {
+          changed = true;
+          changedChildColumnIds.push(column.id);
+          return { ...column, type };
+        }
+        return column;
+      });
+      return changed ? withNormalizedAutoIncrement({ ...table, columns }) : table;
+    });
+    queue.push(...changedChildColumnIds);
+  }
+  return result;
 }
 
 function withNormalizedAutoIncrement(table: Table): Table {
