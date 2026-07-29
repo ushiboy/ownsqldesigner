@@ -109,6 +109,55 @@ describe("useSchemaWorkspace", () => {
     expect(await repository.loadLastSchemaId()).toBe(result.current.workspace.currentSchema?.id);
   });
 
+  it("loads a schema from a file, assigns it a fresh id, and persists it", async () => {
+    const existing = createSchema("Blog Schema");
+    const repository = createFakeSchemaRepository({
+      schemas: [existing],
+      lastSchemaId: existing.id,
+    });
+    const { result } = renderWorkspace(repository);
+    await waitFor(() => {
+      expect(result.current.workspace.currentSchema).not.toBeNull();
+    });
+    const imported = createSchema("Imported Schema", {
+      id: "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12",
+    });
+
+    act(() => {
+      result.current.workspace.loadSchemaFromFile(imported);
+    });
+
+    await waitFor(() => {
+      expect(result.current.workspace.currentSchema?.name).toBe("Imported Schema");
+    });
+    expect(result.current.workspace.currentSchema?.id).not.toBe(imported.id);
+    expect(await repository.loadLastSchemaId()).toBe(result.current.workspace.currentSchema?.id);
+  });
+
+  it("clears a stale notification when loading a schema from a file", async () => {
+    const existing = createSchema("Blog Schema");
+    const repository = createFakeSchemaRepository({
+      schemas: [existing],
+      lastSchemaId: existing.id,
+    });
+    const { result } = renderWorkspace(repository);
+    await waitFor(() => {
+      expect(result.current.workspace.currentSchema).not.toBeNull();
+    });
+    act(() => {
+      result.current.workspace.selectSchema("missing-id");
+    });
+    await waitFor(() => {
+      expect(result.current.notification.notification).not.toBeNull();
+    });
+
+    act(() => {
+      result.current.workspace.loadSchemaFromFile(createSchema("Imported Schema"));
+    });
+
+    expect(result.current.notification.notification).toBeNull();
+  });
+
   it("switches to a selected schema without bumping its updatedAt", async () => {
     const blog = createSchema("Blog Schema", { now: new Date("2026-07-01T09:00:00.000Z") });
     const shop = createSchema("Shop Schema", { now: new Date("2026-07-02T09:00:00.000Z") });

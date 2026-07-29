@@ -15,6 +15,7 @@ import {
   addKey,
   createSchema,
   createTable,
+  importSchema,
   moveTable,
   removeColumn,
   removeForeignKey,
@@ -33,6 +34,7 @@ import { useNotification } from "../NotificationContext";
 export type SchemaActions = {
   createSchema: (name: string) => void;
   selectSchema: (id: string) => void;
+  loadSchemaFromFile: (schema: Schema) => void;
   renameSchema: (name: string) => void;
   deleteCurrentSchema: () => void;
   createTable: (name: string) => void;
@@ -129,6 +131,10 @@ export function useSchemaWorkspace(
     createSchema: (name) => {
       dismissNotification();
       setCurrentSchema(createSchema(name));
+    },
+    loadSchemaFromFile: (schema) => {
+      dismissNotification();
+      setCurrentSchema(importSchema(schema));
     },
     selectSchema: (id) => {
       (async () => {

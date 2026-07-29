@@ -15,6 +15,7 @@ import {
 } from "./SchemaWorkspaceContext";
 import { useSelection } from "./SelectionContext";
 import { useDeleteKeyShortcut } from "./hooks/useDeleteKeyShortcut";
+import { useDownloadSchemaFile } from "./hooks/useDownloadSchemaFile";
 
 const NO_VALUE = "—";
 
@@ -65,6 +66,8 @@ export function MainScreenView({
     addForeignKey: onAddForeignKey,
     addForeignKeyWithNewColumn: onAddForeignKeyWithNewColumn,
   } = useSchemaActions();
+  const { canDownload: canDownloadSchema, downloadSchemaFile: onDownloadSchema } =
+    useDownloadSchemaFile();
 
   const schemaName = currentSchema?.name ?? NO_VALUE;
   const createdDate =
@@ -82,6 +85,8 @@ export function MainScreenView({
         schemaName={schemaName}
         savedSchemas={savedSchemas}
         currentSchemaId={currentSchema?.id ?? null}
+        canDownloadSchema={canDownloadSchema}
+        onDownloadSchema={onDownloadSchema}
         onSelectSchema={onSelectSchema}
         isSidePanelOpen={isSidePanelOpen}
         onToggleSidePanel={onToggleSidePanel}

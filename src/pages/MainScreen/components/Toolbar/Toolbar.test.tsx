@@ -29,6 +29,22 @@ describe("Toolbar", () => {
     expect(screen.getByRole("button", { name: "Delete schema" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Add Table" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Export SQL" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Download JSON" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Load JSON" })).toBeInTheDocument();
+  });
+
+  it("calls onDownloadSchema when the download button is clicked", async () => {
+    const onDownloadSchema = fn();
+    render(<Default onDownloadSchema={onDownloadSchema} />);
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: "Download JSON" }));
+
+    expect(onDownloadSchema).toHaveBeenCalledOnce();
+  });
+
+  it("disables the download button when canDownloadSchema is false", () => {
+    render(<Default canDownloadSchema={false} />);
+    expect(screen.getByRole("button", { name: "Download JSON" })).toBeDisabled();
   });
 
   it("does not show the schema menu before the trigger is clicked", () => {

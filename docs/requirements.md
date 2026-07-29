@@ -68,7 +68,7 @@ The Phase column gives a rough implementation order: Phase 1 = core MVP, Phase 2
 | REQ-024 | Save and load the entire schema losslessly (diagram layout included) ([0002](design/0002-schema-persistence-and-creation.md))                                         | 1     |
 | REQ-025 | Save, list, and load named schemas in browser storage ([0002](design/0002-schema-persistence-and-creation.md), [0003](design/0003-schema-selection-rename-delete.md)) | 1     |
 | REQ-026 | Export SQL (DDL): CREATE TABLE with keys and foreign-key constraints (SQLite dialect) ([0010](design/0010-name-validation-and-sql-export.md))                         | 1     |
-| REQ-027 | Download the schema as a file / load from a local file                                                                                                                | 2     |
+| REQ-027 | Download the schema as a file / load from a local file ([0014](design/0014-schema-file-download-and-load.md))                                                         | 2     |
 | REQ-028 | Warn before leaving the page with unsaved changes                                                                                                                     | 2     |
 | REQ-035 | Create a new blank schema ([0002](design/0002-schema-persistence-and-creation.md))                                                                                    | 1     |
 | REQ-036 | Delete saved schemas from browser storage ([0003](design/0003-schema-selection-rename-delete.md))                                                                     | 1     |

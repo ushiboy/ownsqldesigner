@@ -1,6 +1,11 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { type ComponentProps, useState } from "react";
 import { fn } from "storybook/test";
+import type { Schema } from "../../../../domain/schema";
+import { createFakeSchemaRepository } from "../../../../test/fakeSchemaRepository";
 import { ActiveDialogProvider } from "../../ActiveDialogContext";
+import { NotificationProvider } from "../../NotificationContext";
+import { SchemaWorkspaceProvider } from "../../SchemaWorkspaceContext";
 import { Toolbar } from "./Toolbar";
 
 const savedSchemas = [
@@ -16,23 +21,43 @@ const savedSchemas = [
   },
 ];
 
+const currentSchema: Schema = {
+  id: savedSchemas[0].id,
+  name: "Blog Schema",
+  tables: [],
+  createdAt: new Date("2026-07-01T09:00:00.000Z"),
+  updatedAt: savedSchemas[0].updatedAt,
+};
+
+// A stable fake repository, so LoadSchemaButton's context providers don't
+// see a new repository identity on every re-render.
+function ToolbarWithProviders(props: ComponentProps<typeof Toolbar>) {
+  const [repository] = useState(() =>
+    createFakeSchemaRepository({ schemas: [currentSchema], lastSchemaId: currentSchema.id }),
+  );
+  return (
+    <NotificationProvider>
+      <ActiveDialogProvider>
+        <SchemaWorkspaceProvider repository={repository} initialSchema={currentSchema}>
+          <Toolbar {...props} />
+        </SchemaWorkspaceProvider>
+      </ActiveDialogProvider>
+    </NotificationProvider>
+  );
+}
+
 const meta = {
   title: "pages/MainScreen/Toolbar",
-  component: Toolbar,
+  component: ToolbarWithProviders,
   args: {
     savedSchemas,
     currentSchemaId: savedSchemas[0].id,
+    canDownloadSchema: true,
+    onDownloadSchema: fn(),
     onSelectSchema: fn(),
     onToggleSidePanel: fn(),
   },
-  decorators: [
-    (Story) => (
-      <ActiveDialogProvider>
-        <Story />
-      </ActiveDialogProvider>
-    ),
-  ],
-} satisfies Meta<typeof Toolbar>;
+} satisfies Meta<typeof ToolbarWithProviders>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;

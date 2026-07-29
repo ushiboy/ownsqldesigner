@@ -2,6 +2,7 @@ import { LuChevronDown, LuPanelRight, LuPencil, LuPlus, LuTrash2 } from "react-i
 import { tv } from "tailwind-variants";
 import type { SchemaSummary } from "../../../../domain/schema";
 import { useActiveDialog } from "../../ActiveDialogContext";
+import { LoadSchemaButton } from "./LoadSchemaButton";
 import { SchemaMenu } from "./SchemaMenu";
 import { useToolbarMenu } from "./useToolbarMenu";
 
@@ -22,6 +23,8 @@ type ToolbarProps = {
   schemaName: string;
   savedSchemas: SchemaSummary[];
   currentSchemaId: string | null;
+  canDownloadSchema: boolean;
+  onDownloadSchema: () => void;
   onSelectSchema: (id: string) => void;
   isSidePanelOpen: boolean;
   onToggleSidePanel: () => void;
@@ -31,6 +34,8 @@ export function Toolbar({
   schemaName,
   savedSchemas,
   currentSchemaId,
+  canDownloadSchema,
+  onDownloadSchema,
   onSelectSchema,
   isSidePanelOpen,
   onToggleSidePanel,
@@ -83,6 +88,15 @@ export function Toolbar({
         <button type="button" onClick={() => openDialog("exportSql")} className={toolButton()}>
           Export SQL
         </button>
+        <button
+          type="button"
+          disabled={!canDownloadSchema}
+          onClick={onDownloadSchema}
+          className={toolButton()}
+        >
+          Download JSON
+        </button>
+        <LoadSchemaButton />
         <button
           type="button"
           aria-label="Toggle side panel"
