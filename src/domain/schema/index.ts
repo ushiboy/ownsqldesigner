@@ -1,0 +1,51 @@
+export { addColumn, removeColumn, updateColumn } from "./column";
+export { addForeignKey, addForeignKeyWithNewColumn, removeForeignKey } from "./foreignKey";
+export { importSchema, isSchemaIntegrityValid, parseSchemaFile } from "./integrity";
+export {
+  EMPTY_COLUMN_KEY_MEMBERSHIP,
+  addKey,
+  getColumnKeyMembership,
+  getColumnKeyMembershipDisabled,
+  getReferenceableColumns,
+  hasConflictingPrimaryKey,
+  hasPrimaryKey,
+  isReferenceableColumn,
+  removeKey,
+  setColumnKeyMembership,
+  updateKey,
+  type ColumnKeyMembership,
+} from "./key";
+export {
+  createSchema,
+  createTable,
+  moveTable,
+  removeTable,
+  renameSchema,
+  renameTable,
+  updateTableComment,
+} from "./table";
+export {
+  DEFAULT_SCHEMA_NAME,
+  SQLITE_COLUMN_TYPES,
+  KEY_TYPES,
+  columnSchema,
+  foreignKeySchema,
+  keySchema,
+  schemaSchema,
+  tableSchema,
+  type Column,
+  type ColumnType,
+  type ForeignKey,
+  type Key,
+  type KeyType,
+  type Position,
+  type Schema,
+  type SchemaSummary,
+  type Table,
+} from "./types";
+export {
+  isColumnNameAvailable,
+  isNameTaken,
+  isTableNameAvailable,
+  isValidIdentifierName,
+} from "./validation";
