@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { Background, ReactFlow, useNodesState } from "@xyflow/react";
+import { Background, Controls, ReactFlow, useNodesState } from "@xyflow/react";
 import type { Connection, Edge, HandleType } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import {
@@ -153,6 +153,7 @@ export function Canvas({
         }}
       >
         <Background />
+        <Controls showInteractive={false} />
       </ReactFlow>
     </div>
   );

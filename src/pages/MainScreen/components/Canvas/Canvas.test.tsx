@@ -15,6 +15,12 @@ describe("Canvas", () => {
     expect(screen.getByTestId("rf__wrapper")).toBeInTheDocument();
   });
 
+  it("renders zoom controls", () => {
+    render(<Default />);
+    expect(screen.getByRole("button", { name: /zoom in/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /zoom out/i })).toBeInTheDocument();
+  });
+
   it("renders a node per table", async () => {
     render(<WithTables />);
     expect(await screen.findByRole("button", { name: "Table users" })).toBeInTheDocument();
