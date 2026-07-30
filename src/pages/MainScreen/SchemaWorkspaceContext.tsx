@@ -41,6 +41,10 @@ export function useSavedSchemas(): SchemaSummary[] {
   return useSchemaWorkspaceContext().savedSchemas;
 }
 
+export function useHasUnsavedChanges(): boolean {
+  return useSchemaWorkspaceContext().hasUnsavedChanges;
+}
+
 export function useSchemaActions(): SchemaActions {
   return useSchemaWorkspaceContext();
 }

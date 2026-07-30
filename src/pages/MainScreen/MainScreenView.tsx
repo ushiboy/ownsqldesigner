@@ -9,6 +9,7 @@ import { SidePanel, type RelationSummary } from "./components/SidePanel";
 import { Toolbar } from "./components/Toolbar";
 import {
   useCurrentSchema,
+  useHasUnsavedChanges,
   useSavedSchemas,
   useSchemaActions,
   useTables,
@@ -16,6 +17,7 @@ import {
 import { useSelection } from "./SelectionContext";
 import { useDeleteKeyShortcut } from "./hooks/useDeleteKeyShortcut";
 import { useDownloadSchemaFile } from "./hooks/useDownloadSchemaFile";
+import { useUnsavedChangesWarning } from "./hooks/useUnsavedChangesWarning";
 
 const NO_VALUE = "—";
 
@@ -49,6 +51,7 @@ export function MainScreenView({
   const { openDialog } = useActiveDialog();
   const currentSchema = useCurrentSchema();
   const savedSchemas = useSavedSchemas();
+  const hasUnsavedChanges = useHasUnsavedChanges();
   const tables = useTables();
   const {
     selectedTableId,
@@ -78,6 +81,7 @@ export function MainScreenView({
   );
 
   useDeleteKeyShortcut({ tableId: selectedTableId, relationId: selectedRelationId });
+  useUnsavedChangesWarning(hasUnsavedChanges);
 
   return (
     <div className="flex h-svh flex-col overflow-hidden">

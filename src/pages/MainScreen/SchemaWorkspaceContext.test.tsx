@@ -6,6 +6,7 @@ import { NotificationProvider } from "./NotificationContext";
 import {
   SchemaWorkspaceProvider,
   useCurrentSchema,
+  useHasUnsavedChanges,
   useSavedSchemas,
   useSchemaActions,
 } from "./SchemaWorkspaceContext";
@@ -27,6 +28,7 @@ function renderWorkspace(initialSchema?: Schema) {
     () => ({
       currentSchema: useCurrentSchema(),
       savedSchemas: useSavedSchemas(),
+      hasUnsavedChanges: useHasUnsavedChanges(),
       actions: useSchemaActions(),
     }),
     {
@@ -83,6 +85,13 @@ describe("SchemaWorkspaceContext", () => {
     await waitFor(async () =>
       expect((await repository.load(blogSchema.id))?.tables).toHaveLength(1),
     );
+  });
+
+  it("reports no unsaved changes once the seeded schema settles", async () => {
+    const { result } = renderWorkspace(blogSchema);
+
+    await waitFor(() => expect(result.current.savedSchemas).toHaveLength(1));
+    expect(result.current.hasUnsavedChanges).toBe(false);
   });
 
   it("throws when used outside a provider", () => {

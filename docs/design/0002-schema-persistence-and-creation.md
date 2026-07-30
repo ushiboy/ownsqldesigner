@@ -2,7 +2,7 @@
 
 - **Status**: Implemented
 - **Created**: 2026-07-18
-- **Updated**: 2026-07-18
+- **Updated**: 2026-07-30
 
 ## Context
 
@@ -116,6 +116,18 @@ named "New Schema" and lets the auto-save effect persist it. The restore
 resolves in a microtask, so the UI renders immediately with placeholder
 values instead of a loading state.
 
+### Save-failure handling (REQ-028)
+
+A thrown `repository.save()` (quota exceeded, private-mode storage, ...)
+is caught in the auto-save effect: it surfaces a notification through the
+existing notification context and flips a `hasUnsavedChanges` flag on the
+workspace, cleared again by the next successful save. `MainScreenView`
+wires that flag into `useUnsavedChangesWarning`, which adds a
+`beforeunload` guard only while it is `true`. Ordinary autosave latency is
+deliberately not guarded — the write resolves in a microtask, so that
+window carries no meaningful risk; only a failed write, which otherwise
+loses the edit silently, does.
+
 ### Creation flow (REQ-035)
 
 "+ New Schema" in the toolbar dropdown opens a **name-input dialog**; on
@@ -168,9 +180,6 @@ doc activates selection.
 
 ## Open Questions
 
-- Save failures (quota exceeded, private mode) are currently silent; the
-  notification bar from 0001 is the likely surface once error UX is
-  designed.
 - Multi-tab use can race on the last-edited pointer and on documents;
   out of scope for now.
 - Whether the dropdown menu gets full APG arrow-key navigation or stays

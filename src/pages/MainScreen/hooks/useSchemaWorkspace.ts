@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   DEFAULT_SCHEMA_NAME,
   type Column,
@@ -66,6 +66,8 @@ export type SchemaWorkspace = SchemaActions & {
   /** null only during the initial async restore tick. */
   currentSchema: Schema | null;
   savedSchemas: SchemaSummary[];
+  /** True when the most recent autosave attempt failed to persist. */
+  hasUnsavedChanges: boolean;
 };
 
 export function useSchemaWorkspace(
@@ -77,9 +79,18 @@ export function useSchemaWorkspace(
   const [seededSchema] = useState(initialSchema);
   const [currentSchema, setCurrentSchema] = useState<Schema | null>(seededSchema ?? null);
   const [savedSchemas, setSavedSchemas] = useState<SchemaSummary[]>([]);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   // Failures surface through the notification context; each successful
   // operation clears any stale message.
   const { notify, dismissNotification } = useNotification();
+  // A stable handle to the latest `notify`: the autosave effect below keys
+  // off `currentSchema` only, so it must not re-run just because some
+  // unrelated notify() call elsewhere changed the notification context's
+  // function identity.
+  const notifyRef = useRef(notify);
+  useEffect(() => {
+    notifyRef.current = notify;
+  }, [notify]);
 
   // Startup restore: the last-edited schema, or a fresh blank one on the
   // first visit (or when the last-edited pointer dangles). A seeded
@@ -112,8 +123,22 @@ export function useSchemaWorkspace(
       // not written straight back; the summary list is still refreshed so
       // the schema menu has the same contents it would have in the app.
       if (currentSchema !== seededSchema) {
-        await repository.save(currentSchema);
-        await repository.saveLastSchemaId(currentSchema.id);
+        try {
+          await repository.save(currentSchema);
+          await repository.saveLastSchemaId(currentSchema.id);
+        } catch {
+          // Quota exceeded, private-mode storage, etc: the edit exists only
+          // in memory. Surface it and let the beforeunload guard (see
+          // useUnsavedChangesWarning) stop the user from losing it silently.
+          if (!cancelled) {
+            setHasUnsavedChanges(true);
+            notifyRef.current("Could not save your changes. Leaving this page may lose them.");
+          }
+          return;
+        }
+      }
+      if (!cancelled) {
+        setHasUnsavedChanges(false);
       }
       const summaries = await repository.list();
       if (!cancelled) {
@@ -128,6 +153,7 @@ export function useSchemaWorkspace(
   return {
     currentSchema,
     savedSchemas,
+    hasUnsavedChanges,
     createSchema: (name) => {
       dismissNotification();
       setCurrentSchema(createSchema(name));

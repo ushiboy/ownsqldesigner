@@ -84,6 +84,57 @@ describe("useSchemaWorkspace", () => {
     });
   });
 
+  it("marks unsaved changes and notifies when an autosave attempt fails", async () => {
+    const blog = createSchema("Blog Schema");
+    const repository = createFakeSchemaRepository({ schemas: [blog], lastSchemaId: blog.id });
+    const { result } = renderWorkspace(repository);
+    // Let the startup restore's own resave complete before rigging a failure,
+    // so the mock rejects the mutation below and not that unrelated write.
+    await waitFor(() => {
+      expect(result.current.workspace.savedSchemas).toHaveLength(1);
+    });
+    vi.spyOn(repository, "save").mockRejectedValueOnce(new Error("quota exceeded"));
+
+    act(() => {
+      result.current.workspace.createTable("posts");
+    });
+
+    await waitFor(() => {
+      expect(result.current.workspace.hasUnsavedChanges).toBe(true);
+    });
+    expect(result.current.notification.notification).toBe(
+      "Could not save your changes. Leaving this page may lose them.",
+    );
+    expect(await repository.load(blog.id)).toEqual(blog);
+  });
+
+  it("clears the unsaved-changes flag once a later save succeeds", async () => {
+    const blog = createSchema("Blog Schema");
+    const repository = createFakeSchemaRepository({ schemas: [blog], lastSchemaId: blog.id });
+    const { result } = renderWorkspace(repository);
+    await waitFor(() => {
+      expect(result.current.workspace.savedSchemas).toHaveLength(1);
+    });
+    vi.spyOn(repository, "save").mockRejectedValueOnce(new Error("quota exceeded"));
+    act(() => {
+      result.current.workspace.createTable("posts");
+    });
+    await waitFor(() => {
+      expect(result.current.workspace.hasUnsavedChanges).toBe(true);
+    });
+
+    act(() => {
+      result.current.workspace.renameTable(
+        result.current.workspace.currentSchema?.tables[0]?.id ?? "",
+        "articles",
+      );
+    });
+
+    await waitFor(() => {
+      expect(result.current.workspace.hasUnsavedChanges).toBe(false);
+    });
+  });
+
   it("creates, persists, and switches to a new schema via createSchema", async () => {
     const existing = createSchema("Blog Schema");
     const repository = createFakeSchemaRepository({
