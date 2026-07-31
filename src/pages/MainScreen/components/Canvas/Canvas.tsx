@@ -22,13 +22,13 @@ const nodeTypes = { table: TableNode };
 
 type CanvasProps = {
   tables: Table[];
-  selectedTableId: string | null;
+  selectedTableIds: ReadonlySet<string>;
   selectedRelationId: string | null;
-  /** null deselects (pane click). */
-  onSelectTable: (id: string | null) => void;
+  /** Fires with every selection-changing gesture: click, shift-click, rubber-band, pane click ([]). */
+  onTableSelectionChange: (ids: string[]) => void;
   /** null deselects (pane click). */
   onSelectRelation: (id: string | null) => void;
-  onMoveTable: (tableId: string, position: Position) => void;
+  onMoveTables: (moves: { tableId: string; position: Position }[]) => void;
   onAddForeignKey: (tableId: string, fields: Omit<ForeignKey, "id">) => void;
   onAddForeignKeyWithNewColumn: (
     childTableId: string,
@@ -39,11 +39,11 @@ type CanvasProps = {
 
 export function Canvas({
   tables,
-  selectedTableId,
+  selectedTableIds,
   selectedRelationId,
-  onSelectTable,
+  onTableSelectionChange,
   onSelectRelation,
-  onMoveTable,
+  onMoveTables,
   onAddForeignKey,
   onAddForeignKeyWithNewColumn,
 }: CanvasProps) {
@@ -54,7 +54,7 @@ export function Canvas({
   // state: they're anchored to node/handle ids, not fixed coordinates, so
   // they follow dragged nodes automatically.
   const [nodes, setNodes, handleNodesChange] = useNodesState<TableNodeType>(
-    tablesToNodes(tables, selectedTableId),
+    tablesToNodes(tables, selectedTableIds),
   );
   const edges = tablesToEdges(tables, selectedRelationId);
   // Set in onConnectStart, read in isValidConnection (both fire mid-drag,
@@ -65,8 +65,8 @@ export function Canvas({
   const dragStartHandleTypeRef = useRef<HandleType | null>(null);
 
   useEffect(() => {
-    setNodes(tablesToNodes(tables, selectedTableId));
-  }, [tables, selectedTableId, setNodes]);
+    setNodes(tablesToNodes(tables, selectedTableIds));
+  }, [tables, selectedTableIds, setNodes]);
 
   return (
     <div className="h-full w-full">
@@ -80,15 +80,24 @@ export function Canvas({
         // state (used only to animate in-progress drags) and cause a
         // flicker before the confirm flow runs.
         deleteKeyCode={null}
+        // One modifier for both click-accumulate and rubber-band, matching
+        // REQ-004's "Shift+click". Table selection itself is not read from
+        // onNodeClick/onPaneClick below — React Flow's own selection engine
+        // already implements click/shift-click/box-select, and it reports
+        // every resulting selection through onSelectionChange.
+        multiSelectionKeyCode="Shift"
+        onSelectionChange={({ nodes: selectedNodes }) => {
+          onTableSelectionChange(selectedNodes.map((node) => node.id));
+        }}
         onNodesChange={(changes) => {
           handleNodesChange(changes);
-          for (const { id, position } of selectCommittedMoves(changes)) {
-            onMoveTable(id, position);
+          const moves = selectCommittedMoves(changes);
+          if (moves.length > 0) {
+            onMoveTables(moves.map(({ id, position }) => ({ tableId: id, position })));
           }
         }}
-        onNodeClick={(_, node) => {
+        onNodeClick={() => {
           onSelectRelation(null);
-          onSelectTable(node.id);
         }}
         onConnect={(connection) => {
           const columnId = columnIdFromHandle(connection.sourceHandle);
@@ -144,11 +153,9 @@ export function Canvas({
           }
         }}
         onEdgeClick={(_, edge) => {
-          onSelectTable(null);
           onSelectRelation(edge.id);
         }}
         onPaneClick={() => {
-          onSelectTable(null);
           onSelectRelation(null);
         }}
       >
@@ -159,7 +166,7 @@ export function Canvas({
   );
 }
 
-function tablesToNodes(tables: Table[], selectedTableId: string | null): TableNodeType[] {
+function tablesToNodes(tables: Table[], selectedTableIds: ReadonlySet<string>): TableNodeType[] {
   return tables.map((table) => ({
     id: table.id,
     type: "table",
@@ -173,7 +180,7 @@ function tablesToNodes(tables: Table[], selectedTableId: string | null): TableNo
         referenceable: isReferenceableColumn(table, id),
       })),
     },
-    selected: table.id === selectedTableId,
+    selected: selectedTableIds.has(table.id),
   }));
 }
 

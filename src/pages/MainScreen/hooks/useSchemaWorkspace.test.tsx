@@ -531,6 +531,70 @@ describe("useSchemaWorkspace", () => {
     expect(result.current.workspace.currentSchema?.updatedAt).toEqual(blog.updatedAt);
   });
 
+  it("moves a batch of tables in one update and persists it", async () => {
+    const blog = createTable(
+      createTable(
+        createSchema("Blog Schema", { now: new Date("2026-07-01T09:00:00.000Z") }),
+        "posts",
+        { id: "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12", now: new Date("2026-07-01T09:00:00.000Z") },
+      ),
+      "comments",
+      { id: "e5c3fb8c-9c97-4f5e-d2cf-5f8f3d8c7b23", now: new Date("2026-07-01T09:00:00.000Z") },
+    );
+    const repository = createFakeSchemaRepository({ schemas: [blog], lastSchemaId: blog.id });
+    const { result } = renderWorkspace(repository);
+    await waitFor(() => {
+      expect(result.current.workspace.currentSchema).not.toBeNull();
+    });
+
+    act(() => {
+      result.current.workspace.moveTables([
+        { tableId: "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12", position: { x: 400, y: 300 } },
+        { tableId: "e5c3fb8c-9c97-4f5e-d2cf-5f8f3d8c7b23", position: { x: 500, y: 100 } },
+      ]);
+    });
+
+    await waitFor(() => {
+      expect(result.current.workspace.currentSchema?.tables[0]?.position).toEqual({
+        x: 400,
+        y: 300,
+      });
+    });
+    expect(result.current.workspace.currentSchema?.tables[1]?.position).toEqual({
+      x: 500,
+      y: 100,
+    });
+    const persisted = await repository.load(blog.id);
+    expect(persisted?.tables[0]?.position).toEqual({ x: 400, y: 300 });
+    expect(persisted?.tables[1]?.position).toEqual({ x: 500, y: 100 });
+    expect(persisted?.updatedAt.getTime()).toBeGreaterThan(blog.updatedAt.getTime());
+  });
+
+  it("treats a batch move where every position is unchanged as a no-op", async () => {
+    const blog = createTable(
+      createSchema("Blog Schema", { now: new Date("2026-07-01T09:00:00.000Z") }),
+      "posts",
+      { id: "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12", now: new Date("2026-07-01T09:00:00.000Z") },
+    );
+    const repository = createFakeSchemaRepository({ schemas: [blog], lastSchemaId: blog.id });
+    const { result } = renderWorkspace(repository);
+    await waitFor(() => {
+      expect(result.current.workspace.currentSchema).not.toBeNull();
+    });
+    const originalPosition = result.current.workspace.currentSchema?.tables[0]?.position;
+
+    act(() => {
+      result.current.workspace.moveTables([
+        {
+          tableId: "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12",
+          position: originalPosition ?? { x: 0, y: 0 },
+        },
+      ]);
+    });
+
+    expect(result.current.workspace.currentSchema?.updatedAt).toEqual(blog.updatedAt);
+  });
+
   it("removes a table, bumps updatedAt, and persists it", async () => {
     const blog = createTable(
       createSchema("Blog Schema", { now: new Date("2026-07-01T09:00:00.000Z") }),

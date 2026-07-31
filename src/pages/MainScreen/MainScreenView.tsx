@@ -55,8 +55,9 @@ export function MainScreenView({
   const tables = useTables();
   const {
     selectedTableId,
+    selectedTableIds,
     selectedRelationId,
-    selectTable,
+    setTableSelection,
     selectColumn,
     selectKey,
     selectRelation,
@@ -65,7 +66,7 @@ export function MainScreenView({
     selectSchema: onSelectSchema,
     renameTable: onUpdateTableName,
     updateTableComment: onUpdateTableComment,
-    moveTable: onMoveTable,
+    moveTables: onMoveTables,
     addForeignKey: onAddForeignKey,
     addForeignKeyWithNewColumn: onAddForeignKeyWithNewColumn,
   } = useSchemaActions();
@@ -100,11 +101,11 @@ export function MainScreenView({
           <NotificationBar />
           <Canvas
             tables={tables}
-            selectedTableId={selectedTableId}
+            selectedTableIds={selectedTableIds}
             selectedRelationId={selectedRelationId}
-            onSelectTable={selectTable}
+            onTableSelectionChange={setTableSelection}
             onSelectRelation={selectRelation}
-            onMoveTable={onMoveTable}
+            onMoveTables={onMoveTables}
             onAddForeignKey={onAddForeignKey}
             onAddForeignKeyWithNewColumn={onAddForeignKeyWithNewColumn}
           />

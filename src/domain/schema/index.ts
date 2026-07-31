@@ -19,6 +19,7 @@ export {
   createSchema,
   createTable,
   moveTable,
+  moveTables,
   removeTable,
   renameSchema,
   renameTable,

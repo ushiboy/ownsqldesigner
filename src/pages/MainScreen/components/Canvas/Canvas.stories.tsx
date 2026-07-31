@@ -85,11 +85,11 @@ const meta = {
   component: Canvas,
   args: {
     tables: [],
-    selectedTableId: null,
+    selectedTableIds: new Set(),
     selectedRelationId: null,
-    onSelectTable: fn(),
+    onTableSelectionChange: fn(),
     onSelectRelation: fn(),
-    onMoveTable: fn(),
+    onMoveTables: fn(),
     onAddForeignKey: fn(),
     onAddForeignKeyWithNewColumn: fn(),
   },
@@ -112,7 +112,11 @@ export const WithTables: Story = {
 };
 
 export const Selected: Story = {
-  args: { tables, selectedTableId: tables[0]?.id ?? null },
+  args: { tables, selectedTableIds: new Set(tables[0] === undefined ? [] : [tables[0].id]) },
+};
+
+export const MultiSelected: Story = {
+  args: { tables, selectedTableIds: new Set(tables.map((table) => table.id)) },
 };
 
 export const WithRelation: Story = {

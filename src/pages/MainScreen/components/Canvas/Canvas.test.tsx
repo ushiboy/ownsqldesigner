@@ -7,7 +7,8 @@ import { fn, userEvent } from "storybook/test";
 import { composeStories } from "@storybook/react-vite";
 import * as stories from "./Canvas.stories";
 
-const { Default, WithTables, Selected, WithRelation, RelationSelected } = composeStories(stories);
+const { Default, WithTables, Selected, MultiSelected, WithRelation, RelationSelected } =
+  composeStories(stories);
 
 describe("Canvas", () => {
   it("renders the React Flow surface", () => {
@@ -33,18 +34,29 @@ describe("Canvas", () => {
     expect(screen.getByRole("button", { name: "Table posts" })).not.toHaveClass("border-accent");
   });
 
-  it("calls onSelectTable with the clicked table's id", async () => {
-    const onSelectTable = fn();
-    render(<WithTables onSelectTable={onSelectTable} />);
+  it("marks every multi-selected table's node as selected", async () => {
+    render(<MultiSelected />);
+    expect(await screen.findByRole("button", { name: "Table users" })).toHaveClass("border-accent");
+    expect(screen.getByRole("button", { name: "Table posts" })).toHaveClass("border-accent");
+  });
+
+  it("calls onTableSelectionChange with the clicked table's id", async () => {
+    // React Flow's selection listener also echoes the (empty) initial
+    // selection once on mount, so the click's effect is asserted as the
+    // most recent call rather than the only one.
+    const onTableSelectionChange = fn();
+    render(<WithTables onTableSelectionChange={onTableSelectionChange} />);
 
     await userEvent.click(await screen.findByRole("button", { name: "Table users" }));
 
-    expect(onSelectTable).toHaveBeenCalledExactlyOnceWith("d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12");
+    expect(onTableSelectionChange).toHaveBeenLastCalledWith([
+      "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12",
+    ]);
   });
 
-  it("calls onSelectTable with null on a pane click", async () => {
-    const onSelectTable = fn();
-    render(<WithTables onSelectTable={onSelectTable} />);
+  it("calls onTableSelectionChange with an empty array on a pane click", async () => {
+    const onTableSelectionChange = fn();
+    render(<Selected onTableSelectionChange={onTableSelectionChange} />);
     await screen.findByRole("button", { name: "Table users" });
 
     const pane = screen.getByTestId("rf__wrapper").querySelector(".react-flow__pane");
@@ -53,7 +65,7 @@ describe("Canvas", () => {
     }
     await userEvent.click(pane);
 
-    expect(onSelectTable).toHaveBeenCalledExactlyOnceWith(null);
+    expect(onTableSelectionChange).toHaveBeenLastCalledWith([]);
   });
 
   it("renders a foreign-key edge between the connected columns", async () => {

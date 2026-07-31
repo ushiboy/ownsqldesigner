@@ -2,6 +2,7 @@ import {
   createSchema,
   createTable,
   moveTable,
+  moveTables,
   removeTable,
   renameSchema,
   renameTable,
@@ -396,6 +397,64 @@ describe("moveTable", () => {
       {
         now: new Date("2026-07-19T09:00:00.000Z"),
       },
+    );
+
+    expect(original.tables[0]?.position).toEqual({ x: 0, y: 0 });
+  });
+});
+
+describe("moveTables", () => {
+  const original = createTable(
+    createTable(
+      createSchema("Blog Schema", {
+        id: "c3a1e96a-9a75-4d3c-b0ad-3d6e1b6a5f01",
+        now: new Date("2026-07-18T09:00:00.000Z"),
+      }),
+      "posts",
+      { id: "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12", now: new Date("2026-07-18T09:00:00.000Z") },
+    ),
+    "comments",
+    { id: "e5c3fb8c-9c97-4f5e-d2cf-5f8f3d8c7b23", now: new Date("2026-07-18T09:00:00.000Z") },
+  );
+
+  it("updates every matching table's position and bumps updatedAt once", () => {
+    const moved = moveTables(
+      original,
+      [
+        { tableId: "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12", position: { x: 400, y: 300 } },
+        { tableId: "e5c3fb8c-9c97-4f5e-d2cf-5f8f3d8c7b23", position: { x: 500, y: 100 } },
+      ],
+      { now: new Date("2026-07-19T09:00:00.000Z") },
+    );
+
+    expect(moved.tables[0]?.position).toEqual({ x: 400, y: 300 });
+    expect(moved.tables[1]?.position).toEqual({ x: 500, y: 100 });
+    expect(moved.updatedAt).toEqual(new Date("2026-07-19T09:00:00.000Z"));
+  });
+
+  it("leaves tables not named in the batch untouched", () => {
+    const moved = moveTables(
+      original,
+      [{ tableId: "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12", position: { x: 400, y: 300 } }],
+      { now: new Date("2026-07-19T09:00:00.000Z") },
+    );
+
+    expect(moved.tables[1]?.position).toEqual({ x: 260, y: 0 });
+  });
+
+  it("is a no-op when no move matches an existing table id", () => {
+    const moved = moveTables(original, [{ tableId: "unknown-id", position: { x: 400, y: 300 } }], {
+      now: new Date("2026-07-19T09:00:00.000Z"),
+    });
+
+    expect(moved).toBe(original);
+  });
+
+  it("does not mutate the input schema", () => {
+    moveTables(
+      original,
+      [{ tableId: "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12", position: { x: 400, y: 300 } }],
+      { now: new Date("2026-07-19T09:00:00.000Z") },
     );
 
     expect(original.tables[0]?.position).toEqual({ x: 0, y: 0 });

@@ -17,6 +17,7 @@ import {
   createTable,
   importSchema,
   moveTable,
+  moveTables,
   removeColumn,
   removeForeignKey,
   removeKey,
@@ -41,6 +42,7 @@ export type SchemaActions = {
   renameTable: (tableId: string, name: string) => void;
   updateTableComment: (tableId: string, comment: string) => void;
   moveTable: (tableId: string, position: Position) => void;
+  moveTables: (moves: { tableId: string; position: Position }[]) => void;
   removeTable: (tableId: string) => void;
   addColumn: (tableId: string, fields: Omit<Column, "id">, id?: string) => void;
   updateColumn: (tableId: string, columnId: string, fields: Omit<Column, "id">) => void;
@@ -241,6 +243,22 @@ export function useSchemaWorkspace(
         return isTablePositionUnchanged(table, position)
           ? prev
           : moveTable(prev, tableId, position);
+      });
+    },
+    moveTables: (moves) => {
+      dismissNotification();
+      setCurrentSchema((prev) => {
+        if (prev === null) {
+          return prev;
+        }
+        const changedMoves = moves.filter(
+          (move) =>
+            !isTablePositionUnchanged(
+              prev.tables.find((t) => t.id === move.tableId),
+              move.position,
+            ),
+        );
+        return changedMoves.length === 0 ? prev : moveTables(prev, changedMoves);
       });
     },
     removeTable: (tableId) => {

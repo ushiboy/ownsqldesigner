@@ -137,6 +137,30 @@ export function moveTable(
   };
 }
 
+type MoveTablesOptions = {
+  now?: Date;
+};
+
+export function moveTables(
+  schema: Schema,
+  moves: readonly { tableId: string; position: Position }[],
+  options: MoveTablesOptions = {},
+): Schema {
+  const positionByTableId = new Map(moves.map((move) => [move.tableId, move.position]));
+  if (!schema.tables.some((table) => positionByTableId.has(table.id))) {
+    return schema;
+  }
+  const { now = new Date() } = options;
+  return {
+    ...schema,
+    tables: schema.tables.map((table) => {
+      const position = positionByTableId.get(table.id);
+      return position === undefined ? table : { ...table, position };
+    }),
+    updatedAt: now,
+  };
+}
+
 type RemoveTableOptions = {
   now?: Date;
 };

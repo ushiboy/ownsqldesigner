@@ -2,18 +2,21 @@ import { type ReactNode, createContext, useContext, useMemo, useState } from "re
 import { useCurrentSchema } from "./SchemaWorkspaceContext";
 
 export type InitialSelection = {
-  tableId?: string;
+  tableIds?: string[];
   columnId?: string;
   keyId?: string;
   relationId?: string;
 };
 
 type SelectionContextValue = {
+  /** Derived: the sole id when exactly one table is selected, else null. */
   selectedTableId: string | null;
+  selectedTableIds: ReadonlySet<string>;
   selectedColumnId: string | null;
   selectedKeyId: string | null;
   selectedRelationId: string | null;
   selectTable: (id: string | null) => void;
+  setTableSelection: (ids: readonly string[]) => void;
   selectColumn: (id: string | null) => void;
   selectKey: (id: string | null) => void;
   selectRelation: (id: string | null) => void;
@@ -29,8 +32,8 @@ type SelectionProviderProps = {
 
 export function SelectionProvider({ initialSelection, children }: SelectionProviderProps) {
   const currentSchema = useCurrentSchema();
-  const [selectedTableId, setSelectedTableId] = useState<string | null>(
-    initialSelection?.tableId ?? null,
+  const [selectedTableIds, setSelectedTableIds] = useState<ReadonlySet<string>>(
+    () => new Set(initialSelection?.tableIds ?? []),
   );
   const [selectedColumnId, setSelectedColumnId] = useState<string | null>(
     initialSelection?.columnId ?? null,
@@ -49,29 +52,47 @@ export function SelectionProvider({ initialSelection, children }: SelectionProvi
   );
   if (currentSchema?.id !== selectedSchemaId) {
     setSelectedSchemaId(currentSchema?.id ?? null);
-    setSelectedTableId(null);
+    setSelectedTableIds(new Set());
     setSelectedColumnId(null);
     setSelectedKeyId(null);
     setSelectedRelationId(null);
   }
 
-  const value = useMemo(
-    () => ({
+  const value = useMemo(() => {
+    const selectedTableId = selectedTableIds.size === 1 ? [...selectedTableIds][0]! : null;
+    return {
       selectedTableId,
+      selectedTableIds,
       selectedColumnId,
       selectedKeyId,
       selectedRelationId,
       selectTable: (id: string | null) => {
-        setSelectedTableId(id);
+        const ids = id === null ? [] : [id];
+        if (isSameTableSelection(selectedTableIds, ids)) {
+          return;
+        }
+        setSelectedTableIds(new Set(ids));
+        setSelectedColumnId(null);
+        setSelectedKeyId(null);
+      },
+      // Guarded against a no-op update, not just as an optimization: Canvas's
+      // onSelectionChange also echoes the current selection once on mount
+      // (see docs/design/0015-multi-select-and-group-move.md), and an
+      // unguarded call would clear an already-selected column/key on every
+      // mount even though the table selection itself did not change.
+      setTableSelection: (ids: readonly string[]) => {
+        if (isSameTableSelection(selectedTableIds, ids)) {
+          return;
+        }
+        setSelectedTableIds(new Set(ids));
         setSelectedColumnId(null);
         setSelectedKeyId(null);
       },
       selectColumn: setSelectedColumnId,
       selectKey: setSelectedKeyId,
       selectRelation: setSelectedRelationId,
-    }),
-    [selectedTableId, selectedColumnId, selectedKeyId, selectedRelationId],
-  );
+    };
+  }, [selectedTableIds, selectedColumnId, selectedKeyId, selectedRelationId]);
 
   return <SelectionContext value={value}>{children}</SelectionContext>;
 }
@@ -82,4 +103,8 @@ export function useSelection(): SelectionContextValue {
     throw new Error("useSelection must be used within a SelectionProvider");
   }
   return value;
+}
+
+function isSameTableSelection(current: ReadonlySet<string>, next: readonly string[]): boolean {
+  return current.size === next.length && next.every((id) => current.has(id));
 }

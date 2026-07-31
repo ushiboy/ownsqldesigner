@@ -144,14 +144,14 @@ export const WithNotification: Story = {
 export const TableSelected: Story = {
   args: {
     initialSchema: withUsers,
-    initialSelection: { tableId: usersTable.id },
+    initialSelection: { tableIds: [usersTable.id] },
   },
 };
 
 export const DeleteColumnDialogOpen: Story = {
   args: {
     initialSchema: withUsers,
-    initialSelection: { tableId: usersTable.id, columnId: usersTable.columns[0].id },
+    initialSelection: { tableIds: [usersTable.id], columnId: usersTable.columns[0].id },
     initialDialog: "deleteColumn",
   },
 };
@@ -159,7 +159,7 @@ export const DeleteColumnDialogOpen: Story = {
 export const AddColumnDialogOpenPrimaryKeyAvailable: Story = {
   args: {
     initialSchema: withUsersLackingPrimaryKey,
-    initialSelection: { tableId: usersTable.id },
+    initialSelection: { tableIds: [usersTable.id] },
     initialDialog: "addColumn",
   },
 };
@@ -167,7 +167,7 @@ export const AddColumnDialogOpenPrimaryKeyAvailable: Story = {
 export const EditPrimaryKeyColumnDialogOpen: Story = {
   args: {
     initialSchema: withUsers,
-    initialSelection: { tableId: usersTable.id, columnId: usersTable.columns[1].id },
+    initialSelection: { tableIds: [usersTable.id], columnId: usersTable.columns[1].id },
     initialDialog: "editColumn",
   },
 };
@@ -175,21 +175,21 @@ export const EditPrimaryKeyColumnDialogOpen: Story = {
 export const TableWithRelationSelected: Story = {
   args: {
     initialSchema: withRelation,
-    initialSelection: { tableId: postsTable.id },
+    initialSelection: { tableIds: [postsTable.id] },
   },
 };
 
 export const RelationSelected: Story = {
   args: {
     initialSchema: withRelation,
-    initialSelection: { tableId: postsTable.id, relationId: postsTable.foreignKeys[0].id },
+    initialSelection: { tableIds: [postsTable.id], relationId: postsTable.foreignKeys[0].id },
   },
 };
 
 export const DeleteRelationDialogOpen: Story = {
   args: {
     initialSchema: withRelation,
-    initialSelection: { tableId: postsTable.id, relationId: postsTable.foreignKeys[0].id },
+    initialSelection: { tableIds: [postsTable.id], relationId: postsTable.foreignKeys[0].id },
     initialDialog: "deleteRelation",
   },
 };
