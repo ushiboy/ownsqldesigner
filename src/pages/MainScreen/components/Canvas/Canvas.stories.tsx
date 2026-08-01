@@ -1,6 +1,11 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { fn } from "storybook/test";
+// storybook/test's userEvent (not the standalone @testing-library/user-event
+// package): its default click also crashes React Flow's d3-zoom pane, which
+// reads `event.view` from the dispatched mouse event and gets null from the
+// standalone package.
+import { fn, userEvent, within } from "storybook/test";
 import type { Table } from "../../../../domain/schema";
+import { CanvasApiProvider } from "../../CanvasApiContext";
 import { Canvas } from "./Canvas";
 
 const tables: Table[] = [
@@ -85,7 +90,6 @@ const meta = {
   component: Canvas,
   args: {
     tables: [],
-    selectedTableIds: new Set(),
     selectedRelationId: null,
     onTableSelectionChange: fn(),
     onSelectRelation: fn(),
@@ -95,9 +99,11 @@ const meta = {
   },
   decorators: [
     (Story) => (
-      <div className="h-[400px]">
-        <Story />
-      </div>
+      <CanvasApiProvider>
+        <div className="h-[400px]">
+          <Story />
+        </div>
+      </CanvasApiProvider>
     ),
   ],
 } satisfies Meta<typeof Canvas>;
@@ -111,12 +117,33 @@ export const WithTables: Story = {
   args: { tables },
 };
 
+// Selection is React Flow's own internal state (see
+// docs/design/0016-undo-redo.md), so there's no prop to seed it with — the
+// play function drives a real click/shift-click to reach the state.
 export const Selected: Story = {
-  args: { tables, selectedTableIds: new Set(tables[0] === undefined ? [] : [tables[0].id]) },
+  args: { tables },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(await canvas.findByRole("button", { name: "Table users" }));
+  },
 };
 
 export const MultiSelected: Story = {
-  args: { tables, selectedTableIds: new Set(tables.map((table) => table.id)) },
+  args: { tables },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    // Shares one session across the press/click/release so the modifier
+    // state is tracked consistently, and releases Shift in `finally` so a
+    // failed click can't leak a held key into a later test.
+    const user = userEvent.setup();
+    await user.click(await canvas.findByRole("button", { name: "Table users" }));
+    await user.keyboard("{Shift>}");
+    try {
+      await user.click(canvas.getByRole("button", { name: "Table posts" }));
+    } finally {
+      await user.keyboard("{/Shift}");
+    }
+  },
 };
 
 export const WithRelation: Story = {

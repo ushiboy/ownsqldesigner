@@ -11,6 +11,7 @@ import {
 import type { SchemaRepository } from "../../domain/schemaRepository";
 import { createLocalStorageSchemaRepository } from "../../infrastructure/localStorageSchemaRepository";
 import { ActiveDialogProvider, type DialogKind } from "./ActiveDialogContext";
+import { CanvasApiProvider } from "./CanvasApiContext";
 import { describeForeignKey, type RelationSummary } from "./components/SidePanel";
 import { MainScreenView } from "./MainScreenView";
 import { NotificationProvider } from "./NotificationContext";
@@ -47,7 +48,9 @@ function MainScreen({
       <ActiveDialogProvider initialDialog={initialDialog}>
         <SchemaWorkspaceProvider repository={repository} initialSchema={initialSchema}>
           <SelectionProvider initialSelection={initialSelection}>
-            <MainScreenContent initialSidePanelOpen={initialSidePanelOpen} />
+            <CanvasApiProvider>
+              <MainScreenContent initialSidePanelOpen={initialSidePanelOpen} />
+            </CanvasApiProvider>
           </SelectionProvider>
         </SchemaWorkspaceProvider>
       </ActiveDialogProvider>

@@ -10,6 +10,18 @@ import * as stories from "./Canvas.stories";
 const { Default, WithTables, Selected, MultiSelected, WithRelation, RelationSelected } =
   composeStories(stories);
 
+// Story.run() mounts into its own React root via ReactDOM.createRoot,
+// bypassing @testing-library/react's auto-cleanup entirely (confirmed by
+// reading @storybook/react-dom-shim's renderer). Its container is only
+// removed at the start of the *next* run()/load() call, so a run()-driven
+// test's leftover node stays queryable — and reachable by role — in every
+// later test unless something forces that flush here. load() does the same
+// internal flush without rendering anything of its own, so it's a clean way
+// to trigger it after every test.
+afterEach(async () => {
+  await Default.load();
+});
+
 describe("Canvas", () => {
   it("renders the React Flow surface", () => {
     render(<Default />);
@@ -29,14 +41,14 @@ describe("Canvas", () => {
   });
 
   it("marks the selected table's node as selected", async () => {
-    render(<Selected />);
-    expect(await screen.findByRole("button", { name: "Table users" })).toHaveClass("border-accent");
+    await Selected.run();
+    expect(screen.getByRole("button", { name: "Table users" })).toHaveClass("border-accent");
     expect(screen.getByRole("button", { name: "Table posts" })).not.toHaveClass("border-accent");
   });
 
   it("marks every multi-selected table's node as selected", async () => {
-    render(<MultiSelected />);
-    expect(await screen.findByRole("button", { name: "Table users" })).toHaveClass("border-accent");
+    await MultiSelected.run();
+    expect(screen.getByRole("button", { name: "Table users" })).toHaveClass("border-accent");
     expect(screen.getByRole("button", { name: "Table posts" })).toHaveClass("border-accent");
   });
 
@@ -55,9 +67,11 @@ describe("Canvas", () => {
   });
 
   it("calls onTableSelectionChange with an empty array on a pane click", async () => {
+    // .run()'s extraContext is Object.assign'd onto the story context, so
+    // `args` must be spread from the story's own args rather than passed as
+    // a partial override — otherwise it replaces `tables` with `undefined`.
     const onTableSelectionChange = fn();
-    render(<Selected onTableSelectionChange={onTableSelectionChange} />);
-    await screen.findByRole("button", { name: "Table users" });
+    await Selected.run({ args: { ...Selected.args, onTableSelectionChange } });
 
     const pane = screen.getByTestId("rf__wrapper").querySelector(".react-flow__pane");
     if (pane === null) {

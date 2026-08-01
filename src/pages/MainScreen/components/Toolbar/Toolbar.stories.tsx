@@ -4,6 +4,7 @@ import { fn } from "storybook/test";
 import type { Schema } from "../../../../domain/schema";
 import { createFakeSchemaRepository } from "../../../../test/fakeSchemaRepository";
 import { ActiveDialogProvider } from "../../ActiveDialogContext";
+import { CanvasApiProvider } from "../../CanvasApiContext";
 import { NotificationProvider } from "../../NotificationContext";
 import { SchemaWorkspaceProvider } from "../../SchemaWorkspaceContext";
 import { SelectionProvider } from "../../SelectionContext";
@@ -41,7 +42,9 @@ function ToolbarWithProviders(props: ComponentProps<typeof Toolbar>) {
       <ActiveDialogProvider>
         <SchemaWorkspaceProvider repository={repository} initialSchema={currentSchema}>
           <SelectionProvider>
-            <Toolbar {...props} />
+            <CanvasApiProvider>
+              <Toolbar {...props} />
+            </CanvasApiProvider>
           </SelectionProvider>
         </SchemaWorkspaceProvider>
       </ActiveDialogProvider>

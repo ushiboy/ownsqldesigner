@@ -1,10 +1,5 @@
 import type { NodeChange } from "@xyflow/react";
-import { isOscillating, selectCommittedMoves, type SelectionEcho } from "./nodeChanges";
-
-/** Builds evenly-spaced echoes `intervalMs` apart, starting at t=0. */
-function echoes(signatures: string[], intervalMs: number): SelectionEcho[] {
-  return signatures.map((signature, index) => ({ signature, timestamp: index * intervalMs }));
-}
+import { selectCommittedMoves } from "./nodeChanges";
 
 describe("selectCommittedMoves", () => {
   it("includes a drag-end position change", () => {
@@ -50,35 +45,5 @@ describe("selectCommittedMoves", () => {
       { id: "1", position: { x: 100, y: 50 } },
       { id: "3", position: { x: 200, y: 75 } },
     ]);
-  });
-});
-
-describe("isOscillating", () => {
-  it("is false with fewer than six reports", () => {
-    expect(isOscillating(echoes(["a", "b", "a", "b", "a"], 5))).toBe(false);
-  });
-
-  it("is true for a fast, strict A,B,A,B alternation", () => {
-    expect(isOscillating(echoes(["a", "b", "a", "b", "a", "b"], 5))).toBe(true);
-  });
-
-  it("is true for a fast 3-state cycle (A,A,B repeating)", () => {
-    expect(isOscillating(echoes(["a", "a", "b", "a", "a", "b"], 5))).toBe(true);
-  });
-
-  it("is true when the values are table-id selection signatures", () => {
-    expect(isOscillating(echoes(["1,2", "", "1,2", "", "1,2", ""], 5))).toBe(true);
-  });
-
-  it("is false when the same value repeats without alternating", () => {
-    expect(isOscillating(echoes(["a", "a", "a", "a", "a", "a"], 5))).toBe(false);
-  });
-
-  it("is false once three or more distinct values appear in the window", () => {
-    expect(isOscillating(echoes(["a", "b", "c", "a", "b", "c"], 5))).toBe(false);
-  });
-
-  it("is false when the same two states repeat but the reports are human-paced", () => {
-    expect(isOscillating(echoes(["a", "b", "a", "b", "a", "b"], 200))).toBe(false);
   });
 });

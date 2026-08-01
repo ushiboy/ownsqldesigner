@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useRef } from "react";
-import { Background, Controls, ReactFlow, useNodesState } from "@xyflow/react";
+import { useEffect, useRef } from "react";
+import { Background, Controls, ReactFlow, useNodesState, useStoreApi } from "@xyflow/react";
 import type { Connection, Edge, HandleType } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import {
@@ -8,8 +8,9 @@ import {
   type Position,
   type Table,
 } from "../../../../domain/schema";
+import { useCanvasApiRef } from "../../CanvasApiContext";
 import { resolveForeignKeyDrop } from "./connectionEnd";
-import { isOscillating, selectCommittedMoves, type SelectionEcho } from "./nodeChanges";
+import { selectCommittedMoves } from "./nodeChanges";
 import {
   columnIdFromHandle,
   sourceColumnIdFromHandle,
@@ -22,8 +23,13 @@ const nodeTypes = { table: TableNode };
 
 type CanvasProps = {
   tables: Table[];
-  selectedTableIds: ReadonlySet<string>;
   selectedRelationId: string | null;
+  /**
+   * Table ids selected when Canvas first mounts (stories/tests that start
+   * with a selection made). Read once, into the initial nodes only — see
+   * the comment on the `useNodesState` call below for why.
+   */
+  initialSelectedTableIds?: string[];
   /** Fires with every selection-changing gesture: click, shift-click, rubber-band, pane click ([]). */
   onTableSelectionChange: (ids: string[]) => void;
   /** null deselects (pane click). */
@@ -39,8 +45,8 @@ type CanvasProps = {
 
 export function Canvas({
   tables,
-  selectedTableIds,
   selectedRelationId,
+  initialSelectedTableIds,
   onTableSelectionChange,
   onSelectRelation,
   onMoveTables,
@@ -53,8 +59,23 @@ export function Canvas({
   // pattern for nodes "controlled from outside". Edges need no such local
   // state: they're anchored to node/handle ids, not fixed coordinates, so
   // they follow dragged nodes automatically.
+  //
+  // `selected` is never computed by this app on an ongoing basis — see
+  // `tablesToNodes` for why: React Flow, not this app, is the source of
+  // truth for which table nodes are selected (see
+  // docs/design/0016-undo-redo.md). The one exception is the very first
+  // node array: `useNodesState`'s initializer runs exactly once, before
+  // React Flow exists to own anything, so it's the only place this app may
+  // set `.selected` without risking the resync-timing oscillation that
+  // ruled out feeding it in on an ongoing basis. Doing this also makes
+  // React Flow's own "echo the initial selection once on mount" (see
+  // docs/design/0015-multi-select-and-group-move.md) report a selection
+  // that already matches `initialSelectedTableIds`, instead of an empty one
+  // that would otherwise bounce SelectionContext's table selection to empty
+  // and back — clearing column/key selection as a side effect of a change
+  // that never really happened.
   const [nodes, setNodes, handleNodesChange] = useNodesState<TableNodeType>(
-    tablesToNodes(tables, selectedTableIds),
+    tablesToNodes(tables, initialSelectedTableIds),
   );
   const edges = tablesToEdges(tables, selectedRelationId);
   // Set in onConnectStart, read in isValidConnection (both fire mid-drag,
@@ -64,58 +85,20 @@ export function Canvas({
   // docs/design/0012-foreign-key-child-column-generation.md).
   const dragStartHandleTypeRef = useRef<HandleType | null>(null);
 
-  // Carries each node's already-measured dimensions forward instead of
-  // dropping them on every resync. `tablesToNodes` never sets `measured`,
-  // so without this, every resync makes React Flow treat all nodes as
-  // freshly mounted, hiding them (`visibility: hidden`) until a fresh
-  // ResizeObserver pass measures them again — and a resync landing before
-  // that pass completes discards the fresh measurement too, in the worst
-  // case leaving nodes hidden indefinitely (see docs/design/0016-undo-redo.md).
   useEffect(() => {
-    setNodes((prevNodes) => {
-      const measuredById = new Map(prevNodes.map((node) => [node.id, node.measured]));
-      return tablesToNodes(tables, selectedTableIds).map((node) => {
-        node.measured = measuredById.get(node.id) ?? node.measured;
-        return node;
-      });
+    // Resyncing from `tables` rebuilds every node from scratch, so a schema
+    // edit made while a table is selected would otherwise wipe React Flow's
+    // own `.selected` tracking for it on the very next render (any edit
+    // changes `tables`, not just ones touching that table). Carrying the
+    // previous `.selected` value forward by id preserves it without this
+    // app ever writing selection state into nodes itself.
+    setNodes((currentNodes) => {
+      const selectedIds = currentNodes
+        .filter((node) => node.selected === true)
+        .map((node) => node.id);
+      return tablesToNodes(tables, selectedIds);
     });
-  }, [tables, selectedTableIds, setNodes]);
-
-  // React Flow's own selection reconciliation can, in one specific
-  // circumstance, oscillate between a couple of selection states
-  // indefinitely: `selectedTableIds` transitioning to empty soon after
-  // `tables` changes — exactly what undo/redo's post-undo clearSelection
-  // could do (see docs/design/0016-undo-redo.md, which now defers that
-  // clear well past when React Flow's own remeasurement settles, avoiding
-  // the trigger). The oscillation lives entirely inside React Flow's
-  // controlled-selection handling; it reproduced identically regardless of
-  // how the controlled `nodes` array was built or memoized on this side.
-  // `isOscillating` is a backstop against this same failure mode
-  // resurfacing some other way: it recognizes reports that keep revisiting
-  // the same couple of states abnormally fast and drops further echoes
-  // until a genuinely different, human-paced selection breaks the cycle,
-  // degrading to (at most) a brief selection flicker instead of a runaway
-  // render loop. It cannot also correct which of those states sticks — by
-  // the time the pattern is recognized, several of the echoes have already
-  // been forwarded and may have already overwritten this app's own
-  // intended selection — so avoiding the trigger (above) is what actually
-  // keeps the result correct; this only keeps a recurrence non-fatal.
-  const selectionEchoRef = useRef<SelectionEcho[]>([]);
-  const handleSelectionChange = useCallback(
-    ({ nodes: selectedNodes }: { nodes: TableNodeType[] }) => {
-      const ids = selectedNodes.map((node) => node.id);
-      const history = selectionEchoRef.current;
-      history.push({ signature: ids.toSorted().join(","), timestamp: performance.now() });
-      if (history.length > 20) {
-        history.shift();
-      }
-      if (isOscillating(history)) {
-        return;
-      }
-      onTableSelectionChange(ids);
-    },
-    [onTableSelectionChange],
-  );
+  }, [tables, setNodes]);
 
   return (
     <div className="h-full w-full">
@@ -135,7 +118,9 @@ export function Canvas({
         // already implements click/shift-click/box-select, and it reports
         // every resulting selection through onSelectionChange.
         multiSelectionKeyCode="Shift"
-        onSelectionChange={handleSelectionChange}
+        onSelectionChange={({ nodes: selectedNodes }) => {
+          onTableSelectionChange(selectedNodes.map((node) => node.id));
+        }}
         onNodesChange={(changes) => {
           handleNodesChange(changes);
           const moves = selectCommittedMoves(changes);
@@ -208,16 +193,33 @@ export function Canvas({
       >
         <Background />
         <Controls showInteractive={false} />
+        <CanvasApiBridge />
       </ReactFlow>
     </div>
   );
 }
 
-function tablesToNodes(tables: Table[], selectedTableIds: ReadonlySet<string>): TableNodeType[] {
+// `selectedIds` is only ever passed by the `useNodesState` initializer
+// above, for the initial mount — React Flow owns which table nodes are
+// selected as its own internal (uncontrolled) state from that point on,
+// driven by its own click/shift-click/rubber-band handling via
+// onNodesChange's "select"-type changes; this app only reads that state
+// back out through onSelectionChange (above) and onTableSelectionChange.
+// Feeding an ongoing `selectedTableIds` value from this app back into
+// `nodes[].selected` on every resync was tried first and made React Flow's
+// own selection reconciliation oscillate when a resync landed at the wrong
+// moment relative to its dimension remeasurement (see
+// docs/design/0016-undo-redo.md) — a React Flow-internal failure mode, not
+// something this app can validate against. Programmatic deselection
+// (undo/redo) goes through `CanvasApiBridge` below, which calls React
+// Flow's own native deselect instead.
+function tablesToNodes(tables: Table[], selectedIds?: string[]): TableNodeType[] {
+  const selected = new Set(selectedIds);
   return tables.map((table) => ({
     id: table.id,
     type: "table",
     position: table.position,
+    selected: selected.has(table.id),
     data: {
       name: table.name,
       comment: table.comment,
@@ -227,7 +229,6 @@ function tablesToNodes(tables: Table[], selectedTableIds: ReadonlySet<string>): 
         referenceable: isReferenceableColumn(table, id),
       })),
     },
-    selected: selectedTableIds.has(table.id),
   }));
 }
 
@@ -261,4 +262,23 @@ function isValidForeignKeyConnection(tables: Table[], connection: Connection | E
   return (
     referencedTable !== undefined && isReferenceableColumn(referencedTable, referencedColumnId)
   );
+}
+
+// A child of <ReactFlow> (needed to reach its store via useStoreApi) that
+// registers an imperative deselect-all into CanvasApiContext, so callers
+// outside the React Flow tree (undo/redo) can deselect through React Flow's
+// own native selection handling rather than a controlled prop — see the
+// comment on `tablesToNodes` above.
+function CanvasApiBridge() {
+  const apiRef = useCanvasApiRef();
+  const store = useStoreApi();
+  useEffect(() => {
+    apiRef.current = {
+      deselectAllTables: () => store.getState().unselectNodesAndEdges(),
+    };
+    return () => {
+      apiRef.current = null;
+    };
+  }, [apiRef, store]);
+  return null;
 }

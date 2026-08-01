@@ -115,7 +115,7 @@ selected before a history jump is not a meaningful concept to preserve across
 it, so there's nothing lost by clearing rather than trying to carry
 selection forward when it happens to still resolve.
 
-### A React Flow reconciliation hazard
+### A React Flow reconciliation hazard, and why React Flow now owns selection outright
 
 Driving the app confirmed a real failure mode the design above didn't
 anticipate: undoing (or redoing) while a table is selected could make React
@@ -123,61 +123,93 @@ Flow's controlled-selection reconciliation oscillate — its
 `onSelectionChange` callback reporting the node alternately selected and
 not, each report processed by this app and fed back into the
 `selectedTableIds`/`nodes` props React Flow reads, producing another
-contradicting report. This is a genuine bug-hunt-across-two-attempts story,
-recorded here because the first fix looked complete (it wasn't) and the
-second required understanding the failure precisely rather than just
-suppressing its symptom.
+contradicting report.
 
 **The cause sits entirely inside React Flow, not in this app's state.**
-Deselecting a table shortly after (not necessarily in the same commit —
-this was the first, incorrect hypothesis) a `tables` change that made React
-Flow re-measure the affected nodes could trigger it. The pattern reproduced
-identically no matter how `Canvas`'s controlled `nodes` array was built,
-memoized, or given stable object identity, and identically regardless of
-whether the deselection landed in the same React commit as the schema
-change or was pushed into a separate one — which is what places the cause
-inside React Flow's own reconciliation rather than in anything under this
-app's control.
+Deselecting a table shortly after (not necessarily in the same commit) a
+`tables` change that made React Flow re-measure the affected nodes could
+trigger it. The pattern reproduced identically no matter how `Canvas`'s
+controlled `nodes` array was built, memoized, or given stable object
+identity, and identically regardless of whether the deselection landed in
+the same React commit as the schema change or a separate one — which is
+what places the cause inside React Flow's own reconciliation rather than in
+anything under this app's control. (The oscillation itself was bounded, not
+literal-infinite — it resolved on its own after roughly a dozen rapid
+reports, well under 100ms; earlier manual testing that looked like runaway,
+tab-freezing behavior was mis-measured, since `requestAnimationFrame`-based
+FPS sampling doesn't reveal churn happening below one frame. A precise
+`MutationObserver` + timestamped echo log was what actually confirmed the
+bound.)
 
-**The oscillation is bounded, not literal-infinite, but naive detection of
-it is easy to get wrong.** It resolves on its own after roughly a dozen
-rapid reports (well under 100ms) — genuinely runaway, tab-freezing behavior
-was never reproduced once instrumented precisely with a `MutationObserver`
-on the side panel and timestamped echo logging; earlier manual testing that
-seemed to show that was mis-measured (`requestAnimationFrame`-based FPS
-sampling doesn't reveal churn happening below one frame). The period of the
-echo isn't fixed either — a strict two-state A,B,A,B alternation was
-observed for one edit and a three-state A,A,B cycle for another — so a
-detector matching one exact pattern (the first version of `isOscillating`)
-silently never fired on the other. `isOscillating` (`nodeChanges.ts`)
-instead checks "at least 2 but at most `OSCILLATION_MAX_DISTINCT` (2)
-distinct selection signatures across the last `OSCILLATION_MIN_REPORTS` (6)
-reports, all within `OSCILLATION_WINDOW_MS` (500ms)" — pattern-agnostic and
-timing-gated so genuine, human-paced re-selection of the same couple of
-tables is never mistaken for it.
+Two fixes were tried that treated the symptom — forcing `clearSelection`
+into its own commit via `flushSync`, then a pattern-agnostic oscillation
+detector paired with a doubly-deferred `clearSelection` (see Alternatives
+Considered for both, and why each looked complete but wasn't). Both worked
+around a specific echo shape rather than removing the thing producing
+echoes in the first place: this app writing `selectedTableIds` into
+`nodes[].selected` on every resync, in a tug-of-war with React Flow's own
+idea of which nodes are selected.
 
-**Detecting the oscillation and correcting which state it lands on are two
-different problems.** By the time enough reports have arrived to recognize
-the pattern, several have already been forwarded — including, often, a
-reassertion of the stale "still selected" state — so simply suppressing
-further echoes once detected does stop the runaway forwarding but can leave
-the wrong state stuck. `Canvas`'s `isOscillating` guard is therefore a
-backstop against the failure mode being fatal, not a guarantee of the
-correct outcome; the actual fix for _correctness_ lives in `useUndoRedo`:
-`clearSelection` is called twice after `undo`/`redo` — once after two
-deferred `requestAnimationFrame`s (not reliably past the oscillation
-window on its own) and once again `SELECTION_CORRECTION_DELAY_MS` (200ms)
-later, by which point the oscillation has always finished in testing, so
-the second call's "deselected" is the last word.
+**The actual fix removes that tug-of-war**: `Canvas` no longer computes
+`.selected` from app state on an ongoing basis at all. React Flow owns
+which table nodes are selected as its own internal (uncontrolled) state,
+driven entirely by its own click/shift-click/rubber-band handling; this app
+only reads that state back out through `onSelectionChange`, and never
+writes it back in except once, at the very first mount (see below). With
+nothing to reconcile against, the reconciliation hazard has no input to
+oscillate on.
 
-`Canvas`'s node-resync effect also now carries each node's already-measured
+This shifts two things that used to be trivial into their own small
+mechanisms:
+
+- **Programmatic deselection** (undo/redo clearing selection after a
+  history jump) can no longer set a prop — there's no controlled prop left
+  to set. `CanvasApiContext` is a page-scoped ref (`CanvasApi`, currently
+  just `deselectAllTables`) that a `CanvasApiBridge` component — a child of
+  `<ReactFlow>`, needed to reach its store via `useStoreApi()` — registers
+  on mount. `deselectAllTables` calls React Flow's own native
+  `store.getState().unselectNodesAndEdges()`, the same internal path a
+  user's own Escape or pane-click already drives, instead of this app
+  trying to model deselection itself. `useUndoRedo` calls it (alongside
+  `clearSelection`, for column/key/relation) after every `undo`/`redo`; no
+  deferral of any kind is needed since there's no oscillation to outlast.
+- **Seeding an initial selection** (stories, tests that start with a table
+  already selected) can't go through `SelectionContext`'s normal seeding
+  path unmodified, because React Flow always echoes its actual (empty)
+  selection once on mount regardless of what this app seeded — a
+  pre-existing, already-relied-on behavior (see
+  [0015](0015-multi-select-and-group-move.md)). Left alone, that echo
+  reaches `SelectionContext.setTableSelection`, which — correctly, for a
+  real click — clears column/key selection whenever the table selection
+  changes; a seeded selection bouncing through "echoed empty, then
+  corrected" looks exactly like a real change and loses whatever column/key
+  was also seeded. Rather than special-casing that guard, `Canvas` accepts
+  an `initialSelectedTableIds` prop read only by `useNodesState`'s lazy
+  initializer — invoked exactly once, before React Flow exists to own
+  anything — so the very first node array already carries the correct
+  `.selected` values and React Flow's mount-time echo reports a selection
+  that matches the seed from the start. Nothing bounces, so there's nothing
+  to guard against.
+
+One more consequence of dropping the ongoing resync of `.selected` needed
+its own fix: `Canvas`'s resync effect rebuilds every node from `tables`
+on _any_ schema edit (not just ones touching the selected table), so
+without carrying `.selected` forward explicitly, an edit made while a table
+was selected would silently deselect it. The resync effect now reads which
+node ids are currently selected off the outgoing node array before
+rebuilding, and re-applies that same set to the freshly built one — the
+only place in the app that reads `.selected` back out of React Flow's own
+state, and only to carry it through a rebuild it would otherwise be lost
+in, never to compute it from `tables`.
+
+`Canvas`'s node-resync effect also carries each node's already-measured
 `measured` dimensions forward across a resync instead of dropping them
 (`tablesToNodes` never sets it). Discarding it on every resync made React
 Flow treat every node as freshly mounted on every edit, hiding it
 (`visibility: hidden`) until it was re-measured — and, if another resync
 landed before that remeasurement completed, discarding the fresh
 measurement too. This was reachable (nodes could be left permanently
-invisible) even independent of the oscillation, since a resync only
+invisible) even independent of the selection hazard, since a resync only
 requires _some_ diagram edit, not a selection change.
 
 ### Exposing the controls
@@ -248,6 +280,35 @@ growing inside `MainScreenView`.
   rejected once retesting showed a different edit produced a three-state
   A,A,B cycle that a period-2 matcher never recognizes at all. Replaced with
   a pattern-agnostic "few distinct states, reported abnormally fast" check.
+- **Keeping the pattern-agnostic `isOscillating` detector plus the
+  doubly-deferred `clearSelection` as the permanent fix**, instead of
+  removing the ongoing `.selected` write-back that produced the echoes —
+  this is what shipped first, and it did work, but only by suppressing a
+  symptom it could detect rather than removing its cause: a bespoke
+  detector (two tunable constants, `OSCILLATION_MAX_DISTINCT` and
+  `OSCILLATION_MIN_REPORTS`) racing a bug it couldn't fully characterize
+  (the pattern-matching miss above), plus a 200ms magic-number correction
+  delay with no principled derivation beyond "long enough in testing."
+  Superseded once it became clear the only reliable fix was to stop feeding
+  app state into `nodes[].selected` on an ongoing basis at all (see Design)
+  — after which the detector and its constants became dead code and were
+  deleted (`nodeChanges.ts`).
+- **Seeding an initial selection via an imperative `CanvasApi` method**
+  (`selectTableNodes(ids)`, called from a mount effect once `Canvas` had
+  registered its API, mirroring `deselectAllTables`) — tried first for
+  seeding, and it did correctly restore table selection, but it did so by
+  driving the exact same path a real click drives:
+  `onSelectionChange` → `SelectionContext.setTableSelection`. React Flow's
+  mount-time echo (of the actual, still-empty selection) reaches that path
+  first and clears column/key selection as part of what looks like a real
+  table-selection change; the imperative call then restores the table
+  selection through the same guarded setter, which — correctly, by its own
+  logic — doesn't re-clear column/key on this second pass, so they stayed
+  lost. A story or test seeding a table _and_ a column together (several
+  do) would end up with the column selection silently dropped. Replaced by
+  seeding through `useNodesState`'s one-time initializer instead (see
+  Design), which avoids the round trip entirely rather than working around
+  it.
 
 ## Open Questions
 

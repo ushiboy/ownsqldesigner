@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import type { Schema } from "../../../domain/schema";
 import { createFakeSchemaRepository } from "../../../test/fakeSchemaRepository";
 import { type DialogKind, ActiveDialogProvider } from "../ActiveDialogContext";
+import { CanvasApiProvider } from "../CanvasApiContext";
 import { NotificationProvider } from "../NotificationContext";
 import {
   SchemaWorkspaceProvider,
@@ -36,7 +37,11 @@ function renderShortcut(initialDialog: DialogKind | null = null) {
         <NotificationProvider>
           <SchemaWorkspaceProvider repository={repository} initialSchema={blogSchema}>
             <SelectionProvider>
-              <ActiveDialogProvider initialDialog={initialDialog}>{children}</ActiveDialogProvider>
+              <CanvasApiProvider>
+                <ActiveDialogProvider initialDialog={initialDialog}>
+                  {children}
+                </ActiveDialogProvider>
+              </CanvasApiProvider>
             </SelectionProvider>
           </SchemaWorkspaceProvider>
         </NotificationProvider>

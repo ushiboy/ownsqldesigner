@@ -102,6 +102,8 @@ describe("MainScreenView", () => {
     await userEvent.click(within(dialog).getByLabelText("Primary Key"));
     await userEvent.click(within(dialog).getByRole("button", { name: "Save" }));
 
+    console.log("DEBUG sidePanel html:", sidePanel.innerHTML);
+
     expect(within(sidePanel).queryByText("PRIMARY KEY (id)")).not.toBeInTheDocument();
   });
 

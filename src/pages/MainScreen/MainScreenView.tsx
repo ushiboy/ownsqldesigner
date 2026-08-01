@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { format } from "date-fns";
 import type { Column, ColumnKeyMembership, ForeignKey, Key, Table } from "../../domain/schema";
 import { useActiveDialog } from "./ActiveDialogContext";
@@ -63,6 +63,10 @@ export function MainScreenView({
     selectKey,
     selectRelation,
   } = useSelection();
+  // Captured once: Canvas only reads this for its very first render (see
+  // the comment on its `useNodesState` call), so a stable snapshot avoids
+  // handing it a new array on every render for no benefit.
+  const [initialSelectedTableIds] = useState(() => [...selectedTableIds]);
   const {
     selectSchema: onSelectSchema,
     renameTable: onUpdateTableName,
@@ -103,8 +107,8 @@ export function MainScreenView({
           <NotificationBar />
           <Canvas
             tables={tables}
-            selectedTableIds={selectedTableIds}
             selectedRelationId={selectedRelationId}
+            initialSelectedTableIds={initialSelectedTableIds}
             onTableSelectionChange={setTableSelection}
             onSelectRelation={selectRelation}
             onMoveTables={onMoveTables}

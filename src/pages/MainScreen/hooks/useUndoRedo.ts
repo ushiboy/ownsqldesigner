@@ -1,9 +1,6 @@
+import { useCanvasApiRef } from "../CanvasApiContext";
 import { useHistoryActions } from "../SchemaWorkspaceContext";
 import { useSelection } from "../SelectionContext";
-
-// A second, later correction is needed on top of the double-`requestAnimationFrame`
-// one below — see `deferClearSelection` for why one alone isn't reliably enough.
-const SELECTION_CORRECTION_DELAY_MS = 200;
 
 export type UndoRedoControls = {
   undo: () => void;
@@ -17,9 +14,16 @@ export type UndoRedoControls = {
 // does both rather than each remembering to clear selection itself (see
 // docs/design/0016-undo-redo.md). Guarded on canUndo/canRedo so a no-op
 // undo/redo — nothing left on that stack — doesn't clear a valid selection.
+//
+// Table deselection goes through Canvas's own native API
+// (`CanvasApiContext`, backed by React Flow's `unselectNodesAndEdges`)
+// rather than through `SelectionContext` state, since React Flow — not this
+// app — owns which table nodes are selected; `clearSelection` still handles
+// column/key/relation, which are plain app state.
 export function useUndoRedo(): UndoRedoControls {
   const { undo, redo, canUndo, canRedo } = useHistoryActions();
   const { clearSelection } = useSelection();
+  const canvasApiRef = useCanvasApiRef();
 
   return {
     canUndo,
@@ -29,34 +33,16 @@ export function useUndoRedo(): UndoRedoControls {
         return;
       }
       undo();
-      deferClearSelection(clearSelection);
+      clearSelection();
+      canvasApiRef.current?.deselectAllTables();
     },
     redo: () => {
       if (!canRedo) {
         return;
       }
       redo();
-      deferClearSelection(clearSelection);
+      clearSelection();
+      canvasApiRef.current?.deselectAllTables();
     },
   };
-}
-
-// Clearing a currently-selected node's selection at the same time as (or
-// soon after) a `tables` change that triggers React Flow's own dimension
-// remeasurement can make React Flow's controlled-selection reconciliation
-// briefly oscillate, reporting the node alternately selected and not, a few
-// times, before settling — see the `isOscillating` guard in Canvas (a
-// second, independent backstop against the same failure mode) and
-// docs/design/0016-undo-redo.md for the full account. That settling isn't
-// guaranteed to land on "deselected": whichever state the oscillation
-// happened to be reporting when Canvas's guard recognized and stopped it is
-// what sticks, and it can be the stale, still-selected one. Clearing
-// selection twice — once after the oscillation window has had time to
-// finish (deferring past two animation frames is not reliably past it) and
-// once again shortly after — reliably lands on "deselected" as the last
-// word in testing, without needing to detect that the first clear lost the
-// race.
-function deferClearSelection(clearSelection: () => void): void {
-  requestAnimationFrame(() => requestAnimationFrame(clearSelection));
-  setTimeout(clearSelection, SELECTION_CORRECTION_DELAY_MS);
 }

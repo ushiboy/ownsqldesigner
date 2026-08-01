@@ -6,6 +6,7 @@ import { composeStories } from "@storybook/react-vite";
 import type { Schema } from "../../../../domain/schema";
 import { createFakeSchemaRepository } from "../../../../test/fakeSchemaRepository";
 import { ActiveDialogProvider } from "../../ActiveDialogContext";
+import { CanvasApiProvider } from "../../CanvasApiContext";
 import { NotificationProvider } from "../../NotificationContext";
 import { SchemaWorkspaceProvider, useSchemaActions } from "../../SchemaWorkspaceContext";
 import { SelectionProvider } from "../../SelectionContext";
@@ -37,17 +38,19 @@ function ToolbarWithEditTrigger() {
       <ActiveDialogProvider>
         <SchemaWorkspaceProvider repository={repository} initialSchema={editableSchema}>
           <SelectionProvider>
-            <CreateTableTrigger />
-            <Toolbar
-              schemaName="Blog Schema"
-              savedSchemas={[]}
-              currentSchemaId={editableSchema.id}
-              canDownloadSchema={false}
-              onDownloadSchema={fn()}
-              onSelectSchema={fn()}
-              isSidePanelOpen
-              onToggleSidePanel={fn()}
-            />
+            <CanvasApiProvider>
+              <CreateTableTrigger />
+              <Toolbar
+                schemaName="Blog Schema"
+                savedSchemas={[]}
+                currentSchemaId={editableSchema.id}
+                canDownloadSchema={false}
+                onDownloadSchema={fn()}
+                onSelectSchema={fn()}
+                isSidePanelOpen
+                onToggleSidePanel={fn()}
+              />
+            </CanvasApiProvider>
           </SelectionProvider>
         </SchemaWorkspaceProvider>
       </ActiveDialogProvider>

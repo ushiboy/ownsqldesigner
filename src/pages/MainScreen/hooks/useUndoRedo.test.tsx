@@ -1,7 +1,9 @@
 import { act, renderHook } from "@testing-library/react";
 import type { ReactNode } from "react";
+import { fn } from "storybook/test";
 import type { Schema } from "../../../domain/schema";
 import { createFakeSchemaRepository } from "../../../test/fakeSchemaRepository";
+import { CanvasApiProvider, useCanvasApiRef } from "../CanvasApiContext";
 import { NotificationProvider } from "../NotificationContext";
 import { SchemaWorkspaceProvider, useSchemaActions } from "../SchemaWorkspaceContext";
 import { type InitialSelection, SelectionProvider, useSelection } from "../SelectionContext";
@@ -17,15 +19,6 @@ const blogSchema: Schema = {
 
 const seededSelection: InitialSelection = { tableIds: ["a-table-id"] };
 
-/** clearSelection is deferred (twice) past undo/redo — see useUndoRedo.ts. */
-async function flushDeferredClearSelection() {
-  await act(async () => {
-    await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
-    await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
-    await new Promise<void>((resolve) => setTimeout(resolve, 210));
-  });
-}
-
 function renderUndoRedo() {
   const repository = createFakeSchemaRepository({
     schemas: [blogSchema],
@@ -36,12 +29,15 @@ function renderUndoRedo() {
       undoRedo: useUndoRedo(),
       actions: useSchemaActions(),
       selection: useSelection(),
+      canvasApiRef: useCanvasApiRef(),
     }),
     {
       wrapper: ({ children }: { children: ReactNode }) => (
         <NotificationProvider>
           <SchemaWorkspaceProvider repository={repository} initialSchema={blogSchema}>
-            <SelectionProvider initialSelection={seededSelection}>{children}</SelectionProvider>
+            <SelectionProvider initialSelection={seededSelection}>
+              <CanvasApiProvider>{children}</CanvasApiProvider>
+            </SelectionProvider>
           </SchemaWorkspaceProvider>
         </NotificationProvider>
       ),
@@ -57,23 +53,22 @@ describe("useUndoRedo", () => {
     expect(result.current.undoRedo.canRedo).toBe(false);
   });
 
-  it("undoes the last edit and clears selection", async () => {
+  it("undoes the last edit and clears column/key/relation selection", () => {
     const { result } = renderUndoRedo();
     act(() => {
       result.current.actions.createTable("posts");
+      result.current.selection.selectColumn("some-column-id");
     });
-    expect(result.current.selection.selectedTableIds).toEqual(new Set(["a-table-id"]));
 
     act(() => {
       result.current.undoRedo.undo();
     });
-    await flushDeferredClearSelection();
 
-    expect(result.current.selection.selectedTableIds).toEqual(new Set());
+    expect(result.current.selection.selectedColumnId).toBeNull();
     expect(result.current.undoRedo.canRedo).toBe(true);
   });
 
-  it("redoes an undone edit and clears selection", async () => {
+  it("redoes an undone edit and clears column/key/relation selection", () => {
     const { result } = renderUndoRedo();
     act(() => {
       result.current.actions.createTable("posts");
@@ -81,39 +76,74 @@ describe("useUndoRedo", () => {
     act(() => {
       result.current.undoRedo.undo();
     });
-    await flushDeferredClearSelection();
     act(() => {
-      result.current.selection.selectTable("a-table-id");
+      result.current.selection.selectKey("some-key-id");
     });
 
     act(() => {
       result.current.undoRedo.redo();
     });
-    await flushDeferredClearSelection();
 
-    expect(result.current.selection.selectedTableIds).toEqual(new Set());
+    expect(result.current.selection.selectedKeyId).toBeNull();
     expect(result.current.undoRedo.canUndo).toBe(true);
   });
 
-  it("does not clear selection when there is nothing to undo", async () => {
+  it("deselects table nodes through Canvas's imperative API on undo", () => {
     const { result } = renderUndoRedo();
+    const deselectAllTables = fn();
+    result.current.canvasApiRef.current = { deselectAllTables };
+    act(() => {
+      result.current.actions.createTable("posts");
+    });
 
     act(() => {
       result.current.undoRedo.undo();
     });
-    await flushDeferredClearSelection();
 
-    expect(result.current.selection.selectedTableIds).toEqual(new Set(["a-table-id"]));
+    expect(deselectAllTables).toHaveBeenCalledOnce();
   });
 
-  it("does not clear selection when there is nothing to redo", async () => {
+  it("deselects table nodes through Canvas's imperative API on redo", () => {
     const { result } = renderUndoRedo();
+    act(() => {
+      result.current.actions.createTable("posts");
+    });
+    act(() => {
+      result.current.undoRedo.undo();
+    });
+    const deselectAllTables = fn();
+    result.current.canvasApiRef.current = { deselectAllTables };
 
     act(() => {
       result.current.undoRedo.redo();
     });
-    await flushDeferredClearSelection();
 
+    expect(deselectAllTables).toHaveBeenCalledOnce();
+  });
+
+  it("does nothing when there is nothing to undo", () => {
+    const { result } = renderUndoRedo();
+    const deselectAllTables = fn();
+    result.current.canvasApiRef.current = { deselectAllTables };
+
+    act(() => {
+      result.current.undoRedo.undo();
+    });
+
+    expect(deselectAllTables).not.toHaveBeenCalled();
+    expect(result.current.selection.selectedTableIds).toEqual(new Set(["a-table-id"]));
+  });
+
+  it("does nothing when there is nothing to redo", () => {
+    const { result } = renderUndoRedo();
+    const deselectAllTables = fn();
+    result.current.canvasApiRef.current = { deselectAllTables };
+
+    act(() => {
+      result.current.undoRedo.redo();
+    });
+
+    expect(deselectAllTables).not.toHaveBeenCalled();
     expect(result.current.selection.selectedTableIds).toEqual(new Set(["a-table-id"]));
   });
 });
