@@ -1,9 +1,12 @@
 import {
   LuChevronDown,
+  LuMonitor,
+  LuMoon,
   LuPanelRight,
   LuPencil,
   LuPlus,
   LuRedo2,
+  LuSun,
   LuTrash2,
   LuUndo2,
 } from "react-icons/lu";
@@ -11,9 +14,16 @@ import { tv } from "tailwind-variants";
 import type { SchemaSummary } from "../../../../domain/schema";
 import { useActiveDialog } from "../../ActiveDialogContext";
 import { useUndoRedo } from "../../hooks/useUndoRedo";
+import type { Theme } from "../../hooks/useThemePreference";
 import { LoadSchemaButton } from "./LoadSchemaButton";
 import { SchemaMenu } from "./SchemaMenu";
 import { useToolbarMenu } from "./useToolbarMenu";
+
+const THEME_ICON: Record<Theme, typeof LuSun> = {
+  light: LuSun,
+  dark: LuMoon,
+  system: LuMonitor,
+};
 
 const toolbar = tv({
   base: "flex shrink-0 items-center gap-1 border-b border-edge bg-surface px-3 py-2",
@@ -37,6 +47,8 @@ type ToolbarProps = {
   onSelectSchema: (id: string) => void;
   isSidePanelOpen: boolean;
   onToggleSidePanel: () => void;
+  theme: Theme;
+  onCycleTheme: () => void;
 };
 
 export function Toolbar({
@@ -48,10 +60,13 @@ export function Toolbar({
   onSelectSchema,
   isSidePanelOpen,
   onToggleSidePanel,
+  theme,
+  onCycleTheme,
 }: ToolbarProps) {
   const { isOpen: isMenuOpen, wrapperRef: menuWrapperRef, toggle, close } = useToolbarMenu();
   const { openDialog } = useActiveDialog();
   const { undo, redo, canUndo, canRedo } = useUndoRedo();
+  const ThemeIcon = THEME_ICON[theme];
 
   return (
     <header className={toolbar()}>
@@ -125,6 +140,14 @@ export function Toolbar({
           Download JSON
         </button>
         <LoadSchemaButton />
+        <button
+          type="button"
+          aria-label={`Theme: ${theme}`}
+          onClick={onCycleTheme}
+          className={toolButton()}
+        >
+          <ThemeIcon aria-hidden="true" className="size-4" />
+        </button>
         <button
           type="button"
           aria-label="Toggle side panel"

@@ -62,6 +62,7 @@ const meta = {
     onDownloadSchema: fn(),
     onSelectSchema: fn(),
     onToggleSidePanel: fn(),
+    onCycleTheme: fn(),
   },
 } satisfies Meta<typeof ToolbarWithProviders>;
 
@@ -72,6 +73,7 @@ export const Default: Story = {
   args: {
     schemaName: "Blog Schema",
     isSidePanelOpen: true,
+    theme: "system",
   },
 };
 
@@ -79,5 +81,14 @@ export const SidePanelClosed: Story = {
   args: {
     schemaName: "Blog Schema",
     isSidePanelOpen: false,
+    theme: "system",
+  },
+};
+
+export const DarkTheme: Story = {
+  args: {
+    schemaName: "Blog Schema",
+    isSidePanelOpen: true,
+    theme: "dark",
   },
 };

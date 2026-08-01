@@ -13,7 +13,7 @@ import { SelectionProvider } from "../../SelectionContext";
 import { Toolbar } from "./Toolbar";
 import * as stories from "./Toolbar.stories";
 
-const { Default, SidePanelClosed } = composeStories(stories);
+const { Default, SidePanelClosed, DarkTheme } = composeStories(stories);
 
 const editableSchema: Schema = {
   id: "0b54b945-13c9-4d38-9ba6-b81bbe1cbc21",
@@ -49,6 +49,8 @@ function ToolbarWithEditTrigger() {
                 onSelectSchema={fn()}
                 isSidePanelOpen
                 onToggleSidePanel={fn()}
+                theme="system"
+                onCycleTheme={fn()}
               />
             </CanvasApiProvider>
           </SelectionProvider>
@@ -206,5 +208,23 @@ describe("Toolbar", () => {
       "aria-pressed",
       "false",
     );
+  });
+
+  it("labels the theme button with the current theme", () => {
+    render(<Default />);
+    expect(screen.getByRole("button", { name: "Theme: system" })).toBeInTheDocument();
+  });
+
+  it("reflects a non-default theme in the button label", () => {
+    render(<DarkTheme />);
+    expect(screen.getByRole("button", { name: "Theme: dark" })).toBeInTheDocument();
+  });
+
+  it("calls onCycleTheme when the theme button is clicked", async () => {
+    const onCycleTheme = fn();
+    render(<Default onCycleTheme={onCycleTheme} />);
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: "Theme: system" }));
+    expect(onCycleTheme).toHaveBeenCalledOnce();
   });
 });

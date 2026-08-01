@@ -64,6 +64,17 @@ class DOMMatrixReadOnlyMock {
 globalThis.ResizeObserver ??= ResizeObserverMock as unknown as typeof ResizeObserver;
 globalThis.DOMMatrixReadOnly ??= DOMMatrixReadOnlyMock as unknown as typeof DOMMatrixReadOnly;
 
+// jsdom does not implement matchMedia; default to "no dark preference" so
+// components reading it (useThemePreference) can mount without throwing.
+// Tests exercising theme behavior stub this per-test instead.
+window.matchMedia ??= ((query: string) =>
+  ({
+    matches: false,
+    media: query,
+    addEventListener: () => {},
+    removeEventListener: () => {},
+  }) as unknown as MediaQueryList) as typeof window.matchMedia;
+
 // jsdom always reports 0 for offsetWidth/offsetHeight; React Flow treats a
 // zero-size node as unmeasured and keeps it hidden.
 Object.defineProperty(HTMLElement.prototype, "offsetWidth", {

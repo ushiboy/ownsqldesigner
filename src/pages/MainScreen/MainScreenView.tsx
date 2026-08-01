@@ -17,6 +17,7 @@ import {
 import { useSelection } from "./SelectionContext";
 import { useDeleteKeyShortcut } from "./hooks/useDeleteKeyShortcut";
 import { useDownloadSchemaFile } from "./hooks/useDownloadSchemaFile";
+import type { Theme } from "./hooks/useThemePreference";
 import { useUndoRedoShortcut } from "./hooks/useUndoRedoShortcut";
 import { useUnsavedChangesWarning } from "./hooks/useUnsavedChangesWarning";
 
@@ -34,6 +35,8 @@ type MainScreenViewProps = {
   primaryKeyDisabled: boolean;
   isSidePanelOpen: boolean;
   onToggleSidePanel: () => void;
+  theme: Theme;
+  onCycleTheme: () => void;
 };
 
 export function MainScreenView({
@@ -48,6 +51,8 @@ export function MainScreenView({
   primaryKeyDisabled,
   isSidePanelOpen,
   onToggleSidePanel,
+  theme,
+  onCycleTheme,
 }: MainScreenViewProps) {
   const { openDialog } = useActiveDialog();
   const currentSchema = useCurrentSchema();
@@ -101,6 +106,8 @@ export function MainScreenView({
         onSelectSchema={onSelectSchema}
         isSidePanelOpen={isSidePanelOpen}
         onToggleSidePanel={onToggleSidePanel}
+        theme={theme}
+        onCycleTheme={onCycleTheme}
       />
       <div className="flex min-h-0 flex-1">
         <main aria-label="Canvas" className="relative min-w-0 flex-1">

@@ -13,6 +13,7 @@ import { createLocalStorageSchemaRepository } from "../../infrastructure/localSt
 import { ActiveDialogProvider, type DialogKind } from "./ActiveDialogContext";
 import { CanvasApiProvider } from "./CanvasApiContext";
 import { describeForeignKey, type RelationSummary } from "./components/SidePanel";
+import { type Theme, useThemePreference } from "./hooks/useThemePreference";
 import { MainScreenView } from "./MainScreenView";
 import { NotificationProvider } from "./NotificationContext";
 import { SchemaWorkspaceProvider, useTables } from "./SchemaWorkspaceContext";
@@ -28,6 +29,7 @@ export type MainScreenSeed = {
   initialDialog?: DialogKind | null;
   initialNotification?: string | null;
   initialSidePanelOpen?: boolean;
+  initialTheme?: Theme;
 };
 
 type MainScreenProps = MainScreenSeed & {
@@ -42,6 +44,7 @@ function MainScreen({
   initialDialog,
   initialNotification,
   initialSidePanelOpen,
+  initialTheme,
 }: MainScreenProps) {
   return (
     <NotificationProvider initialNotification={initialNotification}>
@@ -49,7 +52,10 @@ function MainScreen({
         <SchemaWorkspaceProvider repository={repository} initialSchema={initialSchema}>
           <SelectionProvider initialSelection={initialSelection}>
             <CanvasApiProvider>
-              <MainScreenContent initialSidePanelOpen={initialSidePanelOpen} />
+              <MainScreenContent
+                initialSidePanelOpen={initialSidePanelOpen}
+                initialTheme={initialTheme}
+              />
             </CanvasApiProvider>
           </SelectionProvider>
         </SchemaWorkspaceProvider>
@@ -62,10 +68,12 @@ export default MainScreen;
 
 type MainScreenContentProps = {
   initialSidePanelOpen?: boolean;
+  initialTheme?: Theme;
 };
 
-function MainScreenContent({ initialSidePanelOpen }: MainScreenContentProps) {
+function MainScreenContent({ initialSidePanelOpen, initialTheme }: MainScreenContentProps) {
   const [isSidePanelOpen, setIsSidePanelOpen] = useState(initialSidePanelOpen ?? true);
+  const { theme, cycleTheme } = useThemePreference(initialTheme);
   const { selectedTableId, selectedColumnId, selectedKeyId, selectedRelationId } = useSelection();
 
   const tables = useTables();
@@ -114,6 +122,8 @@ function MainScreenContent({ initialSidePanelOpen }: MainScreenContentProps) {
       primaryKeyDisabled={keyDialogPrimaryKeyDisabled}
       isSidePanelOpen={isSidePanelOpen}
       onToggleSidePanel={() => setIsSidePanelOpen((prev) => !prev)}
+      theme={theme}
+      onCycleTheme={cycleTheme}
     />
   );
 }
