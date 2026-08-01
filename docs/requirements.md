@@ -76,12 +76,12 @@ The Phase column gives a rough implementation order: Phase 1 = core MVP, Phase 2
 
 ### UI / UX
 
-| ID      | Requirement                                                          | Phase |
-| ------- | -------------------------------------------------------------------- | ----- |
-| REQ-029 | Dark mode (theme switching)                                          | 2     |
-| REQ-030 | Japanese / English UI switching (i18n)                               | 2     |
-| REQ-031 | Keyboard shortcuts (delete, undo/redo, confirm/cancel, ...)          | 2     |
-| REQ-032 | Persist settings (dialect, snap, FK naming pattern, display toggles) | 3     |
+| ID      | Requirement                                                                                             | Phase |
+| ------- | ------------------------------------------------------------------------------------------------------- | ----- |
+| REQ-029 | Dark mode (theme switching)                                                                             | 2     |
+| REQ-030 | Japanese / English UI switching (i18n)                                                                  | 2     |
+| REQ-031 | Keyboard shortcuts (delete, undo/redo, confirm/cancel, ...) ([0017](design/0017-keyboard-shortcuts.md)) | 2     |
+| REQ-032 | Persist settings (dialect, snap, FK naming pattern, display toggles)                                    | 3     |
 
 ## Non-Goals
 
