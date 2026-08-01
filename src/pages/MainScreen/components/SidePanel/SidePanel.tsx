@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { LuPencil, LuPlus, LuTrash2 } from "react-icons/lu";
 import { tv } from "tailwind-variants";
-import { isNameTaken, isValidIdentifierName, type Table } from "../../../../domain/schema";
+import { describeNameValidity, type Table } from "../../../../domain/schema";
 import { describeKey } from "./describeKey";
 
 const panel = tv({
@@ -168,11 +168,11 @@ function TableProperties({
 }: TablePropertiesProps) {
   const [name, setName] = useState(table.name);
   const trimmedName = name.trim();
-  const isNameEmpty = trimmedName === "";
-  const isNameInvalidShape = !isNameEmpty && !isValidIdentifierName(trimmedName);
-  const isNameDuplicate =
-    !isNameEmpty && !isNameInvalidShape && isNameTaken(trimmedName, existingTableNames);
-  const isNameInvalid = isNameEmpty || isNameInvalidShape || isNameDuplicate;
+  const {
+    isInvalidShape: isNameInvalidShape,
+    isDuplicate: isNameDuplicate,
+    isInvalid: isNameInvalid,
+  } = describeNameValidity(trimmedName, existingTableNames);
 
   return (
     <>
@@ -197,7 +197,7 @@ function TableProperties({
               const value = event.target.value;
               setName(value);
               const trimmed = value.trim();
-              if (canCommitTableName(trimmed, existingTableNames)) {
+              if (!describeNameValidity(trimmed, existingTableNames).isInvalid) {
                 onUpdateTableName(table.id, trimmed);
               }
             }}
@@ -296,11 +296,6 @@ function TableProperties({
       </div>
     </>
   );
-}
-
-/** Whether `name` (the value being typed, not yet committed to state) can be saved as the table's new name. */
-function canCommitTableName(name: string, existingNames: string[]): boolean {
-  return name !== "" && isValidIdentifierName(name) && !isNameTaken(name, existingNames);
 }
 
 type KeyRowProps = {

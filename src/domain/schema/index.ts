@@ -46,8 +46,10 @@ export {
   type Table,
 } from "./types";
 export {
+  describeNameValidity,
   isColumnNameAvailable,
   isNameTaken,
   isTableNameAvailable,
   isValidIdentifierName,
+  type NameValidity,
 } from "./validation";

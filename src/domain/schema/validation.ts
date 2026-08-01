@@ -42,3 +42,23 @@ export function isColumnNameAvailable(
     )
   );
 }
+
+export type NameValidity = {
+  isEmpty: boolean;
+  isInvalidShape: boolean;
+  isDuplicate: boolean;
+  isInvalid: boolean;
+};
+
+/** Live (REQ-023) validity of a name field being typed in a form, against sibling names (REQ-018/019). */
+export function describeNameValidity(trimmedName: string, existingNames: string[]): NameValidity {
+  const isEmpty = trimmedName === "";
+  const isInvalidShape = !isEmpty && !isValidIdentifierName(trimmedName);
+  const isDuplicate = !isEmpty && !isInvalidShape && isNameTaken(trimmedName, existingNames);
+  return {
+    isEmpty,
+    isInvalidShape,
+    isDuplicate,
+    isInvalid: isEmpty || isInvalidShape || isDuplicate,
+  };
+}

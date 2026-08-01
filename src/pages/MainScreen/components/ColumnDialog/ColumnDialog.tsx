@@ -5,8 +5,7 @@ import {
   type Column,
   type ColumnKeyMembership,
   type ColumnType,
-  isNameTaken,
-  isValidIdentifierName,
+  describeNameValidity,
   KEY_TYPES,
   SQLITE_COLUMN_TYPES,
 } from "../../../../domain/schema";
@@ -105,10 +104,11 @@ function ColumnForm({
   const [fields, setFields] = useState<ColumnFields>(initialColumn ?? BLANK_COLUMN);
   const [keyMembership, setKeyMembership] = useState(initialKeyMembership);
   const trimmedName = fields.name.trim();
-  const isNameEmpty = trimmedName === "";
-  const isNameInvalidShape = !isNameEmpty && !isValidIdentifierName(trimmedName);
-  const isNameDuplicate =
-    !isNameEmpty && !isNameInvalidShape && isNameTaken(trimmedName, existingNames);
+  const {
+    isEmpty: isNameEmpty,
+    isInvalidShape: isNameInvalidShape,
+    isDuplicate: isNameDuplicate,
+  } = describeNameValidity(trimmedName, existingNames);
   // Live against the checkbox above, not the seeded initial value: checking
   // Primary Key and Auto increment together in one submit is the point.
   const autoIncrementAllowed = keyMembership.PRIMARY_KEY && fields.type === "INTEGER";

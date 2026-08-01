@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { tv } from "tailwind-variants";
 import { Dialog, dialogActionButton } from "../../../../components/parts/Dialog";
-import { isNameTaken, isValidIdentifierName } from "../../../../domain/schema";
+import { describeNameValidity } from "../../../../domain/schema";
 
 const nameInput = tv({
   base: "mt-1 w-full rounded-md border border-edge bg-surface px-2.5 py-1.5 text-[14px] text-heading focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
@@ -58,9 +58,7 @@ function TableNameForm({
 }: TableNameFormProps) {
   const [name, setName] = useState(initialName);
   const trimmedName = name.trim();
-  const isEmpty = trimmedName === "";
-  const isInvalidShape = !isEmpty && !isValidIdentifierName(trimmedName);
-  const isDuplicate = !isEmpty && !isInvalidShape && isNameTaken(trimmedName, existingNames);
+  const { isEmpty, isInvalidShape, isDuplicate } = describeNameValidity(trimmedName, existingNames);
 
   return (
     <form

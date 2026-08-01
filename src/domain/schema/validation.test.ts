@@ -6,6 +6,7 @@ import {
   getTable,
 } from "./test-fixtures";
 import {
+  describeNameValidity,
   isColumnNameAvailable,
   isNameTaken,
   isTableNameAvailable,
@@ -44,6 +45,44 @@ describe("isNameTaken", () => {
 
   it("is false when no existing name matches", () => {
     expect(isNameTaken("comments", ["posts", "users"])).toBe(false);
+  });
+});
+
+describe("describeNameValidity", () => {
+  it("flags an empty name as empty, not invalid-shape or duplicate", () => {
+    expect(describeNameValidity("", ["posts"])).toEqual({
+      isEmpty: true,
+      isInvalidShape: false,
+      isDuplicate: false,
+      isInvalid: true,
+    });
+  });
+
+  it("flags an invalid identifier shape", () => {
+    expect(describeNameValidity("1posts", ["users"])).toEqual({
+      isEmpty: false,
+      isInvalidShape: true,
+      isDuplicate: false,
+      isInvalid: true,
+    });
+  });
+
+  it("flags a name already used by a sibling, case-insensitively", () => {
+    expect(describeNameValidity("Posts", ["posts", "users"])).toEqual({
+      isEmpty: false,
+      isInvalidShape: false,
+      isDuplicate: true,
+      isInvalid: true,
+    });
+  });
+
+  it("is fully valid for a well-formed, unused name", () => {
+    expect(describeNameValidity("comments", ["posts", "users"])).toEqual({
+      isEmpty: false,
+      isInvalidShape: false,
+      isDuplicate: false,
+      isInvalid: false,
+    });
   });
 });
 
