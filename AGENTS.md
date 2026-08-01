@@ -26,6 +26,7 @@ You MUST read and follow all rules in `docs/rules/`:
 
 - [Pre-Commit Checks](docs/rules/pre-commit-checks.md) — Required verification steps before every commit
 - [Code Organization](docs/rules/code-organization.md) — Ordering of exports, private helpers, constants, and types within a file
+- [Component Design](docs/rules/component-design.md) — When to split a component into pure functions, a custom Hook, or Container/Presentation
 - [Testing](docs/rules/testing.md) — How to add tests and stories for new code
 - [Design Docs](docs/rules/design-docs.md) — Where to place design docs and what to write in them
 

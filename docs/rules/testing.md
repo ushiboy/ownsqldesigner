@@ -8,7 +8,7 @@ Every time you add or modify a React component, page, hook, or any other logic. 
 
 Tests run with Vitest (configured inside `vite.config.ts`: jsdom environment, `globals: true`, setup in `src/test/setup.ts`). `describe` / `it` / `expect` are available as globals — do not import them. Storybook preview annotations are wired into Vitest in the setup file, so stories render in tests via `composeStories` with the same decorators and globals as Storybook.
 
-Choose the testing style by the kind of code:
+Choose the testing style by the kind of code (see [Component Design](component-design.md) for how to decide which of these a piece of logic belongs in, and how test scope narrows as Hook/Presentation/Container layers separate):
 
 | Kind of code                             | How to test                                                                                            |
 | ---------------------------------------- | ------------------------------------------------------------------------------------------------------ |
