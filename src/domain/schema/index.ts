@@ -23,6 +23,7 @@ export {
   removeTable,
   renameSchema,
   renameTable,
+  restoreSchema,
   updateTableComment,
 } from "./table";
 export {

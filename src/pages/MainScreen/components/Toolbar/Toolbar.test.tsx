@@ -1,11 +1,68 @@
-import type { ComponentProps } from "react";
-import { render, screen } from "@testing-library/react";
+import { type ComponentProps, useState } from "react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { fn } from "storybook/test";
 import { composeStories } from "@storybook/react-vite";
+import type { Schema } from "../../../../domain/schema";
+import { createFakeSchemaRepository } from "../../../../test/fakeSchemaRepository";
+import { ActiveDialogProvider } from "../../ActiveDialogContext";
+import { NotificationProvider } from "../../NotificationContext";
+import { SchemaWorkspaceProvider, useSchemaActions } from "../../SchemaWorkspaceContext";
+import { SelectionProvider } from "../../SelectionContext";
+import { Toolbar } from "./Toolbar";
 import * as stories from "./Toolbar.stories";
 
 const { Default, SidePanelClosed } = composeStories(stories);
+
+const editableSchema: Schema = {
+  id: "0b54b945-13c9-4d38-9ba6-b81bbe1cbc21",
+  name: "Blog Schema",
+  tables: [],
+  createdAt: new Date("2026-07-01T09:00:00.000Z"),
+  updatedAt: new Date("2026-07-01T09:00:00.000Z"),
+};
+
+/**
+ * Mounts Toolbar with a hidden trigger that performs a real diagram edit.
+ * Undo/Redo's enabled state depends on in-memory history, which (unlike
+ * `currentSchema`) has no seed prop — see docs/design/0016-undo-redo.md —
+ * so exercising it needs an actual edit rather than a story args override.
+ */
+function ToolbarWithEditTrigger() {
+  const [repository] = useState(() =>
+    createFakeSchemaRepository({ schemas: [editableSchema], lastSchemaId: editableSchema.id }),
+  );
+  return (
+    <NotificationProvider>
+      <ActiveDialogProvider>
+        <SchemaWorkspaceProvider repository={repository} initialSchema={editableSchema}>
+          <SelectionProvider>
+            <CreateTableTrigger />
+            <Toolbar
+              schemaName="Blog Schema"
+              savedSchemas={[]}
+              currentSchemaId={editableSchema.id}
+              canDownloadSchema={false}
+              onDownloadSchema={fn()}
+              onSelectSchema={fn()}
+              isSidePanelOpen
+              onToggleSidePanel={fn()}
+            />
+          </SelectionProvider>
+        </SchemaWorkspaceProvider>
+      </ActiveDialogProvider>
+    </NotificationProvider>
+  );
+}
+
+function CreateTableTrigger() {
+  const { createTable } = useSchemaActions();
+  return (
+    <button type="button" onClick={() => createTable("posts")}>
+      Create table (test trigger)
+    </button>
+  );
+}
 
 /** Renders Default and opens the schema dropdown menu by clicking its trigger. */
 async function openMenu(props?: Partial<ComponentProps<typeof Default>>) {
@@ -27,10 +84,33 @@ describe("Toolbar", () => {
     render(<Default />);
     expect(screen.getByRole("button", { name: "Rename schema" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Delete schema" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Undo" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Redo" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Add Table" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Export SQL" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Download JSON" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Load JSON" })).toBeInTheDocument();
+  });
+
+  it("disables Undo and Redo when there is no history", () => {
+    render(<Default />);
+    expect(screen.getByRole("button", { name: "Undo" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Redo" })).toBeDisabled();
+  });
+
+  it("enables Undo after an edit, and Redo after undoing it", async () => {
+    render(<ToolbarWithEditTrigger />);
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: "Create table (test trigger)" }));
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: "Undo" })).toBeEnabled();
+    });
+    expect(screen.getByRole("button", { name: "Redo" })).toBeDisabled();
+
+    await user.click(screen.getByRole("button", { name: "Undo" }));
+
+    expect(screen.getByRole("button", { name: "Undo" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Redo" })).toBeEnabled();
   });
 
   it("calls onDownloadSchema when the download button is clicked", async () => {

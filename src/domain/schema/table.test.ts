@@ -6,6 +6,7 @@ import {
   removeTable,
   renameSchema,
   renameTable,
+  restoreSchema,
   updateTableComment,
 } from "./table";
 import { schemaSchema } from "./types";
@@ -458,6 +459,55 @@ describe("moveTables", () => {
     );
 
     expect(original.tables[0]?.position).toEqual({ x: 0, y: 0 });
+  });
+});
+
+describe("restoreSchema", () => {
+  const current = createTable(
+    renameSchema(
+      createSchema("Blog Schema", {
+        id: "c3a1e96a-9a75-4d3c-b0ad-3d6e1b6a5f01",
+        now: new Date("2026-07-18T09:00:00.000Z"),
+      }),
+      "Journal Schema",
+      { now: new Date("2026-07-19T09:00:00.000Z") },
+    ),
+    "comments",
+    { id: "e5c3fb8c-9c97-4f5e-d2cf-5f8f3d8c7b23", now: new Date("2026-07-20T09:00:00.000Z") },
+  );
+  const snapshot = createTable(
+    createSchema("Blog Schema", {
+      id: "c3a1e96a-9a75-4d3c-b0ad-3d6e1b6a5f01",
+      now: new Date("2026-07-18T09:00:00.000Z"),
+    }),
+    "posts",
+    { id: "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12", now: new Date("2026-07-18T09:00:00.000Z") },
+  );
+
+  it("restores the snapshot's content and bumps updatedAt to the injected time", () => {
+    const restored = restoreSchema(current, snapshot, {
+      now: new Date("2026-07-21T09:00:00.000Z"),
+    });
+
+    expect(restored.tables.map((table) => table.name)).toEqual(["posts"]);
+    expect(restored.updatedAt).toEqual(new Date("2026-07-21T09:00:00.000Z"));
+  });
+
+  it("keeps the current document's id, name, and createdAt rather than the snapshot's", () => {
+    const restored = restoreSchema(current, snapshot, {
+      now: new Date("2026-07-21T09:00:00.000Z"),
+    });
+
+    expect(restored.id).toBe(current.id);
+    expect(restored.name).toBe("Journal Schema");
+    expect(restored.createdAt).toEqual(current.createdAt);
+  });
+
+  it("does not mutate either input schema", () => {
+    restoreSchema(current, snapshot, { now: new Date("2026-07-21T09:00:00.000Z") });
+
+    expect(current.tables.map((table) => table.name)).toEqual(["comments"]);
+    expect(snapshot.tables.map((table) => table.name)).toEqual(["posts"]);
   });
 });
 

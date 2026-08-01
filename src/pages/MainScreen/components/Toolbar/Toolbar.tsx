@@ -1,7 +1,16 @@
-import { LuChevronDown, LuPanelRight, LuPencil, LuPlus, LuTrash2 } from "react-icons/lu";
+import {
+  LuChevronDown,
+  LuPanelRight,
+  LuPencil,
+  LuPlus,
+  LuRedo2,
+  LuTrash2,
+  LuUndo2,
+} from "react-icons/lu";
 import { tv } from "tailwind-variants";
 import type { SchemaSummary } from "../../../../domain/schema";
 import { useActiveDialog } from "../../ActiveDialogContext";
+import { useUndoRedo } from "../../hooks/useUndoRedo";
 import { LoadSchemaButton } from "./LoadSchemaButton";
 import { SchemaMenu } from "./SchemaMenu";
 import { useToolbarMenu } from "./useToolbarMenu";
@@ -42,6 +51,7 @@ export function Toolbar({
 }: ToolbarProps) {
   const { isOpen: isMenuOpen, wrapperRef: menuWrapperRef, toggle, close } = useToolbarMenu();
   const { openDialog } = useActiveDialog();
+  const { undo, redo, canUndo, canRedo } = useUndoRedo();
 
   return (
     <header className={toolbar()}>
@@ -81,6 +91,24 @@ export function Toolbar({
         <LuTrash2 aria-hidden="true" className="size-4" />
       </button>
       <div className="ml-auto flex items-center gap-1">
+        <button
+          type="button"
+          aria-label="Undo"
+          disabled={!canUndo}
+          onClick={undo}
+          className={toolButton()}
+        >
+          <LuUndo2 aria-hidden="true" className="size-4" />
+        </button>
+        <button
+          type="button"
+          aria-label="Redo"
+          disabled={!canRedo}
+          onClick={redo}
+          className={toolButton()}
+        >
+          <LuRedo2 aria-hidden="true" className="size-4" />
+        </button>
         <button type="button" onClick={() => openDialog("createTable")} className={toolButton()}>
           <LuPlus aria-hidden="true" className="size-4" />
           Add Table

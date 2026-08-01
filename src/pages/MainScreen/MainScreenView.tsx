@@ -17,6 +17,7 @@ import {
 import { useSelection } from "./SelectionContext";
 import { useDeleteKeyShortcut } from "./hooks/useDeleteKeyShortcut";
 import { useDownloadSchemaFile } from "./hooks/useDownloadSchemaFile";
+import { useUndoRedoShortcut } from "./hooks/useUndoRedoShortcut";
 import { useUnsavedChangesWarning } from "./hooks/useUnsavedChangesWarning";
 
 const NO_VALUE = "—";
@@ -82,6 +83,7 @@ export function MainScreenView({
   );
 
   useDeleteKeyShortcut({ tableId: selectedTableId, relationId: selectedRelationId });
+  useUndoRedoShortcut();
   useUnsavedChangesWarning(hasUnsavedChanges);
 
   return (

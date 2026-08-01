@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { Background, Controls, ReactFlow, useNodesState } from "@xyflow/react";
 import type { Connection, Edge, HandleType } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
@@ -9,7 +9,7 @@ import {
   type Table,
 } from "../../../../domain/schema";
 import { resolveForeignKeyDrop } from "./connectionEnd";
-import { selectCommittedMoves } from "./nodeChanges";
+import { isOscillating, selectCommittedMoves, type SelectionEcho } from "./nodeChanges";
 import {
   columnIdFromHandle,
   sourceColumnIdFromHandle,
@@ -64,9 +64,58 @@ export function Canvas({
   // docs/design/0012-foreign-key-child-column-generation.md).
   const dragStartHandleTypeRef = useRef<HandleType | null>(null);
 
+  // Carries each node's already-measured dimensions forward instead of
+  // dropping them on every resync. `tablesToNodes` never sets `measured`,
+  // so without this, every resync makes React Flow treat all nodes as
+  // freshly mounted, hiding them (`visibility: hidden`) until a fresh
+  // ResizeObserver pass measures them again — and a resync landing before
+  // that pass completes discards the fresh measurement too, in the worst
+  // case leaving nodes hidden indefinitely (see docs/design/0016-undo-redo.md).
   useEffect(() => {
-    setNodes(tablesToNodes(tables, selectedTableIds));
+    setNodes((prevNodes) => {
+      const measuredById = new Map(prevNodes.map((node) => [node.id, node.measured]));
+      return tablesToNodes(tables, selectedTableIds).map((node) => {
+        node.measured = measuredById.get(node.id) ?? node.measured;
+        return node;
+      });
+    });
   }, [tables, selectedTableIds, setNodes]);
+
+  // React Flow's own selection reconciliation can, in one specific
+  // circumstance, oscillate between a couple of selection states
+  // indefinitely: `selectedTableIds` transitioning to empty soon after
+  // `tables` changes — exactly what undo/redo's post-undo clearSelection
+  // could do (see docs/design/0016-undo-redo.md, which now defers that
+  // clear well past when React Flow's own remeasurement settles, avoiding
+  // the trigger). The oscillation lives entirely inside React Flow's
+  // controlled-selection handling; it reproduced identically regardless of
+  // how the controlled `nodes` array was built or memoized on this side.
+  // `isOscillating` is a backstop against this same failure mode
+  // resurfacing some other way: it recognizes reports that keep revisiting
+  // the same couple of states abnormally fast and drops further echoes
+  // until a genuinely different, human-paced selection breaks the cycle,
+  // degrading to (at most) a brief selection flicker instead of a runaway
+  // render loop. It cannot also correct which of those states sticks — by
+  // the time the pattern is recognized, several of the echoes have already
+  // been forwarded and may have already overwritten this app's own
+  // intended selection — so avoiding the trigger (above) is what actually
+  // keeps the result correct; this only keeps a recurrence non-fatal.
+  const selectionEchoRef = useRef<SelectionEcho[]>([]);
+  const handleSelectionChange = useCallback(
+    ({ nodes: selectedNodes }: { nodes: TableNodeType[] }) => {
+      const ids = selectedNodes.map((node) => node.id);
+      const history = selectionEchoRef.current;
+      history.push({ signature: ids.toSorted().join(","), timestamp: performance.now() });
+      if (history.length > 20) {
+        history.shift();
+      }
+      if (isOscillating(history)) {
+        return;
+      }
+      onTableSelectionChange(ids);
+    },
+    [onTableSelectionChange],
+  );
 
   return (
     <div className="h-full w-full">
@@ -86,9 +135,7 @@ export function Canvas({
         // already implements click/shift-click/box-select, and it reports
         // every resulting selection through onSelectionChange.
         multiSelectionKeyCode="Shift"
-        onSelectionChange={({ nodes: selectedNodes }) => {
-          onTableSelectionChange(selectedNodes.map((node) => node.id));
-        }}
+        onSelectionChange={handleSelectionChange}
         onNodesChange={(changes) => {
           handleNodesChange(changes);
           const moves = selectCommittedMoves(changes);

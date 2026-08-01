@@ -6,11 +6,12 @@ import {
   addKey,
   createSchema,
   createTable,
+  type Schema,
 } from "../../../domain/schema";
 import type { SchemaRepository } from "../../../domain/schemaRepository";
 import { createFakeSchemaRepository } from "../../../test/fakeSchemaRepository";
 import { NotificationProvider, useNotification } from "../NotificationContext";
-import { useSchemaWorkspace } from "./useSchemaWorkspace";
+import { HISTORY_LIMIT, useSchemaWorkspace } from "./useSchemaWorkspace";
 
 const wrapper = ({ children }: { children: ReactNode }) => (
   <NotificationProvider>{children}</NotificationProvider>
@@ -944,5 +945,354 @@ describe("useSchemaWorkspace", () => {
     const persisted = await repository.load(blog.id);
     expect(persisted?.tables[0]?.foreignKeys).toEqual([]);
     expect(persisted?.updatedAt.getTime()).toBeGreaterThan(blog.updatedAt.getTime());
+  });
+
+  describe("undo/redo", () => {
+    async function renderReadyWorkspace(schema: Schema) {
+      const repository = createFakeSchemaRepository({ schemas: [schema], lastSchemaId: schema.id });
+      const view = renderWorkspace(repository);
+      await waitFor(() => {
+        expect(view.result.current.workspace.currentSchema).not.toBeNull();
+      });
+      return { ...view, repository };
+    }
+
+    it("reports nothing to undo or redo for a fresh workspace", async () => {
+      const { result } = await renderReadyWorkspace(createSchema("Blog Schema"));
+
+      expect(result.current.workspace.canUndo).toBe(false);
+      expect(result.current.workspace.canRedo).toBe(false);
+    });
+
+    it("undoes the most recent diagram edit", async () => {
+      const { result } = await renderReadyWorkspace(createSchema("Blog Schema"));
+      act(() => {
+        result.current.workspace.createTable("posts");
+      });
+      await waitFor(() => {
+        expect(result.current.workspace.currentSchema?.tables).toHaveLength(1);
+      });
+
+      act(() => {
+        result.current.workspace.undo();
+      });
+
+      expect(result.current.workspace.currentSchema?.tables).toEqual([]);
+      expect(result.current.workspace.canUndo).toBe(false);
+      expect(result.current.workspace.canRedo).toBe(true);
+    });
+
+    it("redoes an undone edit", async () => {
+      const { result } = await renderReadyWorkspace(createSchema("Blog Schema"));
+      act(() => {
+        result.current.workspace.createTable("posts");
+      });
+      await waitFor(() => {
+        expect(result.current.workspace.currentSchema?.tables).toHaveLength(1);
+      });
+      act(() => {
+        result.current.workspace.undo();
+      });
+
+      act(() => {
+        result.current.workspace.redo();
+      });
+
+      expect(result.current.workspace.currentSchema?.tables.map((table) => table.name)).toEqual([
+        "posts",
+      ]);
+      expect(result.current.workspace.canUndo).toBe(true);
+      expect(result.current.workspace.canRedo).toBe(false);
+    });
+
+    it("is a no-op to undo when there is nothing to undo", async () => {
+      const blog = createSchema("Blog Schema");
+      const { result } = await renderReadyWorkspace(blog);
+
+      act(() => {
+        result.current.workspace.undo();
+      });
+
+      expect(result.current.workspace.currentSchema).toEqual(blog);
+    });
+
+    it("is a no-op to redo when there is nothing to redo", async () => {
+      const blog = createSchema("Blog Schema");
+      const { result } = await renderReadyWorkspace(blog);
+
+      act(() => {
+        result.current.workspace.redo();
+      });
+
+      expect(result.current.workspace.currentSchema).toEqual(blog);
+    });
+
+    it("does not push a no-op edit onto the undo stack", async () => {
+      const blog = createTable(createSchema("Blog Schema"), "posts", {
+        id: "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12",
+      });
+      const { result } = await renderReadyWorkspace(blog);
+
+      act(() => {
+        result.current.workspace.renameTable("d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12", "posts");
+      });
+
+      expect(result.current.workspace.canUndo).toBe(false);
+    });
+
+    it("clears the redo stack once a new edit follows an undo", async () => {
+      const { result } = await renderReadyWorkspace(createSchema("Blog Schema"));
+      act(() => {
+        result.current.workspace.createTable("posts");
+      });
+      await waitFor(() => {
+        expect(result.current.workspace.currentSchema?.tables).toHaveLength(1);
+      });
+      act(() => {
+        result.current.workspace.undo();
+      });
+      expect(result.current.workspace.canRedo).toBe(true);
+
+      act(() => {
+        result.current.workspace.createTable("comments");
+      });
+
+      expect(result.current.workspace.canRedo).toBe(false);
+      act(() => {
+        result.current.workspace.redo();
+      });
+      expect(result.current.workspace.currentSchema?.tables.map((table) => table.name)).toEqual([
+        "comments",
+      ]);
+    });
+
+    it("restores a whole group move as a single undo step", async () => {
+      const blog = createTable(
+        createTable(createSchema("Blog Schema"), "posts", {
+          id: "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12",
+        }),
+        "comments",
+        { id: "e5c3fb8c-9c97-4f5e-d2cf-5f8f3d8c7b23" },
+      );
+      const { result } = await renderReadyWorkspace(blog);
+      const originalPositions = blog.tables.map((table) => table.position);
+
+      act(() => {
+        result.current.workspace.moveTables([
+          { tableId: "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12", position: { x: 400, y: 300 } },
+          { tableId: "e5c3fb8c-9c97-4f5e-d2cf-5f8f3d8c7b23", position: { x: 500, y: 100 } },
+        ]);
+      });
+      await waitFor(() => {
+        expect(result.current.workspace.currentSchema?.tables[0]?.position).toEqual({
+          x: 400,
+          y: 300,
+        });
+      });
+
+      act(() => {
+        result.current.workspace.undo();
+      });
+
+      expect(result.current.workspace.currentSchema?.tables.map((table) => table.position)).toEqual(
+        originalPositions,
+      );
+      expect(result.current.workspace.canUndo).toBe(false);
+    });
+
+    it("chains two edits dispatched synchronously in the same handler into two undo steps", async () => {
+      // Mirrors ColumnDialog's "add column, then set its key membership"
+      // submit (see DialogHost), which calls both actions back-to-back in
+      // one event handler before React re-renders between them.
+      const blog = createTable(createSchema("Blog Schema"), "posts", {
+        id: "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12",
+      });
+      const { result } = await renderReadyWorkspace(blog);
+
+      act(() => {
+        result.current.workspace.addColumn(
+          "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12",
+          columnFields,
+          "f1a2b3c4-5d6e-4f7a-8b9c-0d1e2f3a4b5c",
+        );
+        result.current.workspace.setColumnKeyMembership(
+          "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12",
+          "f1a2b3c4-5d6e-4f7a-8b9c-0d1e2f3a4b5c",
+          { PRIMARY_KEY: true, UNIQUE: false, INDEX: false },
+        );
+      });
+
+      await waitFor(() => {
+        expect(result.current.workspace.currentSchema?.tables[0]?.keys).toHaveLength(1);
+      });
+      expect(result.current.workspace.currentSchema?.tables[0]?.columns).toHaveLength(1);
+
+      act(() => {
+        result.current.workspace.undo();
+      });
+      expect(result.current.workspace.currentSchema?.tables[0]?.keys).toEqual([]);
+      expect(result.current.workspace.currentSchema?.tables[0]?.columns).toHaveLength(1);
+
+      act(() => {
+        result.current.workspace.undo();
+      });
+      expect(result.current.workspace.currentSchema?.tables[0]?.columns).toEqual([]);
+      expect(result.current.workspace.canUndo).toBe(false);
+    });
+
+    it("keeps the current name across an undo that reaches before a schema rename", async () => {
+      const { result } = await renderReadyWorkspace(createSchema("Blog Schema"));
+      act(() => {
+        result.current.workspace.createTable("posts");
+      });
+      await waitFor(() => {
+        expect(result.current.workspace.currentSchema?.tables).toHaveLength(1);
+      });
+      act(() => {
+        result.current.workspace.renameSchema("Journal Schema");
+      });
+      await waitFor(() => {
+        expect(result.current.workspace.currentSchema?.name).toBe("Journal Schema");
+      });
+
+      act(() => {
+        result.current.workspace.undo();
+      });
+
+      expect(result.current.workspace.currentSchema?.tables).toEqual([]);
+      expect(result.current.workspace.currentSchema?.name).toBe("Journal Schema");
+    });
+
+    it("clears history when creating a new schema", async () => {
+      const { result } = await renderReadyWorkspace(createSchema("Blog Schema"));
+      act(() => {
+        result.current.workspace.createTable("posts");
+      });
+      await waitFor(() => {
+        expect(result.current.workspace.canUndo).toBe(true);
+      });
+
+      act(() => {
+        result.current.workspace.createSchema("Orders");
+      });
+
+      expect(result.current.workspace.canUndo).toBe(false);
+      expect(result.current.workspace.canRedo).toBe(false);
+    });
+
+    it("clears history when loading a schema from a file", async () => {
+      const { result } = await renderReadyWorkspace(createSchema("Blog Schema"));
+      act(() => {
+        result.current.workspace.createTable("posts");
+      });
+      await waitFor(() => {
+        expect(result.current.workspace.canUndo).toBe(true);
+      });
+
+      act(() => {
+        result.current.workspace.loadSchemaFromFile(createSchema("Imported Schema"));
+      });
+
+      expect(result.current.workspace.canUndo).toBe(false);
+      expect(result.current.workspace.canRedo).toBe(false);
+    });
+
+    it("clears history when switching to a different schema", async () => {
+      const blog = createSchema("Blog Schema");
+      const shop = createSchema("Shop Schema");
+      const repository = createFakeSchemaRepository({
+        schemas: [blog, shop],
+        lastSchemaId: blog.id,
+      });
+      const { result } = renderWorkspace(repository);
+      await waitFor(() => {
+        expect(result.current.workspace.currentSchema?.id).toBe(blog.id);
+      });
+      act(() => {
+        result.current.workspace.createTable("posts");
+      });
+      await waitFor(() => {
+        expect(result.current.workspace.canUndo).toBe(true);
+      });
+
+      act(() => {
+        result.current.workspace.selectSchema(shop.id);
+      });
+
+      await waitFor(() => {
+        expect(result.current.workspace.currentSchema?.id).toBe(shop.id);
+      });
+      expect(result.current.workspace.canUndo).toBe(false);
+      expect(result.current.workspace.canRedo).toBe(false);
+    });
+
+    it("clears history when deleting the current schema", async () => {
+      const blog = createSchema("Blog Schema", { now: new Date("2026-07-02T09:00:00.000Z") });
+      const older = createSchema("Older Schema", { now: new Date("2026-07-01T09:00:00.000Z") });
+      const repository = createFakeSchemaRepository({
+        schemas: [blog, older],
+        lastSchemaId: blog.id,
+      });
+      const { result } = renderWorkspace(repository);
+      await waitFor(() => {
+        expect(result.current.workspace.currentSchema?.id).toBe(blog.id);
+      });
+      act(() => {
+        result.current.workspace.createTable("posts");
+      });
+      await waitFor(() => {
+        expect(result.current.workspace.canUndo).toBe(true);
+      });
+
+      act(() => {
+        result.current.workspace.deleteCurrentSchema();
+      });
+
+      await waitFor(() => {
+        expect(result.current.workspace.currentSchema?.id).toBe(older.id);
+      });
+      expect(result.current.workspace.canUndo).toBe(false);
+      expect(result.current.workspace.canRedo).toBe(false);
+    });
+
+    it("does not clear history when renaming the current schema", async () => {
+      const { result } = await renderReadyWorkspace(createSchema("Blog Schema"));
+      act(() => {
+        result.current.workspace.createTable("posts");
+      });
+      await waitFor(() => {
+        expect(result.current.workspace.canUndo).toBe(true);
+      });
+
+      act(() => {
+        result.current.workspace.renameSchema("Journal Schema");
+      });
+
+      expect(result.current.workspace.canUndo).toBe(true);
+    });
+
+    it(`caps the undo stack at ${HISTORY_LIMIT} entries, dropping the oldest`, async () => {
+      const { result } = await renderReadyWorkspace(createSchema("Blog Schema"));
+
+      act(() => {
+        for (let i = 0; i < HISTORY_LIMIT + 1; i++) {
+          result.current.workspace.createTable(`table${i}`);
+        }
+      });
+      await waitFor(() => {
+        expect(result.current.workspace.currentSchema?.tables).toHaveLength(HISTORY_LIMIT + 1);
+      });
+
+      act(() => {
+        for (let i = 0; i < HISTORY_LIMIT; i++) {
+          result.current.workspace.undo();
+        }
+      });
+
+      expect(result.current.workspace.canUndo).toBe(false);
+      expect(result.current.workspace.currentSchema?.tables.map((table) => table.name)).toEqual([
+        "table0",
+      ]);
+    });
   });
 });

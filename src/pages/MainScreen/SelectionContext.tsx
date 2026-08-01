@@ -20,6 +20,7 @@ type SelectionContextValue = {
   selectColumn: (id: string | null) => void;
   selectKey: (id: string | null) => void;
   selectRelation: (id: string | null) => void;
+  clearSelection: () => void;
 };
 
 const SelectionContext = createContext<SelectionContextValue | null>(null);
@@ -91,6 +92,16 @@ export function SelectionProvider({ initialSelection, children }: SelectionProvi
       selectColumn: setSelectedColumnId,
       selectKey: setSelectedKeyId,
       selectRelation: setSelectedRelationId,
+      // Used by undo/redo (see docs/design/0016-undo-redo.md): a history
+      // jump can remove whatever is currently selected, so all four ids are
+      // dropped unconditionally rather than reconciled against the
+      // post-jump schema.
+      clearSelection: () => {
+        setSelectedTableIds(new Set());
+        setSelectedColumnId(null);
+        setSelectedKeyId(null);
+        setSelectedRelationId(null);
+      },
     };
   }, [selectedTableIds, selectedColumnId, selectedKeyId, selectedRelationId]);
 

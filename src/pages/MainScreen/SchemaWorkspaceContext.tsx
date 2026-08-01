@@ -2,6 +2,7 @@ import { type ReactNode, createContext, useContext } from "react";
 import type { Schema, SchemaSummary, Table } from "../../domain/schema";
 import type { SchemaRepository } from "../../domain/schemaRepository";
 import {
+  type HistoryActions,
   type SchemaActions,
   type SchemaWorkspace,
   useSchemaWorkspace,
@@ -47,6 +48,11 @@ export function useHasUnsavedChanges(): boolean {
 
 export function useSchemaActions(): SchemaActions {
   return useSchemaWorkspaceContext();
+}
+
+export function useHistoryActions(): HistoryActions {
+  const { undo, redo, canUndo, canRedo } = useSchemaWorkspaceContext();
+  return { undo, redo, canUndo, canRedo };
 }
 
 function useSchemaWorkspaceContext(): SchemaWorkspace {

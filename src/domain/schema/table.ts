@@ -161,6 +161,29 @@ export function moveTables(
   };
 }
 
+type RestoreSchemaOptions = {
+  now?: Date;
+};
+
+// Used by undo/redo: `snapshot` is a prior version of `current`'s content.
+// The document's own identity (id/name/createdAt) tracks `current`, not the
+// snapshot, so that undoing past a rename doesn't also revert the name, and
+// storage sees a restore as a fresh edit rather than a jump back in time.
+export function restoreSchema(
+  current: Schema,
+  snapshot: Schema,
+  options: RestoreSchemaOptions = {},
+): Schema {
+  const { now = new Date() } = options;
+  return {
+    ...snapshot,
+    id: current.id,
+    name: current.name,
+    createdAt: current.createdAt,
+    updatedAt: now,
+  };
+}
+
 type RemoveTableOptions = {
   now?: Date;
 };

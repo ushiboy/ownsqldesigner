@@ -7,6 +7,7 @@ import {
   SchemaWorkspaceProvider,
   useCurrentSchema,
   useHasUnsavedChanges,
+  useHistoryActions,
   useSavedSchemas,
   useSchemaActions,
 } from "./SchemaWorkspaceContext";
@@ -30,6 +31,7 @@ function renderWorkspace(initialSchema?: Schema) {
       savedSchemas: useSavedSchemas(),
       hasUnsavedChanges: useHasUnsavedChanges(),
       actions: useSchemaActions(),
+      history: useHistoryActions(),
     }),
     {
       wrapper: ({ children }: { children: ReactNode }) => (
@@ -98,5 +100,22 @@ describe("SchemaWorkspaceContext", () => {
     expect(() => renderHook(() => useCurrentSchema())).toThrow(
       "Schema workspace hooks must be used within a SchemaWorkspaceProvider",
     );
+  });
+
+  it("exposes undo/redo through useHistoryActions", async () => {
+    const { result } = renderWorkspace(blogSchema);
+
+    act(() => {
+      result.current.actions.createTable("users");
+    });
+    expect(result.current.history.canUndo).toBe(true);
+
+    act(() => {
+      result.current.history.undo();
+    });
+
+    expect(result.current.currentSchema?.tables).toEqual([]);
+    expect(result.current.history.canUndo).toBe(false);
+    expect(result.current.history.canRedo).toBe(true);
   });
 });

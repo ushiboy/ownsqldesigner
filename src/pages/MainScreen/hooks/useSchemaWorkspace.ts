@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useReducer, useRef, useState } from "react";
 import {
   DEFAULT_SCHEMA_NAME,
   type Column,
@@ -24,6 +24,7 @@ import {
   removeTable,
   renameSchema,
   renameTable,
+  restoreSchema,
   setColumnKeyMembership,
   updateColumn,
   updateKey,
@@ -31,6 +32,11 @@ import {
 } from "../../../domain/schema";
 import type { SchemaRepository } from "../../../domain/schemaRepository";
 import { useNotification } from "../NotificationContext";
+
+// Bounds the undo/redo stacks so a long editing session can't grow them
+// without limit. Exported so tests can exercise the cap without duplicating
+// the number.
+export const HISTORY_LIMIT = 100;
 
 export type SchemaActions = {
   createSchema: (name: string) => void;
@@ -64,13 +70,42 @@ export type SchemaActions = {
   removeForeignKey: (tableId: string, foreignKeyId: string) => void;
 };
 
-export type SchemaWorkspace = SchemaActions & {
-  /** null only during the initial async restore tick. */
-  currentSchema: Schema | null;
-  savedSchemas: SchemaSummary[];
-  /** True when the most recent autosave attempt failed to persist. */
-  hasUnsavedChanges: boolean;
+export type HistoryActions = {
+  undo: () => void;
+  redo: () => void;
+  canUndo: boolean;
+  canRedo: boolean;
 };
+
+export type SchemaWorkspace = SchemaActions &
+  HistoryActions & {
+    /** null only during the initial async restore tick. */
+    currentSchema: Schema | null;
+    savedSchemas: SchemaSummary[];
+    /** True when the most recent autosave attempt failed to persist. */
+    hasUnsavedChanges: boolean;
+  };
+
+// `currentSchema` and its undo/redo stacks are modeled as one reducer
+// (rather than three independent `useState`s) because several call sites —
+// most notably ColumnDialog's "add column, then set its key membership"
+// submit (see DialogHost) — dispatch two edits synchronously in the same
+// event handler. A reducer guarantees the second edit sees the first edit's
+// result and its own distinct undo entry; three separate `useState`s
+// updated from closure-read values would not, since none of those values
+// are visible to a sibling call until the next render.
+type WorkspaceHistoryState = {
+  currentSchema: Schema | null;
+  undoStack: Schema[];
+  redoStack: Schema[];
+};
+
+type WorkspaceHistoryAction =
+  | { type: "edit"; updater: (prev: Schema) => Schema }
+  | { type: "editWithoutHistory"; updater: (prev: Schema) => Schema }
+  | { type: "replace"; schema: Schema }
+  | { type: "undo" }
+  | { type: "redo" };
 
 export function useSchemaWorkspace(
   repository: SchemaRepository,
@@ -79,7 +114,11 @@ export function useSchemaWorkspace(
   // Frozen at mount so the two effects below stay correct even if the
   // caller hands over a fresh object identity on a later render.
   const [seededSchema] = useState(initialSchema);
-  const [currentSchema, setCurrentSchema] = useState<Schema | null>(seededSchema ?? null);
+  const [{ currentSchema, undoStack, redoStack }, dispatch] = useReducer(workspaceHistoryReducer, {
+    currentSchema: seededSchema ?? null,
+    undoStack: [],
+    redoStack: [],
+  });
   const [savedSchemas, setSavedSchemas] = useState<SchemaSummary[]>([]);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   // Failures surface through the notification context; each successful
@@ -106,7 +145,7 @@ export function useSchemaWorkspace(
       const lastSchemaId = await repository.loadLastSchemaId();
       const restored = lastSchemaId === null ? null : await repository.load(lastSchemaId);
       if (!cancelled) {
-        setCurrentSchema(restored ?? createSchema(DEFAULT_SCHEMA_NAME));
+        dispatch({ type: "replace", schema: restored ?? createSchema(DEFAULT_SCHEMA_NAME) });
       }
     })();
     return () => {
@@ -152,24 +191,46 @@ export function useSchemaWorkspace(
     };
   }, [repository, currentSchema, seededSchema]);
 
+  // The single interception point for diagram-content edits: dispatches an
+  // "edit" action, which pushes the pre-edit schema onto the undo stack and
+  // clears the redo stack, but only when `updater` actually changes
+  // something. Every diagram-content action below already returns the same
+  // `prev` reference for a no-op edit (an unchanged name/position, an
+  // unknown id, ...), so that existing convention is reused here rather
+  // than re-checked.
+  function commitEdit(updater: (prev: Schema) => Schema) {
+    dismissNotification();
+    dispatch({ type: "edit", updater });
+  }
+
   return {
     currentSchema,
     savedSchemas,
     hasUnsavedChanges,
+    canUndo: undoStack.length > 0,
+    canRedo: redoStack.length > 0,
+    undo: () => {
+      dismissNotification();
+      dispatch({ type: "undo" });
+    },
+    redo: () => {
+      dismissNotification();
+      dispatch({ type: "redo" });
+    },
     createSchema: (name) => {
       dismissNotification();
-      setCurrentSchema(createSchema(name));
+      dispatch({ type: "replace", schema: createSchema(name) });
     },
     loadSchemaFromFile: (schema) => {
       dismissNotification();
-      setCurrentSchema(importSchema(schema));
+      dispatch({ type: "replace", schema: importSchema(schema) });
     },
     selectSchema: (id) => {
       (async () => {
         const loaded = await repository.load(id);
         if (loaded !== null) {
           dismissNotification();
-          setCurrentSchema(loaded);
+          dispatch({ type: "replace", schema: loaded });
           return;
         }
         // The entry vanished (e.g. deleted in another tab) or is corrupt:
@@ -187,9 +248,10 @@ export function useSchemaWorkspace(
     renameSchema: (name) => {
       dismissNotification();
       // Confirming an unchanged name is a no-op so it does not dirty updatedAt.
-      setCurrentSchema((prev) =>
-        prev === null || prev.name === name ? prev : renameSchema(prev, name),
-      );
+      dispatch({
+        type: "editWithoutHistory",
+        updater: (prev) => (prev.name === name ? prev : renameSchema(prev, name)),
+      });
     },
     deleteCurrentSchema: () => {
       if (currentSchema === null) {
@@ -204,29 +266,20 @@ export function useSchemaWorkspace(
         await repository.remove(id);
         const summaries = await repository.list();
         dismissNotification();
-        setCurrentSchema(await loadSuccessor(repository, summaries));
+        dispatch({ type: "replace", schema: await loadSuccessor(repository, summaries) });
       })();
     },
     createTable: (name) => {
-      dismissNotification();
-      setCurrentSchema((prev) => (prev === null ? prev : createTable(prev, name)));
+      commitEdit((prev) => createTable(prev, name));
     },
     renameTable: (tableId, name) => {
-      dismissNotification();
-      setCurrentSchema((prev) => {
-        if (prev === null) {
-          return prev;
-        }
+      commitEdit((prev) => {
         const table = prev.tables.find((t) => t.id === tableId);
         return isTableNameUnchanged(table, name) ? prev : renameTable(prev, tableId, name);
       });
     },
     updateTableComment: (tableId, comment) => {
-      dismissNotification();
-      setCurrentSchema((prev) => {
-        if (prev === null) {
-          return prev;
-        }
+      commitEdit((prev) => {
         const table = prev.tables.find((t) => t.id === tableId);
         return isTableCommentUnchanged(table, comment)
           ? prev
@@ -234,11 +287,7 @@ export function useSchemaWorkspace(
       });
     },
     moveTable: (tableId, position) => {
-      dismissNotification();
-      setCurrentSchema((prev) => {
-        if (prev === null) {
-          return prev;
-        }
+      commitEdit((prev) => {
         const table = prev.tables.find((t) => t.id === tableId);
         return isTablePositionUnchanged(table, position)
           ? prev
@@ -246,11 +295,7 @@ export function useSchemaWorkspace(
       });
     },
     moveTables: (moves) => {
-      dismissNotification();
-      setCurrentSchema((prev) => {
-        if (prev === null) {
-          return prev;
-        }
+      commitEdit((prev) => {
         const changedMoves = moves.filter(
           (move) =>
             !isTablePositionUnchanged(
@@ -262,60 +307,41 @@ export function useSchemaWorkspace(
       });
     },
     removeTable: (tableId) => {
-      dismissNotification();
-      setCurrentSchema((prev) => (prev === null ? prev : removeTable(prev, tableId)));
+      commitEdit((prev) => removeTable(prev, tableId));
     },
     // `id` lets the caller know the new column's id up front, so it can also
     // create the column's PRIMARY KEY key in the same submit (see MainScreenView).
     addColumn: (tableId, fields, id) => {
-      dismissNotification();
-      setCurrentSchema((prev) => (prev === null ? prev : addColumn(prev, tableId, fields, { id })));
+      commitEdit((prev) => addColumn(prev, tableId, fields, { id }));
     },
     updateColumn: (tableId, columnId, fields) => {
-      dismissNotification();
-      setCurrentSchema((prev) =>
-        prev === null ? prev : updateColumn(prev, tableId, columnId, fields),
-      );
+      commitEdit((prev) => updateColumn(prev, tableId, columnId, fields));
     },
     removeColumn: (tableId, columnId) => {
-      dismissNotification();
-      setCurrentSchema((prev) => (prev === null ? prev : removeColumn(prev, tableId, columnId)));
+      commitEdit((prev) => removeColumn(prev, tableId, columnId));
     },
     setColumnKeyMembership: (tableId, columnId, membership) => {
-      dismissNotification();
-      setCurrentSchema((prev) =>
-        prev === null ? prev : setColumnKeyMembership(prev, tableId, columnId, membership),
-      );
+      commitEdit((prev) => setColumnKeyMembership(prev, tableId, columnId, membership));
     },
     addKey: (tableId, fields) => {
-      dismissNotification();
-      setCurrentSchema((prev) => (prev === null ? prev : addKey(prev, tableId, fields)));
+      commitEdit((prev) => addKey(prev, tableId, fields));
     },
     updateKey: (tableId, keyId, fields) => {
-      dismissNotification();
-      setCurrentSchema((prev) => (prev === null ? prev : updateKey(prev, tableId, keyId, fields)));
+      commitEdit((prev) => updateKey(prev, tableId, keyId, fields));
     },
     removeKey: (tableId, keyId) => {
-      dismissNotification();
-      setCurrentSchema((prev) => (prev === null ? prev : removeKey(prev, tableId, keyId)));
+      commitEdit((prev) => removeKey(prev, tableId, keyId));
     },
     addForeignKey: (tableId, fields) => {
-      dismissNotification();
-      setCurrentSchema((prev) => (prev === null ? prev : addForeignKey(prev, tableId, fields)));
+      commitEdit((prev) => addForeignKey(prev, tableId, fields));
     },
     addForeignKeyWithNewColumn: (childTableId, referencedTableId, referencedColumnId) => {
-      dismissNotification();
-      setCurrentSchema((prev) =>
-        prev === null
-          ? prev
-          : addForeignKeyWithNewColumn(prev, childTableId, referencedTableId, referencedColumnId),
+      commitEdit((prev) =>
+        addForeignKeyWithNewColumn(prev, childTableId, referencedTableId, referencedColumnId),
       );
     },
     removeForeignKey: (tableId, foreignKeyId) => {
-      dismissNotification();
-      setCurrentSchema((prev) =>
-        prev === null ? prev : removeForeignKey(prev, tableId, foreignKeyId),
-      );
+      commitEdit((prev) => removeForeignKey(prev, tableId, foreignKeyId));
     },
   };
 }
@@ -332,6 +358,64 @@ async function loadSuccessor(
     return createSchema(DEFAULT_SCHEMA_NAME);
   }
   return (await repository.load(successor.id)) ?? createSchema(DEFAULT_SCHEMA_NAME);
+}
+
+function workspaceHistoryReducer(
+  state: WorkspaceHistoryState,
+  action: WorkspaceHistoryAction,
+): WorkspaceHistoryState {
+  switch (action.type) {
+    case "edit": {
+      if (state.currentSchema === null) {
+        return state;
+      }
+      const next = action.updater(state.currentSchema);
+      if (next === state.currentSchema) {
+        return state;
+      }
+      return {
+        currentSchema: next,
+        undoStack: pushHistory(state.undoStack, state.currentSchema),
+        redoStack: [],
+      };
+    }
+    case "editWithoutHistory": {
+      if (state.currentSchema === null) {
+        return state;
+      }
+      const next = action.updater(state.currentSchema);
+      return next === state.currentSchema ? state : { ...state, currentSchema: next };
+    }
+    case "replace":
+      return { currentSchema: action.schema, undoStack: [], redoStack: [] };
+    case "undo": {
+      if (state.currentSchema === null || state.undoStack.length === 0) {
+        return state;
+      }
+      const previous = state.undoStack[state.undoStack.length - 1]!;
+      return {
+        currentSchema: restoreSchema(state.currentSchema, previous),
+        undoStack: state.undoStack.slice(0, -1),
+        redoStack: pushHistory(state.redoStack, state.currentSchema),
+      };
+    }
+    case "redo": {
+      if (state.currentSchema === null || state.redoStack.length === 0) {
+        return state;
+      }
+      const next = state.redoStack[state.redoStack.length - 1]!;
+      return {
+        currentSchema: restoreSchema(state.currentSchema, next),
+        undoStack: pushHistory(state.undoStack, state.currentSchema),
+        redoStack: state.redoStack.slice(0, -1),
+      };
+    }
+  }
+}
+
+function pushHistory(stack: Schema[], entry: Schema): Schema[] {
+  const pushed = [...stack, entry];
+  return pushed.length > HISTORY_LIMIT ? pushed.slice(pushed.length - HISTORY_LIMIT) : pushed;
 }
 
 function isTableNameUnchanged(table: Table | undefined, name: string): boolean {

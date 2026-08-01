@@ -6,6 +6,7 @@ import { createFakeSchemaRepository } from "../../../../test/fakeSchemaRepositor
 import { ActiveDialogProvider } from "../../ActiveDialogContext";
 import { NotificationProvider } from "../../NotificationContext";
 import { SchemaWorkspaceProvider } from "../../SchemaWorkspaceContext";
+import { SelectionProvider } from "../../SelectionContext";
 import { Toolbar } from "./Toolbar";
 
 const savedSchemas = [
@@ -39,7 +40,9 @@ function ToolbarWithProviders(props: ComponentProps<typeof Toolbar>) {
     <NotificationProvider>
       <ActiveDialogProvider>
         <SchemaWorkspaceProvider repository={repository} initialSchema={currentSchema}>
-          <Toolbar {...props} />
+          <SelectionProvider>
+            <Toolbar {...props} />
+          </SelectionProvider>
         </SchemaWorkspaceProvider>
       </ActiveDialogProvider>
     </NotificationProvider>

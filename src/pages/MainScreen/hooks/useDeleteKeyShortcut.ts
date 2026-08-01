@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { type DialogKind, useActiveDialog } from "../ActiveDialogContext";
+import { isTextInputElement } from "./keyboardShortcutGuards";
 
 type DeleteKeyShortcutSelection = {
   tableId: string | null;
@@ -39,12 +40,4 @@ function shouldIgnoreKeyboardDelete(
   relationId: string | null,
 ): boolean {
   return activeDialog !== null || (tableId === null && relationId === null);
-}
-
-function isTextInputElement(element: Element | null): boolean {
-  return (
-    element instanceof HTMLInputElement ||
-    element instanceof HTMLTextAreaElement ||
-    element instanceof HTMLSelectElement
-  );
 }

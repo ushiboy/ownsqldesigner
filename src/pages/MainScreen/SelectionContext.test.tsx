@@ -88,6 +88,20 @@ describe("SelectionContext", () => {
     );
   });
 
+  it("clears all four selection ids via clearSelection", () => {
+    const { result } = renderSelection(seededSelection);
+
+    act(() => {
+      result.current.selection.clearSelection();
+    });
+
+    expect(result.current.selection.selectedTableId).toBeNull();
+    expect(result.current.selection.selectedTableIds).toEqual(new Set());
+    expect(result.current.selection.selectedColumnId).toBeNull();
+    expect(result.current.selection.selectedKeyId).toBeNull();
+    expect(result.current.selection.selectedRelationId).toBeNull();
+  });
+
   describe("setTableSelection", () => {
     it("replaces the whole table selection set", () => {
       const { result } = renderSelection(seededSelection);
