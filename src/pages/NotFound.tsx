@@ -1,5 +1,5 @@
 import { useTranslations } from "use-intl";
-import { LocaleProvider } from "@/i18n/LocaleProvider";
+import { LocaleProvider } from "@/i18n/LocaleContext";
 
 function NotFound() {
   return (

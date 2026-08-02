@@ -4,7 +4,7 @@ import userEvent from "@testing-library/user-event";
 import { fn } from "storybook/test";
 import { composeStories } from "@storybook/react-vite";
 import type { Schema } from "../../../../domain/schema";
-import { LocaleProvider } from "../../../../i18n/LocaleProvider";
+import { LocaleProvider } from "../../../../i18n/LocaleContext";
 import { createFakeSchemaRepository } from "../../../../test/fakeSchemaRepository";
 import { ActiveDialogProvider } from "../../ActiveDialogContext";
 import { CanvasApiProvider, useCanvasApiRef } from "../../CanvasApiContext";

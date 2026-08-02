@@ -1,7 +1,7 @@
 import { renderHook } from "@testing-library/react";
 import { saveAs } from "file-saver";
 import { createSchema, type Schema } from "../../../domain/schema";
-import { LocaleProvider } from "../../../i18n/LocaleProvider";
+import { LocaleProvider } from "../../../i18n/LocaleContext";
 import { createFakeSchemaRepository } from "../../../test/fakeSchemaRepository";
 import { NotificationProvider } from "../NotificationContext";
 import { SchemaWorkspaceProvider } from "../SchemaWorkspaceContext";

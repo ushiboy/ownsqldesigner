@@ -11,7 +11,7 @@ import {
 import type { SchemaRepository } from "../../domain/schemaRepository";
 import { createLocalStorageSchemaRepository } from "../../infrastructure/localStorageSchemaRepository";
 import type { Locale } from "../../i18n/Locale";
-import { LocaleProvider } from "../../i18n/LocaleProvider";
+import { LocaleProvider } from "../../i18n/LocaleContext";
 import { ActiveDialogProvider, type DialogKind } from "./ActiveDialogContext";
 import { CanvasApiProvider } from "./CanvasApiContext";
 import { describeForeignKey, type RelationSummary } from "./components/SidePanel";

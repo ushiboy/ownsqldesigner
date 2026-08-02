@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { fn } from "storybook/test";
-import { LocaleProvider } from "../../../../i18n/LocaleProvider";
+import { LocaleProvider } from "../../../../i18n/LocaleContext";
 import { ConfirmDialog } from "./ConfirmDialog";
 
 const meta = {

@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 import { EMPTY_COLUMN_KEY_MEMBERSHIP, type Schema } from "../../../../domain/schema";
-import { LocaleProvider } from "../../../../i18n/LocaleProvider";
+import { LocaleProvider } from "../../../../i18n/LocaleContext";
 import { createFakeSchemaRepository } from "../../../../test/fakeSchemaRepository";
 import { ActiveDialogProvider, type DialogKind } from "../../ActiveDialogContext";
 import { NotificationProvider } from "../../NotificationContext";

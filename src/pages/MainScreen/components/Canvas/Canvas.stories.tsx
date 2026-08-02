@@ -5,7 +5,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 // standalone package.
 import { fn, userEvent, within } from "storybook/test";
 import type { Table } from "../../../../domain/schema";
-import { LocaleProvider } from "../../../../i18n/LocaleProvider";
+import { LocaleProvider } from "../../../../i18n/LocaleContext";
 import { CanvasApiProvider } from "../../CanvasApiContext";
 import { Canvas } from "./Canvas";
 

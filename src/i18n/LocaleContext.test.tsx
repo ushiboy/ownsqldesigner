@@ -1,7 +1,7 @@
 import { act, renderHook } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { useLocale, useTranslations } from "use-intl";
-import { LocaleProvider, useLocaleSwitch } from "./LocaleProvider";
+import { LocaleProvider, useLocaleSwitch } from "./LocaleContext";
 
 const STORAGE_KEY = "ownsqldesigner:locale";
 

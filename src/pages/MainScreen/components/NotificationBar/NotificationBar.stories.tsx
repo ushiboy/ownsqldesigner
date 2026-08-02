@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { LocaleProvider } from "../../../../i18n/LocaleProvider";
+import { LocaleProvider } from "../../../../i18n/LocaleContext";
 import { NotificationProvider } from "../../NotificationContext";
 import { NotificationBar } from "./NotificationBar";
 

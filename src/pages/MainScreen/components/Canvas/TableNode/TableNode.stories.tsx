@@ -3,7 +3,7 @@ import type { Edge } from "@xyflow/react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { Background, ReactFlow } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import { LocaleProvider } from "../../../../../i18n/LocaleProvider";
+import { LocaleProvider } from "../../../../../i18n/LocaleContext";
 import { TableNode, type TableNodeType } from "./TableNode";
 
 const nodeTypes = { table: TableNode };

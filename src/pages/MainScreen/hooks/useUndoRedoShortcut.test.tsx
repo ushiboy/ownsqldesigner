@@ -2,7 +2,7 @@ import { act, renderHook, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ReactNode } from "react";
 import type { Schema } from "../../../domain/schema";
-import { LocaleProvider } from "../../../i18n/LocaleProvider";
+import { LocaleProvider } from "../../../i18n/LocaleContext";
 import { createFakeSchemaRepository } from "../../../test/fakeSchemaRepository";
 import { type DialogKind, ActiveDialogProvider } from "../ActiveDialogContext";
 import { CanvasApiProvider } from "../CanvasApiContext";

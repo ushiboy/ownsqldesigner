@@ -2,7 +2,7 @@ import { act, renderHook, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { createSchema } from "../../../domain/schema";
 import type { SchemaRepository } from "../../../domain/schemaRepository";
-import { LocaleProvider } from "../../../i18n/LocaleProvider";
+import { LocaleProvider } from "../../../i18n/LocaleContext";
 import { createFakeSchemaRepository } from "../../../test/fakeSchemaRepository";
 import { NotificationProvider, useNotification } from "../NotificationContext";
 import { useSchemaWorkspace } from "./useSchemaWorkspace";

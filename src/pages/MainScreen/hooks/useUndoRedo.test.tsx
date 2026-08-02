@@ -2,7 +2,7 @@ import { act, renderHook } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { fn } from "storybook/test";
 import type { Schema } from "../../../domain/schema";
-import { LocaleProvider } from "../../../i18n/LocaleProvider";
+import { LocaleProvider } from "../../../i18n/LocaleContext";
 import { createFakeSchemaRepository } from "../../../test/fakeSchemaRepository";
 import { CanvasApiProvider, useCanvasApiRef } from "../CanvasApiContext";
 import { NotificationProvider } from "../NotificationContext";

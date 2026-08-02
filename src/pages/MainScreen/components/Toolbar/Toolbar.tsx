@@ -17,7 +17,7 @@ import {
 import { tv } from "tailwind-variants";
 import { useLocale, useTranslations } from "use-intl";
 import type { SchemaSummary } from "../../../../domain/schema";
-import { useLocaleSwitch } from "../../../../i18n/LocaleProvider";
+import { useLocaleSwitch } from "../../../../i18n/LocaleContext";
 import { useActiveDialog } from "../../ActiveDialogContext";
 import { useCanvasApiRef } from "../../CanvasApiContext";
 import { useUndoRedo } from "../../hooks/useUndoRedo";

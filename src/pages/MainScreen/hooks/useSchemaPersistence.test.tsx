@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import { useState } from "react";
 import { createSchema, type Schema } from "../../../domain/schema";
 import type { SchemaRepository } from "../../../domain/schemaRepository";
-import { LocaleProvider } from "../../../i18n/LocaleProvider";
+import { LocaleProvider } from "../../../i18n/LocaleContext";
 import { createFakeSchemaRepository } from "../../../test/fakeSchemaRepository";
 import { NotificationProvider, useNotification } from "../NotificationContext";
 import { useSchemaPersistence } from "./useSchemaPersistence";

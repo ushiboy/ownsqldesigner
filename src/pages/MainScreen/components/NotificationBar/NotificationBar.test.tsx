@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { composeStories } from "@storybook/react-vite";
-import { LocaleProvider } from "../../../../i18n/LocaleProvider";
+import { LocaleProvider } from "../../../../i18n/LocaleContext";
 import { NotificationProvider } from "../../NotificationContext";
 import * as stories from "./NotificationBar.stories";
 import { NotificationBar } from "./NotificationBar";
