@@ -61,8 +61,8 @@ export const WithColumns: Story = {
         name: "users",
         comment: "",
         columns: [
-          { id: "c1", name: "id", referenceable: false },
-          { id: "c2", name: "email", referenceable: false },
+          { id: "c1", name: "id", referenceable: false, typeLabel: null },
+          { id: "c2", name: "email", referenceable: false, typeLabel: null },
         ],
       },
     }),
@@ -76,8 +76,23 @@ export const WithReferenceableColumn: Story = {
         name: "users",
         comment: "",
         columns: [
-          { id: "c1", name: "id", referenceable: true },
-          { id: "c2", name: "email", referenceable: false },
+          { id: "c1", name: "id", referenceable: true, typeLabel: null },
+          { id: "c2", name: "email", referenceable: false, typeLabel: null },
+        ],
+      },
+    }),
+  },
+};
+
+export const WithColumnDetails: Story = {
+  args: {
+    node: makeNode({
+      data: {
+        name: "users",
+        comment: "",
+        columns: [
+          { id: "c1", name: "id", referenceable: false, typeLabel: "INTEGER" },
+          { id: "c2", name: "email", referenceable: false, typeLabel: "TEXT(255)" },
         ],
       },
     }),

@@ -4,6 +4,7 @@ import type { Connection, Edge, HandleType } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import {
   type ForeignKey,
+  formatColumnType,
   isReferenceableColumn,
   type Position,
   type Table,
@@ -30,6 +31,8 @@ type CanvasProps = {
    * the comment on the `useNodesState` call below for why.
    */
   initialSelectedTableIds?: string[];
+  /** Whether each column's type/size is shown on the canvas (REQ-012). */
+  showColumnDetails: boolean;
   /** Fires with every selection-changing gesture: click, shift-click, rubber-band, pane click ([]). */
   onTableSelectionChange: (ids: string[]) => void;
   /** null deselects (pane click). */
@@ -47,6 +50,7 @@ export function Canvas({
   tables,
   selectedRelationId,
   initialSelectedTableIds,
+  showColumnDetails,
   onTableSelectionChange,
   onSelectRelation,
   onMoveTables,
@@ -75,7 +79,7 @@ export function Canvas({
   // and back — clearing column/key selection as a side effect of a change
   // that never really happened.
   const [nodes, setNodes, handleNodesChange] = useNodesState<TableNodeType>(
-    tablesToNodes(tables, initialSelectedTableIds),
+    tablesToNodes(tables, initialSelectedTableIds, showColumnDetails),
   );
   const edges = tablesToEdges(tables, selectedRelationId);
   // Set in onConnectStart, read in isValidConnection (both fire mid-drag,
@@ -96,9 +100,9 @@ export function Canvas({
       const selectedIds = currentNodes
         .filter((node) => node.selected === true)
         .map((node) => node.id);
-      return tablesToNodes(tables, selectedIds);
+      return tablesToNodes(tables, selectedIds, showColumnDetails);
     });
-  }, [tables, setNodes]);
+  }, [tables, showColumnDetails, setNodes]);
 
   return (
     <div className="h-full w-full">
@@ -213,7 +217,11 @@ export function Canvas({
 // something this app can validate against. Programmatic deselection
 // (undo/redo) goes through `CanvasApiBridge` below, which calls React
 // Flow's own native deselect instead.
-function tablesToNodes(tables: Table[], selectedIds?: string[]): TableNodeType[] {
+function tablesToNodes(
+  tables: Table[],
+  selectedIds: string[] | undefined,
+  showColumnDetails: boolean,
+): TableNodeType[] {
   const selected = new Set(selectedIds);
   return tables.map((table) => ({
     id: table.id,
@@ -223,10 +231,11 @@ function tablesToNodes(tables: Table[], selectedIds?: string[]): TableNodeType[]
     data: {
       name: table.name,
       comment: table.comment,
-      columns: table.columns.map(({ id, name }) => ({
+      columns: table.columns.map(({ id, name, type, size }) => ({
         id,
         name,
         referenceable: isReferenceableColumn(table, id),
+        typeLabel: showColumnDetails ? formatColumnType({ type, size }) : null,
       })),
     },
   }));

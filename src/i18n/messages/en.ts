@@ -27,6 +27,7 @@ export default {
     themeAriaLabel: "Theme: {theme}",
     localeAriaLabel: "Language: {locale}",
     toggleSidePanelAriaLabel: "Toggle side panel",
+    toggleColumnDetailsAriaLabel: "Toggle column type/size",
   },
   schemaMenu: {
     ariaLabel: "Schemas",

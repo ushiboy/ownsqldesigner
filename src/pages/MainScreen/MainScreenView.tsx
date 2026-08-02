@@ -37,6 +37,8 @@ type MainScreenViewProps = {
   onToggleSidePanel: () => void;
   theme: Theme;
   onCycleTheme: () => void;
+  showColumnDetails: boolean;
+  onToggleColumnDetails: () => void;
 };
 
 export function MainScreenView({
@@ -53,6 +55,8 @@ export function MainScreenView({
   onToggleSidePanel,
   theme,
   onCycleTheme,
+  showColumnDetails,
+  onToggleColumnDetails,
 }: MainScreenViewProps) {
   const { openDialog } = useActiveDialog();
   const currentSchema = useCurrentSchema();
@@ -108,6 +112,8 @@ export function MainScreenView({
         onToggleSidePanel={onToggleSidePanel}
         theme={theme}
         onCycleTheme={onCycleTheme}
+        showColumnDetails={showColumnDetails}
+        onToggleColumnDetails={onToggleColumnDetails}
       />
       <div className="flex min-h-0 flex-1">
         <main aria-label="Canvas" className="relative min-w-0 flex-1">
@@ -116,6 +122,7 @@ export function MainScreenView({
             tables={tables}
             selectedRelationId={selectedRelationId}
             initialSelectedTableIds={initialSelectedTableIds}
+            showColumnDetails={showColumnDetails}
             onTableSelectionChange={setTableSelection}
             onSelectRelation={selectRelation}
             onMoveTables={onMoveTables}

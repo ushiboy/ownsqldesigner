@@ -1,4 +1,4 @@
-export { addColumn, removeColumn, updateColumn } from "./column";
+export { addColumn, formatColumnType, removeColumn, updateColumn } from "./column";
 export { addForeignKey, addForeignKeyWithNewColumn, removeForeignKey } from "./foreignKey";
 export { importSchema, isSchemaIntegrityValid, parseSchemaFile } from "./integrity";
 export {

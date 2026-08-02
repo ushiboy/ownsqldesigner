@@ -1,4 +1,4 @@
-import type { Column, ForeignKey, Key, Table } from "../schema";
+import { type Column, type ForeignKey, formatColumnType, type Key, type Table } from "../schema";
 
 const DEFAULT_VALUE_NUMERIC_PATTERN = /^-?\d+(\.\d+)?$/;
 
@@ -56,10 +56,6 @@ function generateCreateIndexStatement(table: Table, key: Key, usedIndexNames: Se
   const columnNames = columnNamesFor(table, key.columnIds);
   const name = uniqueIndexName(`idx_${table.name}_${columnNames.join("_")}`, usedIndexNames);
   return `CREATE INDEX ${name} ON ${table.name} (${columnNames.join(", ")});`;
-}
-
-function formatColumnType(column: Column): string {
-  return column.size === "" ? column.type : `${column.type}(${column.size})`;
 }
 
 function formatDefaultValue(raw: string): string {

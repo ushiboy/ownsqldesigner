@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react";
 import { composeStories } from "@storybook/react-vite";
 import * as stories from "./TableNode.stories";
 
-const { Default, WithComment, Selected, WithColumns, WithReferenceableColumn } =
+const { Default, WithComment, Selected, WithColumns, WithReferenceableColumn, WithColumnDetails } =
   composeStories(stories);
 
 describe("TableNode", () => {
@@ -48,5 +48,16 @@ describe("TableNode", () => {
     const { container } = render(<WithReferenceableColumn />);
     expect(container.querySelectorAll(".react-flow__handle-right")).toHaveLength(2);
     expect(container.querySelectorAll(".react-flow__handle-left")).toHaveLength(1);
+  });
+
+  it("renders each column's type label when present (REQ-012)", () => {
+    render(<WithColumnDetails />);
+    expect(screen.getByText("INTEGER")).toBeInTheDocument();
+    expect(screen.getByText("TEXT(255)")).toBeInTheDocument();
+  });
+
+  it("does not render a type label when it is null", () => {
+    render(<WithColumns />);
+    expect(screen.queryByText("INTEGER")).not.toBeInTheDocument();
   });
 });

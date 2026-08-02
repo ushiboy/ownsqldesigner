@@ -66,6 +66,8 @@ const meta = {
     onSelectSchema: fn(),
     onToggleSidePanel: fn(),
     onCycleTheme: fn(),
+    showColumnDetails: true,
+    onToggleColumnDetails: fn(),
   },
 } satisfies Meta<typeof ToolbarWithProviders>;
 
@@ -93,5 +95,14 @@ export const DarkTheme: Story = {
     schemaName: "Blog Schema",
     isSidePanelOpen: true,
     theme: "dark",
+  },
+};
+
+export const ColumnDetailsHidden: Story = {
+  args: {
+    schemaName: "Blog Schema",
+    isSidePanelOpen: true,
+    theme: "system",
+    showColumnDetails: false,
   },
 };

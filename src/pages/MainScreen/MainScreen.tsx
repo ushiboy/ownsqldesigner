@@ -15,6 +15,7 @@ import { LocaleProvider } from "../../i18n/LocaleProvider";
 import { ActiveDialogProvider, type DialogKind } from "./ActiveDialogContext";
 import { CanvasApiProvider } from "./CanvasApiContext";
 import { describeForeignKey, type RelationSummary } from "./components/SidePanel";
+import { useColumnDetailsVisibility } from "./hooks/useColumnDetailsVisibility";
 import { type Theme, useThemePreference } from "./hooks/useThemePreference";
 import { MainScreenView } from "./MainScreenView";
 import { NotificationProvider } from "./NotificationContext";
@@ -33,6 +34,7 @@ export type MainScreenSeed = {
   initialSidePanelOpen?: boolean;
   initialTheme?: Theme;
   initialLocale?: Locale;
+  initialShowColumnDetails?: boolean;
 };
 
 type MainScreenProps = MainScreenSeed & {
@@ -49,6 +51,7 @@ function MainScreen({
   initialSidePanelOpen,
   initialTheme,
   initialLocale,
+  initialShowColumnDetails,
 }: MainScreenProps) {
   return (
     <LocaleProvider initialLocale={initialLocale}>
@@ -60,6 +63,7 @@ function MainScreen({
                 <MainScreenContent
                   initialSidePanelOpen={initialSidePanelOpen}
                   initialTheme={initialTheme}
+                  initialShowColumnDetails={initialShowColumnDetails}
                 />
               </CanvasApiProvider>
             </SelectionProvider>
@@ -75,11 +79,18 @@ export default MainScreen;
 type MainScreenContentProps = {
   initialSidePanelOpen?: boolean;
   initialTheme?: Theme;
+  initialShowColumnDetails?: boolean;
 };
 
-function MainScreenContent({ initialSidePanelOpen, initialTheme }: MainScreenContentProps) {
+function MainScreenContent({
+  initialSidePanelOpen,
+  initialTheme,
+  initialShowColumnDetails,
+}: MainScreenContentProps) {
   const [isSidePanelOpen, setIsSidePanelOpen] = useState(initialSidePanelOpen ?? true);
   const { theme, cycleTheme } = useThemePreference(initialTheme);
+  const { showColumnDetails, toggleShowColumnDetails } =
+    useColumnDetailsVisibility(initialShowColumnDetails);
   const { selectedTableId, selectedColumnId, selectedKeyId, selectedRelationId } = useSelection();
 
   const tables = useTables();
@@ -130,6 +141,8 @@ function MainScreenContent({ initialSidePanelOpen, initialTheme }: MainScreenCon
       onToggleSidePanel={() => setIsSidePanelOpen((prev) => !prev)}
       theme={theme}
       onCycleTheme={cycleTheme}
+      showColumnDetails={showColumnDetails}
+      onToggleColumnDetails={toggleShowColumnDetails}
     />
   );
 }

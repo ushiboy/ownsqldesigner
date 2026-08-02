@@ -14,7 +14,7 @@ import { SelectionProvider } from "../../SelectionContext";
 import { Toolbar } from "./Toolbar";
 import * as stories from "./Toolbar.stories";
 
-const { Default, SidePanelClosed, DarkTheme } = composeStories(stories);
+const { Default, SidePanelClosed, DarkTheme, ColumnDetailsHidden } = composeStories(stories);
 
 const editableSchema: Schema = {
   id: "0b54b945-13c9-4d38-9ba6-b81bbe1cbc21",
@@ -53,6 +53,8 @@ function ToolbarWithEditTrigger() {
                   onToggleSidePanel={fn()}
                   theme="system"
                   onCycleTheme={fn()}
+                  showColumnDetails
+                  onToggleColumnDetails={fn()}
                 />
               </CanvasApiProvider>
             </SelectionProvider>
@@ -212,6 +214,30 @@ describe("Toolbar", () => {
   it("marks the side panel toggle as not pressed while the panel is closed", () => {
     render(<SidePanelClosed />);
     expect(screen.getByRole("button", { name: "Toggle side panel" })).toHaveAttribute(
+      "aria-pressed",
+      "false",
+    );
+  });
+
+  it("calls onToggleColumnDetails when the column details toggle is clicked", async () => {
+    const onToggleColumnDetails = fn();
+    render(<Default onToggleColumnDetails={onToggleColumnDetails} />);
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: "Toggle column type/size" }));
+    expect(onToggleColumnDetails).toHaveBeenCalledOnce();
+  });
+
+  it("marks the column details toggle as pressed while details are shown", () => {
+    render(<Default />);
+    expect(screen.getByRole("button", { name: "Toggle column type/size" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+  });
+
+  it("marks the column details toggle as not pressed while details are hidden", () => {
+    render(<ColumnDetailsHidden />);
+    expect(screen.getByRole("button", { name: "Toggle column type/size" })).toHaveAttribute(
       "aria-pressed",
       "false",
     );

@@ -1,4 +1,4 @@
-import { addColumn, removeColumn, updateColumn } from "./column";
+import { addColumn, formatColumnType, removeColumn, updateColumn } from "./column";
 import { addForeignKey } from "./foreignKey";
 import { addKey } from "./key";
 import {
@@ -21,6 +21,16 @@ import {
 } from "./test-fixtures";
 import { createSchema, createTable } from "./table";
 import { schemaSchema } from "./types";
+
+describe("formatColumnType", () => {
+  it("returns the bare type when size is empty", () => {
+    expect(formatColumnType({ type: "TEXT", size: "" })).toBe("TEXT");
+  });
+
+  it("returns TYPE(size) when size is set", () => {
+    expect(formatColumnType({ type: "TEXT", size: "8" })).toBe("TEXT(8)");
+  });
+});
 
 describe("addColumn", () => {
   const original = createTable(

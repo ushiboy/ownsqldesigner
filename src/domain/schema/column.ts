@@ -95,6 +95,10 @@ export function removeColumn(
   };
 }
 
+export function formatColumnType(column: Pick<Column, "type" | "size">): string {
+  return column.size === "" ? column.type : `${column.type}(${column.size})`;
+}
+
 /** Suffixes `baseName` with `_2`, `_3`, ... until it doesn't collide with an existing column. */
 export function uniqueColumnName(table: Table, baseName: string): string {
   let candidate = baseName;

@@ -92,6 +92,7 @@ const meta = {
   args: {
     tables: [],
     selectedRelationId: null,
+    showColumnDetails: true,
     onTableSelectionChange: fn(),
     onSelectRelation: fn(),
     onMoveTables: fn(),
@@ -151,6 +152,10 @@ export const MultiSelected: Story = {
 
 export const WithRelation: Story = {
   args: { tables: tablesWithRelation },
+};
+
+export const ColumnDetailsHidden: Story = {
+  args: { tables: tablesWithRelation, showColumnDetails: false },
 };
 
 export const RelationSelected: Story = {

@@ -7,8 +7,15 @@ import { fn, userEvent } from "storybook/test";
 import { composeStories } from "@storybook/react-vite";
 import * as stories from "./Canvas.stories";
 
-const { Default, WithTables, Selected, MultiSelected, WithRelation, RelationSelected } =
-  composeStories(stories);
+const {
+  Default,
+  WithTables,
+  Selected,
+  MultiSelected,
+  WithRelation,
+  RelationSelected,
+  ColumnDetailsHidden,
+} = composeStories(stories);
 
 // Story.run() mounts into its own React root via ReactDOM.createRoot,
 // bypassing @testing-library/react's auto-cleanup entirely (confirmed by
@@ -114,6 +121,17 @@ describe("Canvas", () => {
     expect(onSelectRelation).toHaveBeenCalledExactlyOnceWith(
       "c1d2e3f4-5a6b-4c7d-8e9f-0a1b2c3d4e5f",
     );
+  });
+
+  it("shows each column's type/size when showColumnDetails is true (REQ-012)", async () => {
+    render(<WithRelation />);
+    expect(await screen.findAllByText("INTEGER")).toHaveLength(2);
+  });
+
+  it("hides each column's type/size when showColumnDetails is false", async () => {
+    render(<ColumnDetailsHidden />);
+    await screen.findByRole("button", { name: "Table users" });
+    expect(screen.queryByText("INTEGER")).not.toBeInTheDocument();
   });
 
   it("calls onSelectRelation with null on a pane click", async () => {

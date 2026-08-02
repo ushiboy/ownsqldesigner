@@ -10,6 +10,8 @@ export type TableNodeColumn = {
   name: string;
   /** Whether the column is a valid foreign-key target (REQ-020: sole PRIMARY KEY or UNIQUE column). */
   referenceable: boolean;
+  /** Formatted `TYPE(size)` / `TYPE` text, or null when column detail display is toggled off (REQ-012). */
+  typeLabel: string | null;
 };
 
 export type TableNodeData = {
@@ -70,6 +72,9 @@ export function TableNode({ data, selected }: NodeProps<TableNodeType>) {
           {data.columns.map((column) => (
             <li key={column.id} className="relative px-2 text-[12px] text-body">
               {column.name}
+              {column.typeLabel !== null && (
+                <span className="ml-1 text-body/70">{column.typeLabel}</span>
+              )}
               <Handle
                 type="source"
                 position={Position.Right}

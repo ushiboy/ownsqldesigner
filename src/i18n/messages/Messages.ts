@@ -26,6 +26,7 @@ export type Messages = {
     /** ICU placeholder: {locale} */
     localeAriaLabel: string;
     toggleSidePanelAriaLabel: string;
+    toggleColumnDetailsAriaLabel: string;
   };
   schemaMenu: {
     ariaLabel: string;

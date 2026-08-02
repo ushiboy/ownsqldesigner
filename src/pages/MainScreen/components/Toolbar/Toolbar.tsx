@@ -9,6 +9,7 @@ import {
   LuRedo2,
   LuSun,
   LuTrash2,
+  LuType,
   LuUndo2,
 } from "react-icons/lu";
 import { tv } from "tailwind-variants";
@@ -53,6 +54,8 @@ type ToolbarProps = {
   onToggleSidePanel: () => void;
   theme: Theme;
   onCycleTheme: () => void;
+  showColumnDetails: boolean;
+  onToggleColumnDetails: () => void;
 };
 
 export function Toolbar({
@@ -66,6 +69,8 @@ export function Toolbar({
   onToggleSidePanel,
   theme,
   onCycleTheme,
+  showColumnDetails,
+  onToggleColumnDetails,
 }: ToolbarProps) {
   const { isOpen: isMenuOpen, wrapperRef: menuWrapperRef, toggle, close } = useToolbarMenu();
   const {
@@ -160,6 +165,15 @@ export function Toolbar({
           className={toolButton()}
         >
           <ThemeIcon aria-hidden="true" className="size-4" />
+        </button>
+        <button
+          type="button"
+          aria-label={t("toggleColumnDetailsAriaLabel")}
+          aria-pressed={showColumnDetails}
+          onClick={onToggleColumnDetails}
+          className={toolButton({ pressed: showColumnDetails })}
+        >
+          <LuType aria-hidden="true" className="size-4" />
         </button>
         <div ref={localeMenuWrapperRef} className="relative">
           <button
