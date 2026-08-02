@@ -32,6 +32,11 @@ Each doc starts with a metadata block and tracks its lifecycle through a status:
 - **Status** MUST be one of `Draft`, `Accepted`, `Implemented`, `Superseded`.
 - A `Superseded` doc MUST link to its successor in the metadata block.
 
+### Draft approval
+
+- Writing a `Draft` is not approval to implement it. Do not start writing code against a `Draft` — get it to `Accepted` (explicit user sign-off) first.
+- This matters most when the `Draft` introduces a new external dependency or another hard-to-reverse choice (a data model shape, a state-management approach, ...): undoing that class of decision after implementation costs far more than pausing for approval would have. When in doubt about whether a choice is significant enough to need explicit sign-off, ask rather than assume silence means agreement.
+
 ### Sections
 
 - Required sections, in order:

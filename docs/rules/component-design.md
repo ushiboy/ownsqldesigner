@@ -38,6 +38,10 @@ Ask: does another component need to know this state?
 
 Favor responsibility over reusability: do not merge two visually identical components into one configurable component if their responsibilities or contexts differ. Prefer separate components over a single component with an ever-growing prop list.
 
+### Check for existing duplication before writing new logic
+
+Before adding a new effect, handler, or small utility to a component, search the codebase for the same logic already written elsewhere (e.g. `grep` for a distinctive string or pattern from what you're about to write). If the code you're about to add would be the **third** occurrence of the same logic, extract a shared hook or function instead of copying it again — don't wait for a code review to point out the duplication. A component-scoped hooks directory (e.g. `src/pages/MainScreen/hooks/`) is for that page's own logic; logic shared across pages or with components outside `pages/` belongs in a shared location instead (e.g. `src/components/hooks/`).
+
 ### When to refactor
 
 Do not split components preemptively. Let complexity signal when to refactor — typical indicators:

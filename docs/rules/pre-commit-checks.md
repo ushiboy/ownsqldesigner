@@ -19,3 +19,4 @@ Run the following commands in order and make sure every one of them succeeds:
 - If any step fails, fix the problem and re-run ALL steps from the beginning before committing.
 - If `pnpm format` changes any files, include those changes in the commit.
 - Never commit while any of the checks above is failing.
+- Use `pnpm typecheck` for any type-check verification, including quick mid-task sanity checks — not only the final pre-commit pass. Ad-hoc invocations like `tsc --noEmit -p .` do not go through the same composite/incremental build (`tsc -b`) this project relies on, and can silently report success on code that `pnpm typecheck` would fail (e.g. a `declare module` type augmentation that isn't picked up). A "quick check" that isn't the real command isn't a check.
