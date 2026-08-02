@@ -18,6 +18,8 @@ export {
 export {
   createSchema,
   createTable,
+  GRID_CELL_HEIGHT,
+  GRID_CELL_WIDTH,
   moveTable,
   moveTables,
   removeTable,

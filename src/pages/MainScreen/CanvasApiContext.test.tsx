@@ -7,6 +7,7 @@ const wrapper = ({ children }: { children: ReactNode }) => (
 );
 
 function deselectAllTables() {}
+function autoAlignTables() {}
 
 describe("CanvasApiContext", () => {
   it("starts with no API registered", () => {
@@ -27,9 +28,9 @@ describe("CanvasApiContext", () => {
   it("exposes whatever a caller registers into the ref", () => {
     const { result } = renderHook(() => useCanvasApiRef(), { wrapper });
 
-    result.current.current = { deselectAllTables };
+    result.current.current = { deselectAllTables, autoAlignTables };
 
-    expect(result.current.current).toEqual({ deselectAllTables });
+    expect(result.current.current).toEqual({ deselectAllTables, autoAlignTables });
   });
 
   it("throws when used outside a provider", () => {

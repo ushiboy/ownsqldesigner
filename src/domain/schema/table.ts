@@ -3,8 +3,12 @@ import type { Position, Schema } from "./types";
 import { isTableNameAvailable } from "./validation";
 
 const GRID_COLUMNS = 4;
-const GRID_CELL_WIDTH = 260;
-const GRID_CELL_HEIGHT = 160;
+// Exported for reuse as the fallback table-node footprint estimate when
+// auto-aligning a table that hasn't been measured by the canvas yet
+// (see autoAlignLayout.ts) — the same "typical table node size" concept,
+// not a second, independent magic number.
+export const GRID_CELL_WIDTH = 260;
+export const GRID_CELL_HEIGHT = 160;
 
 type CreateSchemaOptions = {
   id?: string;

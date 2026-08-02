@@ -1,4 +1,4 @@
-import { type ComponentProps, useState } from "react";
+import { type ComponentProps, useEffect, useState } from "react";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { fn } from "storybook/test";
@@ -7,7 +7,7 @@ import type { Schema } from "../../../../domain/schema";
 import { LocaleProvider } from "../../../../i18n/LocaleProvider";
 import { createFakeSchemaRepository } from "../../../../test/fakeSchemaRepository";
 import { ActiveDialogProvider } from "../../ActiveDialogContext";
-import { CanvasApiProvider } from "../../CanvasApiContext";
+import { CanvasApiProvider, useCanvasApiRef } from "../../CanvasApiContext";
 import { NotificationProvider } from "../../NotificationContext";
 import { SchemaWorkspaceProvider, useSchemaActions } from "../../SchemaWorkspaceContext";
 import { SelectionProvider } from "../../SelectionContext";
@@ -75,6 +75,62 @@ function CreateTableTrigger() {
       Create table (test trigger)
     </button>
   );
+}
+
+/**
+ * Mounts Toolbar with a mocked CanvasApi so clicking the auto-align button
+ * can be asserted without a real React Flow canvas (see Canvas.tsx's
+ * CanvasApiBridge, which registers the real implementation).
+ */
+function ToolbarWithMockedCanvasApi({ autoAlignTables }: { autoAlignTables: () => void }) {
+  return (
+    <LocaleProvider>
+      <NotificationProvider>
+        <ActiveDialogProvider>
+          <SchemaWorkspaceProvider
+            repository={createFakeSchemaRepository({
+              schemas: [editableSchema],
+              lastSchemaId: editableSchema.id,
+            })}
+            initialSchema={editableSchema}
+          >
+            <SelectionProvider>
+              <CanvasApiProvider>
+                <CanvasApiSpy autoAlignTables={autoAlignTables} />
+                <Toolbar
+                  schemaName="Blog Schema"
+                  savedSchemas={[]}
+                  currentSchemaId={editableSchema.id}
+                  canDownloadSchema={false}
+                  onDownloadSchema={fn()}
+                  onSelectSchema={fn()}
+                  isSidePanelOpen
+                  onToggleSidePanel={fn()}
+                  theme="system"
+                  onCycleTheme={fn()}
+                  showColumnDetails
+                  onToggleColumnDetails={fn()}
+                  snapToGrid={false}
+                  onToggleSnapToGrid={fn()}
+                />
+              </CanvasApiProvider>
+            </SelectionProvider>
+          </SchemaWorkspaceProvider>
+        </ActiveDialogProvider>
+      </NotificationProvider>
+    </LocaleProvider>
+  );
+}
+
+function CanvasApiSpy({ autoAlignTables }: { autoAlignTables: () => void }) {
+  const canvasApiRef = useCanvasApiRef();
+  useEffect(() => {
+    canvasApiRef.current = { deselectAllTables: () => {}, autoAlignTables };
+    return () => {
+      canvasApiRef.current = null;
+    };
+  }, [canvasApiRef, autoAlignTables]);
+  return null;
 }
 
 /** Renders Default and opens the schema dropdown menu by clicking its trigger. */
@@ -268,6 +324,20 @@ describe("Toolbar", () => {
       "aria-pressed",
       "true",
     );
+  });
+
+  it("renders the auto-align button", () => {
+    render(<Default />);
+    expect(screen.getByRole("button", { name: "Auto-align tables" })).toBeInTheDocument();
+  });
+
+  it("calls the canvas's autoAlignTables through CanvasApiContext when clicked", async () => {
+    const autoAlignTables = fn();
+    render(<ToolbarWithMockedCanvasApi autoAlignTables={autoAlignTables} />);
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: "Auto-align tables" }));
+
+    expect(autoAlignTables).toHaveBeenCalledOnce();
   });
 
   it("labels the theme button with the current theme", () => {

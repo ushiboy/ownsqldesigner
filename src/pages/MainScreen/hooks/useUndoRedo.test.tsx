@@ -94,7 +94,7 @@ describe("useUndoRedo", () => {
   it("deselects table nodes through Canvas's imperative API on undo", () => {
     const { result } = renderUndoRedo();
     const deselectAllTables = fn();
-    result.current.canvasApiRef.current = { deselectAllTables };
+    result.current.canvasApiRef.current = { deselectAllTables, autoAlignTables: fn() };
     act(() => {
       result.current.actions.createTable("posts");
     });
@@ -115,7 +115,7 @@ describe("useUndoRedo", () => {
       result.current.undoRedo.undo();
     });
     const deselectAllTables = fn();
-    result.current.canvasApiRef.current = { deselectAllTables };
+    result.current.canvasApiRef.current = { deselectAllTables, autoAlignTables: fn() };
 
     act(() => {
       result.current.undoRedo.redo();
@@ -127,7 +127,7 @@ describe("useUndoRedo", () => {
   it("does nothing when there is nothing to undo", () => {
     const { result } = renderUndoRedo();
     const deselectAllTables = fn();
-    result.current.canvasApiRef.current = { deselectAllTables };
+    result.current.canvasApiRef.current = { deselectAllTables, autoAlignTables: fn() };
 
     act(() => {
       result.current.undoRedo.undo();
@@ -140,7 +140,7 @@ describe("useUndoRedo", () => {
   it("does nothing when there is nothing to redo", () => {
     const { result } = renderUndoRedo();
     const deselectAllTables = fn();
-    result.current.canvasApiRef.current = { deselectAllTables };
+    result.current.canvasApiRef.current = { deselectAllTables, autoAlignTables: fn() };
 
     act(() => {
       result.current.undoRedo.redo();

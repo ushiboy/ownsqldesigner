@@ -4,6 +4,7 @@ import {
   LuLanguages,
   LuMonitor,
   LuMoon,
+  LuNetwork,
   LuPanelRight,
   LuPencil,
   LuPlus,
@@ -18,6 +19,7 @@ import { useLocale, useTranslations } from "use-intl";
 import type { SchemaSummary } from "../../../../domain/schema";
 import { useLocaleSwitch } from "../../../../i18n/LocaleProvider";
 import { useActiveDialog } from "../../ActiveDialogContext";
+import { useCanvasApiRef } from "../../CanvasApiContext";
 import { useUndoRedo } from "../../hooks/useUndoRedo";
 import type { Theme } from "../../hooks/useThemePreference";
 import { LoadSchemaButton } from "./LoadSchemaButton";
@@ -86,6 +88,7 @@ export function Toolbar({
   } = useToolbarMenu();
   const { openDialog } = useActiveDialog();
   const { undo, redo, canUndo, canRedo } = useUndoRedo();
+  const canvasApiRef = useCanvasApiRef();
   const locale = useLocale();
   const t = useTranslations("toolbar");
   const { setLocale } = useLocaleSwitch();
@@ -146,6 +149,14 @@ export function Toolbar({
           className={toolButton()}
         >
           <LuRedo2 aria-hidden="true" className="size-4" />
+        </button>
+        <button
+          type="button"
+          aria-label={t("autoAlignAriaLabel")}
+          onClick={() => canvasApiRef.current?.autoAlignTables()}
+          className={toolButton()}
+        >
+          <LuNetwork aria-hidden="true" className="size-4" />
         </button>
         <button type="button" onClick={() => openDialog("createTable")} className={toolButton()}>
           <LuPlus aria-hidden="true" className="size-4" />

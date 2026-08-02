@@ -6,6 +6,7 @@ import {
   MiniMap,
   ReactFlow,
   useNodesState,
+  useReactFlow,
   useStoreApi,
 } from "@xyflow/react";
 import type { Connection, Edge, HandleType } from "@xyflow/react";
@@ -13,11 +14,14 @@ import "@xyflow/react/dist/style.css";
 import {
   type ForeignKey,
   formatColumnType,
+  GRID_CELL_HEIGHT,
+  GRID_CELL_WIDTH,
   isReferenceableColumn,
   type Position,
   type Table,
 } from "../../../../domain/schema";
 import { useCanvasApiRef } from "../../CanvasApiContext";
+import { computeAutoAlignedPositions, type NodeSize } from "./autoAlignLayout";
 import { resolveForeignKeyDrop } from "./connectionEnd";
 import { selectCommittedMoves, SNAP_GRID_SIZE, snapPosition } from "./nodeChanges";
 import {
@@ -223,7 +227,7 @@ export function Canvas({
           maskColor="var(--color-accent-bg)"
         />
         <Controls showInteractive={false} />
-        <CanvasApiBridge />
+        <CanvasApiBridge tables={tables} onMoveTables={onMoveTables} />
       </ReactFlow>
     </div>
   );
@@ -299,21 +303,40 @@ function isValidForeignKeyConnection(tables: Table[], connection: Connection | E
   );
 }
 
-// A child of <ReactFlow> (needed to reach its store via useStoreApi) that
-// registers an imperative deselect-all into CanvasApiContext, so callers
-// outside the React Flow tree (undo/redo) can deselect through React Flow's
-// own native selection handling rather than a controlled prop — see the
-// comment on `tablesToNodes` above.
-function CanvasApiBridge() {
+type CanvasApiBridgeProps = {
+  tables: Table[];
+  onMoveTables: (moves: { tableId: string; position: Position }[]) => void;
+};
+
+// A child of <ReactFlow> (needed to reach its store via useStoreApi and its
+// measured node sizes via useReactFlow) that registers imperative canvas
+// actions into CanvasApiContext, so callers outside the React Flow tree
+// (undo/redo, the auto-align toolbar button) can act through React Flow's
+// own APIs rather than a controlled prop — see the comment on
+// `tablesToNodes` above.
+function CanvasApiBridge({ tables, onMoveTables }: CanvasApiBridgeProps) {
   const apiRef = useCanvasApiRef();
   const store = useStoreApi();
+  const { getNodes } = useReactFlow();
   useEffect(() => {
     apiRef.current = {
       deselectAllTables: () => store.getState().unselectNodesAndEdges(),
+      autoAlignTables: () => {
+        const nodeSizes = new Map<string, NodeSize>(
+          getNodes().map((node) => [
+            node.id,
+            {
+              width: node.measured?.width ?? GRID_CELL_WIDTH,
+              height: node.measured?.height ?? GRID_CELL_HEIGHT,
+            },
+          ]),
+        );
+        onMoveTables(computeAutoAlignedPositions(tables, nodeSizes));
+      },
     };
     return () => {
       apiRef.current = null;
     };
-  }, [apiRef, store]);
+  }, [apiRef, store, getNodes, tables, onMoveTables]);
   return null;
 }

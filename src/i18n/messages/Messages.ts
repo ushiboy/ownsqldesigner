@@ -18,6 +18,7 @@ export type Messages = {
     deleteSchemaAriaLabel: string;
     undo: string;
     redo: string;
+    autoAlignAriaLabel: string;
     addTable: string;
     exportSql: string;
     downloadJson: string;

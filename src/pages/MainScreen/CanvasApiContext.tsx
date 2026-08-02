@@ -3,6 +3,8 @@ import { type ReactNode, createContext, useContext, useRef, type RefObject } fro
 export type CanvasApi = {
   /** Deselects every table node via React Flow's own native selection API. */
   deselectAllTables: () => void;
+  /** Re-lays-out every table using the foreign-key graph (REQ-008). */
+  autoAlignTables: () => void;
 };
 
 const CanvasApiContext = createContext<RefObject<CanvasApi | null> | null>(null);

@@ -21,6 +21,7 @@ export default {
     deleteSchemaAriaLabel: "スキーマを削除",
     undo: "元に戻す",
     redo: "やり直す",
+    autoAlignAriaLabel: "テーブルを自動整列",
     addTable: "テーブルを追加",
     exportSql: "SQLを出力",
     downloadJson: "JSONをダウンロード",

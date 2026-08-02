@@ -17,6 +17,7 @@
     "build-storybook": "storybook build"
   },
   "dependencies": {
+    "@dagrejs/dagre": "^3.0.0",
     "@xyflow/react": "^12.11.2",
     "date-fns": "^4.4.0",
     "file-saver": "^2.0.5",

@@ -21,6 +21,7 @@ export default {
     deleteSchemaAriaLabel: "Delete schema",
     undo: "Undo",
     redo: "Redo",
+    autoAlignAriaLabel: "Auto-align tables",
     addTable: "Add Table",
     exportSql: "Export SQL",
     downloadJson: "Download JSON",
