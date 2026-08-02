@@ -28,6 +28,7 @@ export default {
     localeAriaLabel: "言語: {locale}",
     toggleSidePanelAriaLabel: "サイドパネルの表示切り替え",
     toggleColumnDetailsAriaLabel: "列の型・サイズの表示切り替え",
+    toggleSnapToGridAriaLabel: "グリッドへのスナップの切り替え",
   },
   schemaMenu: {
     ariaLabel: "スキーマ一覧",

@@ -28,6 +28,7 @@ export default {
     localeAriaLabel: "Language: {locale}",
     toggleSidePanelAriaLabel: "Toggle side panel",
     toggleColumnDetailsAriaLabel: "Toggle column type/size",
+    toggleSnapToGridAriaLabel: "Toggle snap to grid",
   },
   schemaMenu: {
     ariaLabel: "Schemas",

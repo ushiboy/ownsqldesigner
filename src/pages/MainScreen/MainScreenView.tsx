@@ -39,6 +39,8 @@ type MainScreenViewProps = {
   onCycleTheme: () => void;
   showColumnDetails: boolean;
   onToggleColumnDetails: () => void;
+  snapToGrid: boolean;
+  onToggleSnapToGrid: () => void;
 };
 
 export function MainScreenView({
@@ -57,6 +59,8 @@ export function MainScreenView({
   onCycleTheme,
   showColumnDetails,
   onToggleColumnDetails,
+  snapToGrid,
+  onToggleSnapToGrid,
 }: MainScreenViewProps) {
   const { openDialog } = useActiveDialog();
   const currentSchema = useCurrentSchema();
@@ -114,6 +118,8 @@ export function MainScreenView({
         onCycleTheme={onCycleTheme}
         showColumnDetails={showColumnDetails}
         onToggleColumnDetails={onToggleColumnDetails}
+        snapToGrid={snapToGrid}
+        onToggleSnapToGrid={onToggleSnapToGrid}
       />
       <div className="flex min-h-0 flex-1">
         <main aria-label="Canvas" className="relative min-w-0 flex-1">
@@ -123,6 +129,7 @@ export function MainScreenView({
             selectedRelationId={selectedRelationId}
             initialSelectedTableIds={initialSelectedTableIds}
             showColumnDetails={showColumnDetails}
+            snapToGrid={snapToGrid}
             onTableSelectionChange={setTableSelection}
             onSelectRelation={selectRelation}
             onMoveTables={onMoveTables}

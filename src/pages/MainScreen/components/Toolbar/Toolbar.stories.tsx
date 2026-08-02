@@ -68,6 +68,8 @@ const meta = {
     onCycleTheme: fn(),
     showColumnDetails: true,
     onToggleColumnDetails: fn(),
+    snapToGrid: false,
+    onToggleSnapToGrid: fn(),
   },
 } satisfies Meta<typeof ToolbarWithProviders>;
 
@@ -104,5 +106,14 @@ export const ColumnDetailsHidden: Story = {
     isSidePanelOpen: true,
     theme: "system",
     showColumnDetails: false,
+  },
+};
+
+export const SnapToGridEnabled: Story = {
+  args: {
+    schemaName: "Blog Schema",
+    isSidePanelOpen: true,
+    theme: "system",
+    snapToGrid: true,
   },
 };

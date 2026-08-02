@@ -93,6 +93,7 @@ const meta = {
     tables: [],
     selectedRelationId: null,
     showColumnDetails: true,
+    snapToGrid: false,
     onTableSelectionChange: fn(),
     onSelectRelation: fn(),
     onMoveTables: fn(),
@@ -156,6 +157,10 @@ export const WithRelation: Story = {
 
 export const ColumnDetailsHidden: Story = {
   args: { tables: tablesWithRelation, showColumnDetails: false },
+};
+
+export const SnapToGridEnabled: Story = {
+  args: { tables, snapToGrid: true },
 };
 
 export const RelationSelected: Story = {

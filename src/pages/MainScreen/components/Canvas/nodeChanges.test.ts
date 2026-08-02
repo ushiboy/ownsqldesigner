@@ -1,5 +1,5 @@
 import type { NodeChange } from "@xyflow/react";
-import { selectCommittedMoves } from "./nodeChanges";
+import { selectCommittedMoves, snapPosition } from "./nodeChanges";
 
 describe("selectCommittedMoves", () => {
   it("includes a drag-end position change", () => {
@@ -45,5 +45,23 @@ describe("selectCommittedMoves", () => {
       { id: "1", position: { x: 100, y: 50 } },
       { id: "3", position: { x: 200, y: 75 } },
     ]);
+  });
+});
+
+describe("snapPosition", () => {
+  it("rounds down to the nearest grid line", () => {
+    expect(snapPosition({ x: 108, y: 8 }, 20)).toEqual({ x: 100, y: 0 });
+  });
+
+  it("rounds up to the nearest grid line", () => {
+    expect(snapPosition({ x: 112, y: 15 }, 20)).toEqual({ x: 120, y: 20 });
+  });
+
+  it("leaves a position already on the grid unchanged", () => {
+    expect(snapPosition({ x: 100, y: 60 }, 20)).toEqual({ x: 100, y: 60 });
+  });
+
+  it("rounds a negative position toward the nearest grid line", () => {
+    expect(snapPosition({ x: -108, y: -12 }, 20)).toEqual({ x: -100, y: -20 });
   });
 });

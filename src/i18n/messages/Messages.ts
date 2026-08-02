@@ -27,6 +27,7 @@ export type Messages = {
     localeAriaLabel: string;
     toggleSidePanelAriaLabel: string;
     toggleColumnDetailsAriaLabel: string;
+    toggleSnapToGridAriaLabel: string;
   };
   schemaMenu: {
     ariaLabel: string;

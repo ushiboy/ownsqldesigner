@@ -1,5 +1,6 @@
 import {
   LuChevronDown,
+  LuGrid3X3,
   LuLanguages,
   LuMonitor,
   LuMoon,
@@ -56,6 +57,8 @@ type ToolbarProps = {
   onCycleTheme: () => void;
   showColumnDetails: boolean;
   onToggleColumnDetails: () => void;
+  snapToGrid: boolean;
+  onToggleSnapToGrid: () => void;
 };
 
 export function Toolbar({
@@ -71,6 +74,8 @@ export function Toolbar({
   onCycleTheme,
   showColumnDetails,
   onToggleColumnDetails,
+  snapToGrid,
+  onToggleSnapToGrid,
 }: ToolbarProps) {
   const { isOpen: isMenuOpen, wrapperRef: menuWrapperRef, toggle, close } = useToolbarMenu();
   const {
@@ -174,6 +179,15 @@ export function Toolbar({
           className={toolButton({ pressed: showColumnDetails })}
         >
           <LuType aria-hidden="true" className="size-4" />
+        </button>
+        <button
+          type="button"
+          aria-label={t("toggleSnapToGridAriaLabel")}
+          aria-pressed={snapToGrid}
+          onClick={onToggleSnapToGrid}
+          className={toolButton({ pressed: snapToGrid })}
+        >
+          <LuGrid3X3 aria-hidden="true" className="size-4" />
         </button>
         <div ref={localeMenuWrapperRef} className="relative">
           <button

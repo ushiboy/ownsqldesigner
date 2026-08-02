@@ -16,6 +16,7 @@ import { ActiveDialogProvider, type DialogKind } from "./ActiveDialogContext";
 import { CanvasApiProvider } from "./CanvasApiContext";
 import { describeForeignKey, type RelationSummary } from "./components/SidePanel";
 import { useColumnDetailsVisibility } from "./hooks/useColumnDetailsVisibility";
+import { useSnapToGrid } from "./hooks/useSnapToGrid";
 import { type Theme, useThemePreference } from "./hooks/useThemePreference";
 import { MainScreenView } from "./MainScreenView";
 import { NotificationProvider } from "./NotificationContext";
@@ -35,6 +36,7 @@ export type MainScreenSeed = {
   initialTheme?: Theme;
   initialLocale?: Locale;
   initialShowColumnDetails?: boolean;
+  initialSnapToGrid?: boolean;
 };
 
 type MainScreenProps = MainScreenSeed & {
@@ -52,6 +54,7 @@ function MainScreen({
   initialTheme,
   initialLocale,
   initialShowColumnDetails,
+  initialSnapToGrid,
 }: MainScreenProps) {
   return (
     <LocaleProvider initialLocale={initialLocale}>
@@ -64,6 +67,7 @@ function MainScreen({
                   initialSidePanelOpen={initialSidePanelOpen}
                   initialTheme={initialTheme}
                   initialShowColumnDetails={initialShowColumnDetails}
+                  initialSnapToGrid={initialSnapToGrid}
                 />
               </CanvasApiProvider>
             </SelectionProvider>
@@ -80,17 +84,20 @@ type MainScreenContentProps = {
   initialSidePanelOpen?: boolean;
   initialTheme?: Theme;
   initialShowColumnDetails?: boolean;
+  initialSnapToGrid?: boolean;
 };
 
 function MainScreenContent({
   initialSidePanelOpen,
   initialTheme,
   initialShowColumnDetails,
+  initialSnapToGrid,
 }: MainScreenContentProps) {
   const [isSidePanelOpen, setIsSidePanelOpen] = useState(initialSidePanelOpen ?? true);
   const { theme, cycleTheme } = useThemePreference(initialTheme);
   const { showColumnDetails, toggleShowColumnDetails } =
     useColumnDetailsVisibility(initialShowColumnDetails);
+  const { snapToGrid, toggleSnapToGrid } = useSnapToGrid(initialSnapToGrid);
   const { selectedTableId, selectedColumnId, selectedKeyId, selectedRelationId } = useSelection();
 
   const tables = useTables();
@@ -143,6 +150,8 @@ function MainScreenContent({
       onCycleTheme={cycleTheme}
       showColumnDetails={showColumnDetails}
       onToggleColumnDetails={toggleShowColumnDetails}
+      snapToGrid={snapToGrid}
+      onToggleSnapToGrid={toggleSnapToGrid}
     />
   );
 }

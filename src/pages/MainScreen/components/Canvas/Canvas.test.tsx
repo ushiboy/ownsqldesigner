@@ -15,6 +15,7 @@ const {
   WithRelation,
   RelationSelected,
   ColumnDetailsHidden,
+  SnapToGridEnabled,
 } = composeStories(stories);
 
 // Story.run() mounts into its own React root via ReactDOM.createRoot,
@@ -132,6 +133,20 @@ describe("Canvas", () => {
     render(<ColumnDetailsHidden />);
     await screen.findByRole("button", { name: "Table users" });
     expect(screen.queryByText("INTEGER")).not.toBeInTheDocument();
+  });
+
+  it("shows a dotted background when snapToGrid is false", () => {
+    render(<Default />);
+    expect(
+      screen.getByTestId("rf__background").querySelector(".react-flow__background-pattern.dots"),
+    ).toBeInTheDocument();
+  });
+
+  it("shows a lined grid background when snapToGrid is true (REQ-006)", () => {
+    render(<SnapToGridEnabled />);
+    expect(
+      screen.getByTestId("rf__background").querySelector(".react-flow__background-pattern.lines"),
+    ).toBeInTheDocument();
   });
 
   it("calls onSelectRelation with null on a pane click", async () => {

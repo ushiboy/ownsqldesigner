@@ -1,5 +1,12 @@
 import { useEffect, useRef } from "react";
-import { Background, Controls, ReactFlow, useNodesState, useStoreApi } from "@xyflow/react";
+import {
+  Background,
+  BackgroundVariant,
+  Controls,
+  ReactFlow,
+  useNodesState,
+  useStoreApi,
+} from "@xyflow/react";
 import type { Connection, Edge, HandleType } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import {
@@ -11,7 +18,7 @@ import {
 } from "../../../../domain/schema";
 import { useCanvasApiRef } from "../../CanvasApiContext";
 import { resolveForeignKeyDrop } from "./connectionEnd";
-import { selectCommittedMoves } from "./nodeChanges";
+import { selectCommittedMoves, SNAP_GRID_SIZE, snapPosition } from "./nodeChanges";
 import {
   columnIdFromHandle,
   sourceColumnIdFromHandle,
@@ -33,6 +40,8 @@ type CanvasProps = {
   initialSelectedTableIds?: string[];
   /** Whether each column's type/size is shown on the canvas (REQ-012). */
   showColumnDetails: boolean;
+  /** Whether a table's committed drag-end position snaps to the grid (REQ-006). */
+  snapToGrid: boolean;
   /** Fires with every selection-changing gesture: click, shift-click, rubber-band, pane click ([]). */
   onTableSelectionChange: (ids: string[]) => void;
   /** null deselects (pane click). */
@@ -51,6 +60,7 @@ export function Canvas({
   selectedRelationId,
   initialSelectedTableIds,
   showColumnDetails,
+  snapToGrid,
   onTableSelectionChange,
   onSelectRelation,
   onMoveTables,
@@ -129,7 +139,12 @@ export function Canvas({
           handleNodesChange(changes);
           const moves = selectCommittedMoves(changes);
           if (moves.length > 0) {
-            onMoveTables(moves.map(({ id, position }) => ({ tableId: id, position })));
+            onMoveTables(
+              moves.map(({ id, position }) => ({
+                tableId: id,
+                position: snapToGrid ? snapPosition(position, SNAP_GRID_SIZE) : position,
+              })),
+            );
           }
         }}
         onNodeClick={() => {
@@ -195,7 +210,10 @@ export function Canvas({
           onSelectRelation(null);
         }}
       >
-        <Background />
+        <Background
+          gap={SNAP_GRID_SIZE}
+          variant={snapToGrid ? BackgroundVariant.Lines : BackgroundVariant.Dots}
+        />
         <Controls showInteractive={false} />
         <CanvasApiBridge />
       </ReactFlow>

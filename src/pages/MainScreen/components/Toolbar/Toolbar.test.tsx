@@ -14,7 +14,8 @@ import { SelectionProvider } from "../../SelectionContext";
 import { Toolbar } from "./Toolbar";
 import * as stories from "./Toolbar.stories";
 
-const { Default, SidePanelClosed, DarkTheme, ColumnDetailsHidden } = composeStories(stories);
+const { Default, SidePanelClosed, DarkTheme, ColumnDetailsHidden, SnapToGridEnabled } =
+  composeStories(stories);
 
 const editableSchema: Schema = {
   id: "0b54b945-13c9-4d38-9ba6-b81bbe1cbc21",
@@ -55,6 +56,8 @@ function ToolbarWithEditTrigger() {
                   onCycleTheme={fn()}
                   showColumnDetails
                   onToggleColumnDetails={fn()}
+                  snapToGrid={false}
+                  onToggleSnapToGrid={fn()}
                 />
               </CanvasApiProvider>
             </SelectionProvider>
@@ -240,6 +243,30 @@ describe("Toolbar", () => {
     expect(screen.getByRole("button", { name: "Toggle column type/size" })).toHaveAttribute(
       "aria-pressed",
       "false",
+    );
+  });
+
+  it("calls onToggleSnapToGrid when the snap to grid toggle is clicked", async () => {
+    const onToggleSnapToGrid = fn();
+    render(<Default onToggleSnapToGrid={onToggleSnapToGrid} />);
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: "Toggle snap to grid" }));
+    expect(onToggleSnapToGrid).toHaveBeenCalledOnce();
+  });
+
+  it("marks the snap to grid toggle as not pressed while snapping is disabled", () => {
+    render(<Default />);
+    expect(screen.getByRole("button", { name: "Toggle snap to grid" })).toHaveAttribute(
+      "aria-pressed",
+      "false",
+    );
+  });
+
+  it("marks the snap to grid toggle as pressed while snapping is enabled", () => {
+    render(<SnapToGridEnabled />);
+    expect(screen.getByRole("button", { name: "Toggle snap to grid" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
     );
   });
 
