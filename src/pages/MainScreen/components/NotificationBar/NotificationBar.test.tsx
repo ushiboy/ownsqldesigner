@@ -1,6 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { composeStories } from "@storybook/react-vite";
+import { LocaleProvider } from "../../../../i18n/LocaleProvider";
 import { NotificationProvider } from "../../NotificationContext";
 import * as stories from "./NotificationBar.stories";
 import { NotificationBar } from "./NotificationBar";
@@ -23,9 +24,11 @@ describe("NotificationBar", () => {
 
   it("renders nothing while there is no notification", () => {
     const { container } = render(
-      <NotificationProvider>
-        <NotificationBar />
-      </NotificationProvider>,
+      <LocaleProvider>
+        <NotificationProvider>
+          <NotificationBar />
+        </NotificationProvider>
+      </LocaleProvider>,
     );
     expect(container).toBeEmptyDOMElement();
   });

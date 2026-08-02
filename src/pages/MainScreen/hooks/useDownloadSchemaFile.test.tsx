@@ -1,6 +1,7 @@
 import { renderHook } from "@testing-library/react";
 import { saveAs } from "file-saver";
 import { createSchema, type Schema } from "../../../domain/schema";
+import { LocaleProvider } from "../../../i18n/LocaleProvider";
 import { createFakeSchemaRepository } from "../../../test/fakeSchemaRepository";
 import { NotificationProvider } from "../NotificationContext";
 import { SchemaWorkspaceProvider } from "../SchemaWorkspaceContext";
@@ -16,11 +17,13 @@ function renderDownloadHook(initialSchema?: Schema) {
   );
   return renderHook(() => useDownloadSchemaFile(), {
     wrapper: ({ children }) => (
-      <NotificationProvider>
-        <SchemaWorkspaceProvider repository={repository} initialSchema={initialSchema}>
-          {children}
-        </SchemaWorkspaceProvider>
-      </NotificationProvider>
+      <LocaleProvider>
+        <NotificationProvider>
+          <SchemaWorkspaceProvider repository={repository} initialSchema={initialSchema}>
+            {children}
+          </SchemaWorkspaceProvider>
+        </NotificationProvider>
+      </LocaleProvider>
     ),
   });
 }

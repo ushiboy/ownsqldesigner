@@ -1,5 +1,6 @@
 import { saveAs } from "file-saver";
 import { useState } from "react";
+import { useTranslations } from "use-intl";
 import { Dialog, dialogActionButton } from "../../../../components/parts/Dialog";
 
 type ExportSqlDialogProps = {
@@ -20,8 +21,9 @@ export function ExportSqlDialog({
   schemaName,
   onClose,
 }: ExportSqlDialogProps) {
+  const t = useTranslations("exportSql");
   return (
-    <Dialog open={open} title="Export SQL" onClose={onClose} size="large">
+    <Dialog open={open} title={t("title")} onClose={onClose} size="large">
       <ExportSqlContent
         ddl={ddl}
         tablesWithoutPrimaryKey={tablesWithoutPrimaryKey}
@@ -46,6 +48,7 @@ function ExportSqlContent({
   schemaName,
   onClose,
 }: ExportSqlContentProps) {
+  const t = useTranslations("exportSql");
   const [copied, setCopied] = useState(false);
   const hasTables = ddl !== "";
 
@@ -53,7 +56,7 @@ function ExportSqlContent({
     <>
       {tablesWithoutPrimaryKey.length > 0 && (
         <output className="mt-4 block rounded-md border border-edge bg-danger-bg px-3 py-2 text-[13px] text-danger">
-          <p className="font-medium">Tables with no primary key:</p>
+          <p className="font-medium">{t("noPrimaryKeyHeading")}</p>
           <ul className="mt-1 list-disc pl-5">
             {tablesWithoutPrimaryKey.map((name) => (
               <li key={name}>{name}</li>
@@ -66,11 +69,11 @@ function ExportSqlContent({
           readOnly
           value={ddl}
           rows={16}
-          aria-label="Generated SQL"
+          aria-label={t("generatedSqlAriaLabel")}
           className="mt-4 w-full resize-none rounded-md border border-edge bg-surface px-2.5 py-1.5 font-mono text-[12px] text-heading focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
         />
       ) : (
-        <p className="mt-4 text-[14px]">No tables to export.</p>
+        <p className="mt-4 text-[14px]">{t("noTablesMessage")}</p>
       )}
       <div className="mt-6 flex justify-end gap-2">
         <button
@@ -81,7 +84,7 @@ function ExportSqlContent({
           }
           className={dialogActionButton({ variant: "secondary" })}
         >
-          Download .sql
+          {t("downloadSql")}
         </button>
         <button
           type="button"
@@ -92,7 +95,7 @@ function ExportSqlContent({
           }}
           className={dialogActionButton({ variant: "secondary" })}
         >
-          {copied ? "Copied" : "Copy to clipboard"}
+          {copied ? t("copied") : t("copyToClipboard")}
         </button>
         <button
           type="button"
@@ -100,7 +103,7 @@ function ExportSqlContent({
           data-autofocus
           className={dialogActionButton({ variant: "primary" })}
         >
-          Close
+          {t("close")}
         </button>
       </div>
     </>

@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { fn } from "storybook/test";
 import type { Column, Key } from "../../../../domain/schema";
+import { LocaleProvider } from "../../../../i18n/LocaleProvider";
 import { KeyDialog } from "./KeyDialog";
 
 const columns: Pick<Column, "id" | "name">[] = [
@@ -23,6 +24,13 @@ const meta = {
     onSubmit: fn(),
     onCancel: fn(),
   },
+  decorators: [
+    (Story) => (
+      <LocaleProvider>
+        <Story />
+      </LocaleProvider>
+    ),
+  ],
 } satisfies Meta<typeof KeyDialog>;
 
 export default meta;

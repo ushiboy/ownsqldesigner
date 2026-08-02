@@ -1,3 +1,4 @@
+import { useTranslations } from "use-intl";
 import { Dialog, dialogActionButton } from "../../../../components/parts/Dialog";
 
 type ConfirmDialogProps = {
@@ -17,6 +18,7 @@ export function ConfirmDialog({
   onConfirm,
   onCancel,
 }: ConfirmDialogProps) {
+  const tCommon = useTranslations("common");
   return (
     <Dialog open={open} title={title} onClose={onCancel}>
       <p className="mt-4 text-[14px]">{message}</p>
@@ -26,7 +28,7 @@ export function ConfirmDialog({
           onClick={onCancel}
           className={dialogActionButton({ variant: "secondary" })}
         >
-          Cancel
+          {tCommon("cancel")}
         </button>
         <button
           type="button"

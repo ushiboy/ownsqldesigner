@@ -1,6 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { createSchema, type Schema } from "../../../../domain/schema";
+import { LocaleProvider } from "../../../../i18n/LocaleProvider";
 import { createFakeSchemaRepository } from "../../../../test/fakeSchemaRepository";
 import { NotificationProvider } from "../../NotificationContext";
 import { SchemaWorkspaceProvider, useCurrentSchema } from "../../SchemaWorkspaceContext";
@@ -50,13 +51,15 @@ function renderLoadSchemaButton(initialSchema: Schema) {
     lastSchemaId: initialSchema.id,
   });
   render(
-    <NotificationProvider>
-      <SchemaWorkspaceProvider repository={repository} initialSchema={initialSchema}>
-        <NotificationBar />
-        <LoadSchemaButton />
-        <CurrentSchemaName />
-      </SchemaWorkspaceProvider>
-    </NotificationProvider>,
+    <LocaleProvider>
+      <NotificationProvider>
+        <SchemaWorkspaceProvider repository={repository} initialSchema={initialSchema}>
+          <NotificationBar />
+          <LoadSchemaButton />
+          <CurrentSchemaName />
+        </SchemaWorkspaceProvider>
+      </NotificationProvider>
+    </LocaleProvider>,
   );
 }
 

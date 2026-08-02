@@ -1,5 +1,6 @@
 import { useRef, useState } from "react";
 import { tv } from "tailwind-variants";
+import { useTranslations } from "use-intl";
 import { parseSchemaFile, type Schema } from "../../../../domain/schema";
 import { useNotification } from "../../NotificationContext";
 import { useSchemaActions } from "../../SchemaWorkspaceContext";
@@ -14,11 +15,12 @@ export function LoadSchemaButton() {
   const [pendingSchema, setPendingSchema] = useState<Schema | null>(null);
   const { notify, dismissNotification } = useNotification();
   const { loadSchemaFromFile } = useSchemaActions();
+  const t = useTranslations("loadSchema");
 
   async function handleFileChange(file: File) {
     const parsed = parseSchemaFile(await file.text());
     if (parsed === null) {
-      notify("Could not load the schema file. It is not a valid schema file.");
+      notify(t("couldNotLoadFile"));
       return;
     }
     dismissNotification();
@@ -28,13 +30,13 @@ export function LoadSchemaButton() {
   return (
     <>
       <button type="button" onClick={() => inputRef.current?.click()} className={toolButton()}>
-        Load JSON
+        {t("buttonLabel")}
       </button>
       <input
         ref={inputRef}
         type="file"
         accept="application/json"
-        aria-label="Load schema file"
+        aria-label={t("fileInputAriaLabel")}
         className="hidden"
         onChange={(event) => {
           const file = event.target.files?.[0];
@@ -47,9 +49,9 @@ export function LoadSchemaButton() {
       />
       <ConfirmDialog
         open={pendingSchema !== null}
-        title="Load Schema"
-        message={`Replace the current schema with "${pendingSchema?.name ?? ""}"? This cannot be undone.`}
-        confirmLabel="Load"
+        title={t("dialogTitle")}
+        message={t("confirmMessage", { name: pendingSchema?.name ?? "" })}
+        confirmLabel={t("confirmLabel")}
         onConfirm={() => {
           if (pendingSchema !== null) {
             loadSchemaFromFile(pendingSchema);

@@ -22,7 +22,7 @@ The Phase column gives a rough implementation order: Phase 1 = core MVP, Phase 2
 | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----- |
 | REQ-001 | Place, drag, and delete table nodes on the canvas ([0004](design/0004-table-creation-and-placement.md), [0005](design/0005-table-drag-and-position-persistence.md), [0008](design/0008-table-deletion.md)) | 1     |
 | REQ-002 | Pannable canvas ([0001](design/0001-main-screen.md))                                                                                                                                                       | 1     |
-| REQ-003 | Canvas zoom (in/out)                                                                                                                                                                                       | 2     |
+| REQ-003 | Canvas zoom (in/out) ([0020](design/0020-canvas-zoom.md))                                                                                                                                                  | 2     |
 | REQ-004 | Multi-select (Shift+click / rubber-band) with group move ([0015](design/0015-multi-select-and-group-move.md))                                                                                              | 2     |
 | REQ-005 | Undo / redo ([0016](design/0016-undo-redo.md))                                                                                                                                                             | 2     |
 | REQ-006 | Snap to grid                                                                                                                                                                                               | 3     |
@@ -79,7 +79,7 @@ The Phase column gives a rough implementation order: Phase 1 = core MVP, Phase 2
 | ID      | Requirement                                                                                             | Phase |
 | ------- | ------------------------------------------------------------------------------------------------------- | ----- |
 | REQ-029 | Dark mode (theme switching) ([0018](design/0018-dark-mode-toggle.md))                                   | 2     |
-| REQ-030 | Japanese / English UI switching (i18n)                                                                  | 2     |
+| REQ-030 | Japanese / English UI switching (i18n) ([0019](design/0019-i18n-locale-switching.md))                   | 2     |
 | REQ-031 | Keyboard shortcuts (delete, undo/redo, confirm/cancel, ...) ([0017](design/0017-keyboard-shortcuts.md)) | 2     |
 | REQ-032 | Persist settings (dialect, snap, FK naming pattern, display toggles)                                    | 3     |
 

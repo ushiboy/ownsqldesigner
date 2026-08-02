@@ -1,6 +1,7 @@
 import { Handle, type Node, type NodeProps, Position, useConnection } from "@xyflow/react";
 import { LuArrowRight, LuKeyRound } from "react-icons/lu";
 import { tv } from "tailwind-variants";
+import { useTranslations } from "use-intl";
 import { sourceHandleId, targetHandleId } from "./columnHandleId";
 import { isKeyColumnDragInProgress } from "./dropTarget";
 
@@ -45,11 +46,12 @@ export function TableNode({ data, selected }: NodeProps<TableNodeType>) {
   // is a valid drop target, so highlight all of them to make the gesture's
   // destination obvious without requiring a hover tooltip to discover it.
   const isDropTarget = useConnection(isKeyColumnDragInProgress);
+  const t = useTranslations("tableNode");
 
   return (
     <button
       type="button"
-      aria-label={`Table ${data.name}`}
+      aria-label={t("ariaLabel", { name: data.name })}
       className={card({ selected, dropTarget: isDropTarget })}
     >
       <div className="text-[14px] text-heading">{data.name}</div>
@@ -59,7 +61,7 @@ export function TableNode({ data, selected }: NodeProps<TableNodeType>) {
         // so would shift every handle's position out from under an
         // in-progress drag, defeating the whole point of this indicator.
         <div className="pointer-events-none absolute inset-x-0 bottom-full mb-1 text-center text-[11px] font-medium text-accent">
-          Drop on a column to link it, or here to add a new one
+          {t("dropHint")}
         </div>
       )}
       {data.comment !== "" && <div className="mt-1 text-[12px] text-body">{data.comment}</div>}
@@ -73,7 +75,7 @@ export function TableNode({ data, selected }: NodeProps<TableNodeType>) {
                 position={Position.Right}
                 id={sourceHandleId(column.id)}
                 className={columnHandle}
-                title="Drag from here to connect this column to another table"
+                title={t("sourceHandleTitle")}
               >
                 <LuArrowRight aria-hidden="true" className="pointer-events-none size-2.5" />
               </Handle>
@@ -83,7 +85,7 @@ export function TableNode({ data, selected }: NodeProps<TableNodeType>) {
                   position={Position.Left}
                   id={targetHandleId(column.id)}
                   className={columnHandle}
-                  title="Key column — drop a connection here, or drag from here to create a linked column on another table"
+                  title={t("targetHandleTitle")}
                 >
                   <LuKeyRound aria-hidden="true" className="pointer-events-none size-2.5" />
                 </Handle>

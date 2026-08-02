@@ -1,6 +1,7 @@
 import { act, renderHook, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
 import type { Schema } from "../../domain/schema";
+import { LocaleProvider } from "../../i18n/LocaleProvider";
 import { createFakeSchemaRepository } from "../../test/fakeSchemaRepository";
 import { NotificationProvider } from "./NotificationContext";
 import {
@@ -35,11 +36,13 @@ function renderWorkspace(initialSchema?: Schema) {
     }),
     {
       wrapper: ({ children }: { children: ReactNode }) => (
-        <NotificationProvider>
-          <SchemaWorkspaceProvider repository={repository} initialSchema={initialSchema}>
-            {children}
-          </SchemaWorkspaceProvider>
-        </NotificationProvider>
+        <LocaleProvider>
+          <NotificationProvider>
+            <SchemaWorkspaceProvider repository={repository} initialSchema={initialSchema}>
+              {children}
+            </SchemaWorkspaceProvider>
+          </NotificationProvider>
+        </LocaleProvider>
       ),
     },
   );

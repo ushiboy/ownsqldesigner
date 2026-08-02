@@ -2,6 +2,7 @@ import { act, renderHook } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { fn } from "storybook/test";
 import type { Schema } from "../../../domain/schema";
+import { LocaleProvider } from "../../../i18n/LocaleProvider";
 import { createFakeSchemaRepository } from "../../../test/fakeSchemaRepository";
 import { CanvasApiProvider, useCanvasApiRef } from "../CanvasApiContext";
 import { NotificationProvider } from "../NotificationContext";
@@ -33,13 +34,15 @@ function renderUndoRedo() {
     }),
     {
       wrapper: ({ children }: { children: ReactNode }) => (
-        <NotificationProvider>
-          <SchemaWorkspaceProvider repository={repository} initialSchema={blogSchema}>
-            <SelectionProvider initialSelection={seededSelection}>
-              <CanvasApiProvider>{children}</CanvasApiProvider>
-            </SelectionProvider>
-          </SchemaWorkspaceProvider>
-        </NotificationProvider>
+        <LocaleProvider>
+          <NotificationProvider>
+            <SchemaWorkspaceProvider repository={repository} initialSchema={blogSchema}>
+              <SelectionProvider initialSelection={seededSelection}>
+                <CanvasApiProvider>{children}</CanvasApiProvider>
+              </SelectionProvider>
+            </SchemaWorkspaceProvider>
+          </NotificationProvider>
+        </LocaleProvider>
       ),
     },
   );

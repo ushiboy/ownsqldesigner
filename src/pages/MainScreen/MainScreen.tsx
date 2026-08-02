@@ -10,6 +10,8 @@ import {
 } from "../../domain/schema";
 import type { SchemaRepository } from "../../domain/schemaRepository";
 import { createLocalStorageSchemaRepository } from "../../infrastructure/localStorageSchemaRepository";
+import type { Locale } from "../../i18n/Locale";
+import { LocaleProvider } from "../../i18n/LocaleProvider";
 import { ActiveDialogProvider, type DialogKind } from "./ActiveDialogContext";
 import { CanvasApiProvider } from "./CanvasApiContext";
 import { describeForeignKey, type RelationSummary } from "./components/SidePanel";
@@ -30,6 +32,7 @@ export type MainScreenSeed = {
   initialNotification?: string | null;
   initialSidePanelOpen?: boolean;
   initialTheme?: Theme;
+  initialLocale?: Locale;
 };
 
 type MainScreenProps = MainScreenSeed & {
@@ -45,22 +48,25 @@ function MainScreen({
   initialNotification,
   initialSidePanelOpen,
   initialTheme,
+  initialLocale,
 }: MainScreenProps) {
   return (
-    <NotificationProvider initialNotification={initialNotification}>
-      <ActiveDialogProvider initialDialog={initialDialog}>
-        <SchemaWorkspaceProvider repository={repository} initialSchema={initialSchema}>
-          <SelectionProvider initialSelection={initialSelection}>
-            <CanvasApiProvider>
-              <MainScreenContent
-                initialSidePanelOpen={initialSidePanelOpen}
-                initialTheme={initialTheme}
-              />
-            </CanvasApiProvider>
-          </SelectionProvider>
-        </SchemaWorkspaceProvider>
-      </ActiveDialogProvider>
-    </NotificationProvider>
+    <LocaleProvider initialLocale={initialLocale}>
+      <NotificationProvider initialNotification={initialNotification}>
+        <ActiveDialogProvider initialDialog={initialDialog}>
+          <SchemaWorkspaceProvider repository={repository} initialSchema={initialSchema}>
+            <SelectionProvider initialSelection={initialSelection}>
+              <CanvasApiProvider>
+                <MainScreenContent
+                  initialSidePanelOpen={initialSidePanelOpen}
+                  initialTheme={initialTheme}
+                />
+              </CanvasApiProvider>
+            </SelectionProvider>
+          </SchemaWorkspaceProvider>
+        </ActiveDialogProvider>
+      </NotificationProvider>
+    </LocaleProvider>
   );
 }
 

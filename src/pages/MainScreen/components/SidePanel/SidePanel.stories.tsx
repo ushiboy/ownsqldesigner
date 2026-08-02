@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { fn } from "storybook/test";
 import type { Table } from "../../../../domain/schema";
+import { LocaleProvider } from "../../../../i18n/LocaleProvider";
 import { SidePanel } from "./SidePanel";
 
 const table: Table = {
@@ -81,9 +82,11 @@ const meta = {
   },
   decorators: [
     (Story) => (
-      <div className="flex h-96 justify-end">
-        <Story />
-      </div>
+      <LocaleProvider>
+        <div className="flex h-96 justify-end">
+          <Story />
+        </div>
+      </LocaleProvider>
     ),
   ],
 } satisfies Meta<typeof SidePanel>;

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { LuPencil, LuPlus, LuTrash2 } from "react-icons/lu";
 import { tv } from "tailwind-variants";
+import { useTranslations } from "use-intl";
 import { describeNameValidity, type Table } from "../../../../domain/schema";
 import { describeKey } from "./describeKey";
 
@@ -116,15 +117,17 @@ type SchemaSummaryProps = {
 };
 
 function SchemaSummary({ schemaName, tableCount, createdDate }: SchemaSummaryProps) {
+  const tCommon = useTranslations("common");
+  const t = useTranslations("sidePanel");
   return (
     <>
-      <h2 className="text-[16px]">Schema</h2>
+      <h2 className="text-[16px]">{t("schemaHeading")}</h2>
       <dl className="mt-4 grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-[14px]">
-        <dt>Name</dt>
+        <dt>{tCommon("nameLabel")}</dt>
         <dd className="text-heading">{schemaName}</dd>
-        <dt>Tables</dt>
+        <dt>{t("tablesLabel")}</dt>
         <dd className="text-heading">{tableCount}</dd>
-        <dt>Created</dt>
+        <dt>{t("createdLabel")}</dt>
         <dd className="text-heading">{createdDate}</dd>
       </dl>
     </>
@@ -166,6 +169,8 @@ function TableProperties({
   onDeleteKey,
   onDeleteRelation,
 }: TablePropertiesProps) {
+  const tCommon = useTranslations("common");
+  const t = useTranslations("sidePanel");
   const [name, setName] = useState(table.name);
   const trimmedName = name.trim();
   const {
@@ -177,10 +182,10 @@ function TableProperties({
   return (
     <>
       <div className="flex items-center justify-between">
-        <h2 className="text-[16px]">Table</h2>
+        <h2 className="text-[16px]">{t("tableHeading")}</h2>
         <button
           type="button"
-          aria-label="Delete table"
+          aria-label={t("deleteTableAriaLabel")}
           onClick={onDeleteTable}
           className={iconButton()}
         >
@@ -189,7 +194,7 @@ function TableProperties({
       </div>
       <div className="mt-4 flex flex-col gap-4 text-[14px]">
         <label className="block">
-          Name
+          {tCommon("nameLabel")}
           <input
             type="text"
             value={name}
@@ -210,16 +215,13 @@ function TableProperties({
           />
         </label>
         {isNameInvalidShape && (
-          <p className="text-[12px] text-body">
-            Must start with a letter or underscore and contain only letters, digits, and
-            underscores.
-          </p>
+          <p className="text-[12px] text-body">{tCommon("invalidNameShapeHint")}</p>
         )}
         {isNameDuplicate && (
-          <p className="text-[12px] text-body">A table with this name already exists.</p>
+          <p className="text-[12px] text-body">{tCommon("duplicateTableName")}</p>
         )}
         <label className="block">
-          Comment
+          {tCommon("commentLabel")}
           <textarea
             value={table.comment}
             onChange={(event) => onUpdateTableComment(table.id, event.target.value)}
@@ -229,10 +231,10 @@ function TableProperties({
         </label>
       </div>
       <div className="mt-6">
-        <h3 className="text-[14px] text-heading">Columns</h3>
+        <h3 className="text-[14px] text-heading">{t("columnsHeading")}</h3>
         <button type="button" onClick={onAddColumn} className={sectionActionButton()}>
           <LuPlus aria-hidden="true" className="size-4" />
-          Add Column
+          {t("addColumn")}
         </button>
         <ul className="mt-2 flex flex-col gap-1 text-[13px]">
           {table.columns.map((column) => (
@@ -244,7 +246,7 @@ function TableProperties({
               <span className="flex shrink-0 items-center gap-1">
                 <button
                   type="button"
-                  aria-label={`Edit column ${column.name}`}
+                  aria-label={t("editColumnAriaLabel", { name: column.name })}
                   onClick={() => onEditColumn(column.id)}
                   className={iconButton()}
                 >
@@ -252,7 +254,7 @@ function TableProperties({
                 </button>
                 <button
                   type="button"
-                  aria-label={`Delete column ${column.name}`}
+                  aria-label={t("deleteColumnAriaLabel", { name: column.name })}
                   onClick={() => onDeleteColumn(column.id)}
                   className={iconButton()}
                 >
@@ -264,10 +266,10 @@ function TableProperties({
         </ul>
       </div>
       <div className="mt-6">
-        <h3 className="text-[14px] text-heading">Keys</h3>
+        <h3 className="text-[14px] text-heading">{t("keysHeading")}</h3>
         <button type="button" onClick={onAddKey} className={sectionActionButton()}>
           <LuPlus aria-hidden="true" className="size-4" />
-          Add Key
+          {t("addKey")}
         </button>
         <ul className="mt-2 flex flex-col gap-1 text-[13px]">
           {table.keys.map((key) => (
@@ -282,7 +284,7 @@ function TableProperties({
         </ul>
       </div>
       <div className="mt-6">
-        <h3 className="text-[14px] text-heading">Relations</h3>
+        <h3 className="text-[14px] text-heading">{t("relationsHeading")}</h3>
         <ul className="mt-2 flex flex-col gap-1 text-[13px]">
           {relations.map((relation) => (
             <RelationRow
@@ -306,13 +308,14 @@ type KeyRowProps = {
 };
 
 function KeyRow({ keyId, label, onEditKey, onDeleteKey }: KeyRowProps) {
+  const t = useTranslations("sidePanel");
   return (
     <li className="flex items-center justify-between gap-2">
       <span className="truncate text-heading">{label}</span>
       <span className="flex shrink-0 items-center gap-1">
         <button
           type="button"
-          aria-label={`Edit key ${label}`}
+          aria-label={t("editKeyAriaLabel", { label })}
           onClick={() => onEditKey(keyId)}
           className={iconButton()}
         >
@@ -320,7 +323,7 @@ function KeyRow({ keyId, label, onEditKey, onDeleteKey }: KeyRowProps) {
         </button>
         <button
           type="button"
-          aria-label={`Delete key ${label}`}
+          aria-label={t("deleteKeyAriaLabel", { label })}
           onClick={() => onDeleteKey(keyId)}
           className={iconButton()}
         >
@@ -338,12 +341,13 @@ type RelationRowProps = {
 };
 
 function RelationRow({ relationId, label, onDeleteRelation }: RelationRowProps) {
+  const t = useTranslations("sidePanel");
   return (
     <li className="flex items-center justify-between gap-2">
       <span className="truncate text-heading">{label}</span>
       <button
         type="button"
-        aria-label={`Delete relation ${label}`}
+        aria-label={t("deleteRelationAriaLabel", { label })}
         onClick={() => onDeleteRelation(relationId)}
         className={iconButton()}
       >

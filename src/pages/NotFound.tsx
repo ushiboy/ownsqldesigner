@@ -1,10 +1,22 @@
+import { useTranslations } from "use-intl";
+import { LocaleProvider } from "@/i18n/LocaleProvider";
+
 function NotFound() {
   return (
-    <section>
-      <h1>404 Not Found</h1>
-      <p>The page you are looking for does not exist.</p>
-    </section>
+    <LocaleProvider>
+      <NotFoundContent />
+    </LocaleProvider>
   );
 }
 
 export default NotFound;
+
+function NotFoundContent() {
+  const t = useTranslations("notFound");
+  return (
+    <section>
+      <h1>{t("heading")}</h1>
+      <p>{t("body")}</p>
+    </section>
+  );
+}

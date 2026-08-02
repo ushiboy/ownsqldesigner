@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { fn } from "storybook/test";
+import { LocaleProvider } from "../../../../i18n/LocaleProvider";
 import { TableNameDialog } from "./TableNameDialog";
 
 const meta = {
@@ -10,6 +11,13 @@ const meta = {
     onSubmit: fn(),
     onCancel: fn(),
   },
+  decorators: [
+    (Story) => (
+      <LocaleProvider>
+        <Story />
+      </LocaleProvider>
+    ),
+  ],
 } satisfies Meta<typeof TableNameDialog>;
 
 export default meta;

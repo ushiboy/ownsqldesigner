@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { tv } from "tailwind-variants";
+import { useTranslations } from "use-intl";
 import { Dialog, dialogActionButton } from "../../../../components/parts/Dialog";
 
 const nameInput = tv({
@@ -44,6 +45,8 @@ type SchemaNameFormProps = {
 
 // Mounted only while the dialog is open, so the input state resets each time.
 function SchemaNameForm({ submitLabel, initialName, onSubmit, onCancel }: SchemaNameFormProps) {
+  const tCommon = useTranslations("common");
+  const t = useTranslations("schemaDialog");
   const [name, setName] = useState(initialName);
   const trimmedName = name.trim();
 
@@ -55,7 +58,7 @@ function SchemaNameForm({ submitLabel, initialName, onSubmit, onCancel }: Schema
       }}
     >
       <label className="mt-4 block text-[14px]">
-        Schema name
+        {t("fieldLabel")}
         <input
           type="text"
           value={name}
@@ -70,7 +73,7 @@ function SchemaNameForm({ submitLabel, initialName, onSubmit, onCancel }: Schema
           onClick={onCancel}
           className={dialogActionButton({ variant: "secondary" })}
         >
-          Cancel
+          {tCommon("cancel")}
         </button>
         <button
           type="submit"

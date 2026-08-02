@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { fn } from "storybook/test";
+import { LocaleProvider } from "../../../../i18n/LocaleProvider";
 import { ExportSqlDialog } from "./ExportSqlDialog";
 
 const SAMPLE_DDL =
@@ -16,6 +17,13 @@ const meta = {
     tablesWithoutPrimaryKey: [],
     onClose: fn(),
   },
+  decorators: [
+    (Story) => (
+      <LocaleProvider>
+        <Story />
+      </LocaleProvider>
+    ),
+  ],
 } satisfies Meta<typeof ExportSqlDialog>;
 
 export default meta;

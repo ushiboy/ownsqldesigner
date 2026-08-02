@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 import type { Schema } from "../../../../domain/schema";
+import { LocaleProvider } from "../../../../i18n/LocaleProvider";
 import { createFakeSchemaRepository } from "../../../../test/fakeSchemaRepository";
 import { NotificationProvider } from "../../NotificationContext";
 import { SchemaWorkspaceProvider } from "../../SchemaWorkspaceContext";
@@ -19,11 +20,13 @@ function LoadSchemaButtonWithProviders() {
     createFakeSchemaRepository({ schemas: [currentSchema], lastSchemaId: currentSchema.id }),
   );
   return (
-    <NotificationProvider>
-      <SchemaWorkspaceProvider repository={repository} initialSchema={currentSchema}>
-        <LoadSchemaButton />
-      </SchemaWorkspaceProvider>
-    </NotificationProvider>
+    <LocaleProvider>
+      <NotificationProvider>
+        <SchemaWorkspaceProvider repository={repository} initialSchema={currentSchema}>
+          <LoadSchemaButton />
+        </SchemaWorkspaceProvider>
+      </NotificationProvider>
+    </LocaleProvider>
   );
 }
 

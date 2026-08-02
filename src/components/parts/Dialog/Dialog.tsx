@@ -1,5 +1,6 @@
 import { type ReactNode, useEffect, useRef } from "react";
 import { tv } from "tailwind-variants";
+import { useEscapeKey } from "../../hooks/useEscapeKey";
 
 const overlay = tv({
   base: "fixed inset-0 z-50 flex items-center justify-center bg-black/40",
@@ -59,15 +60,7 @@ function DialogPanel({ title, onClose, size, children }: DialogPanelProps) {
     dialogRef.current?.querySelector<HTMLElement>("[data-autofocus]")?.focus();
   }, []);
 
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        onClose();
-      }
-    };
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [onClose]);
+  useEscapeKey(onClose);
 
   return (
     <div className={overlay()}>

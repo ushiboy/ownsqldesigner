@@ -1,0 +1,140 @@
+import type { Messages } from "./Messages";
+
+export default {
+  common: {
+    cancel: "Cancel",
+    create: "Create",
+    rename: "Rename",
+    delete: "Delete",
+    add: "Add",
+    save: "Save",
+    nameLabel: "Name",
+    commentLabel: "Comment",
+    typeLabel: "Type",
+    invalidNameShapeHint:
+      "Must start with a letter or underscore and contain only letters, digits, and underscores.",
+    duplicateTableName: "A table with this name already exists.",
+    duplicateColumnName: "A column with this name already exists.",
+  },
+  toolbar: {
+    renameSchemaAriaLabel: "Rename schema",
+    deleteSchemaAriaLabel: "Delete schema",
+    undo: "Undo",
+    redo: "Redo",
+    addTable: "Add Table",
+    exportSql: "Export SQL",
+    downloadJson: "Download JSON",
+    themeAriaLabel: "Theme: {theme}",
+    localeAriaLabel: "Language: {locale}",
+    toggleSidePanelAriaLabel: "Toggle side panel",
+  },
+  schemaMenu: {
+    ariaLabel: "Schemas",
+    newSchema: "+ New Schema",
+  },
+  localeMenu: {
+    ariaLabel: "Languages",
+  },
+  loadSchema: {
+    buttonLabel: "Load JSON",
+    fileInputAriaLabel: "Load schema file",
+    couldNotLoadFile: "Could not load the schema file. It is not a valid schema file.",
+    dialogTitle: "Load Schema",
+    confirmMessage: 'Replace the current schema with "{name}"? This cannot be undone.',
+    confirmLabel: "Load",
+  },
+  schemaDialog: {
+    newTitle: "New Schema",
+    renameTitle: "Rename Schema",
+    deleteTitle: "Delete Schema",
+    deleteConfirmMessage: 'Delete "{name}"? This cannot be undone.',
+    fieldLabel: "Schema name",
+  },
+  tableDialog: {
+    newTitle: "New Table",
+    deleteTitle: "Delete Table",
+    deleteConfirmMessage:
+      'Delete "{name}"? All its columns and keys will be removed too. This cannot be undone.',
+    fieldLabel: "Table name",
+  },
+  columnDialog: {
+    addTitle: "Add Column",
+    editTitle: "Edit Column",
+    deleteTitle: "Delete Column",
+    deleteConfirmMessage: 'Delete column "{name}"? This cannot be undone.',
+    keyMembershipCheckboxLabels: {
+      PRIMARY_KEY: "Primary Key",
+      UNIQUE: "Unique",
+      INDEX: "Index",
+    },
+    keyMembershipDisabledHint: {
+      PRIMARY_KEY: "Another key already holds this table''s PRIMARY KEY.",
+      UNIQUE: "This column is part of a composite UNIQUE key — manage it from the Keys section.",
+      INDEX: "This column is part of a composite INDEX key — manage it from the Keys section.",
+    },
+    sizeLabel: "Size",
+    defaultValueLabel: "Default value",
+    nullableLabel: "Nullable",
+    autoIncrementLabel: "Auto increment",
+    autoIncrementHint:
+      "Only available when this is the table''s sole PRIMARY KEY column of type INTEGER.",
+  },
+  keyDialog: {
+    addTitle: "Add Key",
+    editTitle: "Edit Key",
+    deleteTitle: "Delete Key",
+    deleteConfirmMessage: 'Delete key "{label}"? This cannot be undone.',
+    columnsLegend: "Columns",
+  },
+  relationDialog: {
+    deleteTitle: "Delete Relation",
+    deleteConfirmMessage: 'Delete relation "{label}"? This cannot be undone.',
+  },
+  sidePanel: {
+    schemaHeading: "Schema",
+    tablesLabel: "Tables",
+    createdLabel: "Created",
+    tableHeading: "Table",
+    deleteTableAriaLabel: "Delete table",
+    columnsHeading: "Columns",
+    addColumn: "Add Column",
+    editColumnAriaLabel: "Edit column {name}",
+    deleteColumnAriaLabel: "Delete column {name}",
+    keysHeading: "Keys",
+    addKey: "Add Key",
+    editKeyAriaLabel: "Edit key {label}",
+    deleteKeyAriaLabel: "Delete key {label}",
+    relationsHeading: "Relations",
+    deleteRelationAriaLabel: "Delete relation {label}",
+  },
+  exportSql: {
+    title: "Export SQL",
+    noPrimaryKeyHeading: "Tables with no primary key:",
+    generatedSqlAriaLabel: "Generated SQL",
+    noTablesMessage: "No tables to export.",
+    downloadSql: "Download .sql",
+    copyToClipboard: "Copy to clipboard",
+    copied: "Copied",
+    close: "Close",
+  },
+  notificationBar: {
+    dismissAriaLabel: "Dismiss notification",
+  },
+  notifications: {
+    couldNotSave: "Could not save your changes. Leaving this page may lose them.",
+    couldNotLoadSelected:
+      "Could not load the selected schema. It may have been deleted or corrupted.",
+    couldNotLoadNamed: 'Could not load "{name}". It may have been deleted or corrupted.',
+  },
+  tableNode: {
+    ariaLabel: "Table {name}",
+    dropHint: "Drop on a column to link it, or here to add a new one",
+    sourceHandleTitle: "Drag from here to connect this column to another table",
+    targetHandleTitle:
+      "Key column — drop a connection here, or drag from here to create a linked column on another table",
+  },
+  notFound: {
+    heading: "404 Not Found",
+    body: "The page you are looking for does not exist.",
+  },
+} satisfies Messages;

@@ -1,0 +1,142 @@
+import type { Messages } from "./Messages";
+
+export default {
+  common: {
+    cancel: "キャンセル",
+    create: "作成",
+    rename: "変更",
+    delete: "削除",
+    add: "追加",
+    save: "保存",
+    nameLabel: "名前",
+    commentLabel: "コメント",
+    typeLabel: "種類",
+    invalidNameShapeHint:
+      "英字またはアンダースコアで始まり、英数字とアンダースコアのみを使用してください。",
+    duplicateTableName: "同じ名前のテーブルが既に存在します。",
+    duplicateColumnName: "同じ名前のカラムが既に存在します。",
+  },
+  toolbar: {
+    renameSchemaAriaLabel: "スキーマ名を変更",
+    deleteSchemaAriaLabel: "スキーマを削除",
+    undo: "元に戻す",
+    redo: "やり直す",
+    addTable: "テーブルを追加",
+    exportSql: "SQLを出力",
+    downloadJson: "JSONをダウンロード",
+    themeAriaLabel: "テーマ: {theme}",
+    localeAriaLabel: "言語: {locale}",
+    toggleSidePanelAriaLabel: "サイドパネルの表示切り替え",
+  },
+  schemaMenu: {
+    ariaLabel: "スキーマ一覧",
+    newSchema: "+ 新規スキーマ",
+  },
+  localeMenu: {
+    ariaLabel: "言語",
+  },
+  loadSchema: {
+    buttonLabel: "JSONを読み込む",
+    fileInputAriaLabel: "スキーマファイルを読み込む",
+    couldNotLoadFile:
+      "スキーマファイルを読み込めませんでした。有効なスキーマファイルではありません。",
+    dialogTitle: "スキーマを読み込む",
+    confirmMessage: "現在のスキーマを「{name}」に置き換えますか? この操作は取り消せません。",
+    confirmLabel: "読み込む",
+  },
+  schemaDialog: {
+    newTitle: "新規スキーマ",
+    renameTitle: "スキーマ名を変更",
+    deleteTitle: "スキーマを削除",
+    deleteConfirmMessage: "「{name}」を削除しますか? この操作は取り消せません。",
+    fieldLabel: "スキーマ名",
+  },
+  tableDialog: {
+    newTitle: "新規テーブル",
+    deleteTitle: "テーブルを削除",
+    deleteConfirmMessage:
+      "「{name}」を削除しますか? すべてのカラムとキーも削除されます。この操作は取り消せません。",
+    fieldLabel: "テーブル名",
+  },
+  columnDialog: {
+    addTitle: "カラムを追加",
+    editTitle: "カラムを編集",
+    deleteTitle: "カラムを削除",
+    deleteConfirmMessage: "カラム「{name}」を削除しますか? この操作は取り消せません。",
+    keyMembershipCheckboxLabels: {
+      PRIMARY_KEY: "主キー",
+      UNIQUE: "一意制約",
+      INDEX: "インデックス",
+    },
+    keyMembershipDisabledHint: {
+      PRIMARY_KEY: "他のキーが既にこのテーブルの主キーです。",
+      UNIQUE: "このカラムは複合UNIQUEキーの一部です。Keysセクションから管理してください。",
+      INDEX: "このカラムは複合INDEXキーの一部です。Keysセクションから管理してください。",
+    },
+    sizeLabel: "サイズ",
+    defaultValueLabel: "デフォルト値",
+    nullableLabel: "NULL許可",
+    autoIncrementLabel: "自動採番",
+    autoIncrementHint: "このカラムがテーブル唯一のINTEGER型の主キーである場合のみ使用できます。",
+  },
+  keyDialog: {
+    addTitle: "キーを追加",
+    editTitle: "キーを編集",
+    deleteTitle: "キーを削除",
+    deleteConfirmMessage: "キー「{label}」を削除しますか? この操作は取り消せません。",
+    columnsLegend: "カラム",
+  },
+  relationDialog: {
+    deleteTitle: "リレーションを削除",
+    deleteConfirmMessage: "リレーション「{label}」を削除しますか? この操作は取り消せません。",
+  },
+  sidePanel: {
+    schemaHeading: "スキーマ",
+    tablesLabel: "テーブル数",
+    createdLabel: "作成日",
+    tableHeading: "テーブル",
+    deleteTableAriaLabel: "テーブルを削除",
+    columnsHeading: "カラム",
+    addColumn: "カラムを追加",
+    editColumnAriaLabel: "カラム {name} を編集",
+    deleteColumnAriaLabel: "カラム {name} を削除",
+    keysHeading: "キー",
+    addKey: "キーを追加",
+    editKeyAriaLabel: "キー {label} を編集",
+    deleteKeyAriaLabel: "キー {label} を削除",
+    relationsHeading: "リレーション",
+    deleteRelationAriaLabel: "リレーション {label} を削除",
+  },
+  exportSql: {
+    title: "SQLを出力",
+    noPrimaryKeyHeading: "主キーのないテーブル:",
+    generatedSqlAriaLabel: "生成されたSQL",
+    noTablesMessage: "出力するテーブルがありません。",
+    downloadSql: ".sqlをダウンロード",
+    copyToClipboard: "クリップボードにコピー",
+    copied: "コピーしました",
+    close: "閉じる",
+  },
+  notificationBar: {
+    dismissAriaLabel: "通知を閉じる",
+  },
+  notifications: {
+    couldNotSave:
+      "変更を保存できませんでした。このページを離れると変更が失われる可能性があります。",
+    couldNotLoadSelected:
+      "選択したスキーマを読み込めませんでした。削除されたか、破損している可能性があります。",
+    couldNotLoadNamed:
+      "「{name}」を読み込めませんでした。削除されたか、破損している可能性があります。",
+  },
+  tableNode: {
+    ariaLabel: "テーブル {name}",
+    dropHint: "ドロップしてカラムに接続するか、ここにドロップして新しいカラムを追加",
+    sourceHandleTitle: "ここからドラッグして別のテーブルのカラムに接続",
+    targetHandleTitle:
+      "キー列 — ここに接続をドロップするか、ここからドラッグして別のテーブルに連携するカラムを作成",
+  },
+  notFound: {
+    heading: "404 Not Found",
+    body: "お探しのページは見つかりませんでした。",
+  },
+} satisfies Messages;

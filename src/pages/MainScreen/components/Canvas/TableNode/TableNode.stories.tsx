@@ -3,6 +3,7 @@ import type { Edge } from "@xyflow/react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { Background, ReactFlow } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
+import { LocaleProvider } from "../../../../../i18n/LocaleProvider";
 import { TableNode, type TableNodeType } from "./TableNode";
 
 const nodeTypes = { table: TableNode };
@@ -23,11 +24,13 @@ type StoryArgs = { node: TableNodeType };
 function TableNodePreview({ node }: StoryArgs) {
   const nodes = useMemo(() => [node], [node]);
   return (
-    <div className="h-[200px] w-[300px]">
-      <ReactFlow nodes={nodes} edges={edges} nodeTypes={nodeTypes} nodesDraggable={false} fitView>
-        <Background />
-      </ReactFlow>
-    </div>
+    <LocaleProvider>
+      <div className="h-[200px] w-[300px]">
+        <ReactFlow nodes={nodes} edges={edges} nodeTypes={nodeTypes} nodesDraggable={false} fitView>
+          <Background />
+        </ReactFlow>
+      </div>
+    </LocaleProvider>
   );
 }
 

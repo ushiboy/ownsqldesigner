@@ -4,6 +4,7 @@ import userEvent from "@testing-library/user-event";
 import { fn } from "storybook/test";
 import { composeStories } from "@storybook/react-vite";
 import type { Schema } from "../../../../domain/schema";
+import { LocaleProvider } from "../../../../i18n/LocaleProvider";
 import { createFakeSchemaRepository } from "../../../../test/fakeSchemaRepository";
 import { ActiveDialogProvider } from "../../ActiveDialogContext";
 import { CanvasApiProvider } from "../../CanvasApiContext";
@@ -34,29 +35,31 @@ function ToolbarWithEditTrigger() {
     createFakeSchemaRepository({ schemas: [editableSchema], lastSchemaId: editableSchema.id }),
   );
   return (
-    <NotificationProvider>
-      <ActiveDialogProvider>
-        <SchemaWorkspaceProvider repository={repository} initialSchema={editableSchema}>
-          <SelectionProvider>
-            <CanvasApiProvider>
-              <CreateTableTrigger />
-              <Toolbar
-                schemaName="Blog Schema"
-                savedSchemas={[]}
-                currentSchemaId={editableSchema.id}
-                canDownloadSchema={false}
-                onDownloadSchema={fn()}
-                onSelectSchema={fn()}
-                isSidePanelOpen
-                onToggleSidePanel={fn()}
-                theme="system"
-                onCycleTheme={fn()}
-              />
-            </CanvasApiProvider>
-          </SelectionProvider>
-        </SchemaWorkspaceProvider>
-      </ActiveDialogProvider>
-    </NotificationProvider>
+    <LocaleProvider>
+      <NotificationProvider>
+        <ActiveDialogProvider>
+          <SchemaWorkspaceProvider repository={repository} initialSchema={editableSchema}>
+            <SelectionProvider>
+              <CanvasApiProvider>
+                <CreateTableTrigger />
+                <Toolbar
+                  schemaName="Blog Schema"
+                  savedSchemas={[]}
+                  currentSchemaId={editableSchema.id}
+                  canDownloadSchema={false}
+                  onDownloadSchema={fn()}
+                  onSelectSchema={fn()}
+                  isSidePanelOpen
+                  onToggleSidePanel={fn()}
+                  theme="system"
+                  onCycleTheme={fn()}
+                />
+              </CanvasApiProvider>
+            </SelectionProvider>
+          </SchemaWorkspaceProvider>
+        </ActiveDialogProvider>
+      </NotificationProvider>
+    </LocaleProvider>
   );
 }
 
@@ -78,6 +81,10 @@ async function openMenu(props?: Partial<ComponentProps<typeof Default>>) {
 }
 
 describe("Toolbar", () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
   it("renders the schema dropdown trigger with the schema name", () => {
     render(<Default />);
     const trigger = screen.getByRole("button", { name: "Blog Schema" });
@@ -226,5 +233,66 @@ describe("Toolbar", () => {
     const user = userEvent.setup();
     await user.click(screen.getByRole("button", { name: "Theme: system" }));
     expect(onCycleTheme).toHaveBeenCalledOnce();
+  });
+
+  it("labels the locale button with the current language", () => {
+    render(<Default />);
+    expect(screen.getByRole("button", { name: "Language: en" })).toBeInTheDocument();
+  });
+
+  it("does not show the locale menu before the trigger is clicked", () => {
+    render(<Default />);
+    expect(screen.queryByRole("menu", { name: "Languages" })).not.toBeInTheDocument();
+  });
+
+  it("opens the locale menu listing the available languages", async () => {
+    render(<Default />);
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: "Language: en" }));
+
+    expect(screen.getByRole("menu", { name: "Languages" })).toBeInTheDocument();
+    expect(screen.getByRole("menuitem", { name: "English" })).toBeEnabled();
+    expect(screen.getByRole("menuitem", { name: "日本語" })).toBeEnabled();
+  });
+
+  it("marks only the current language in the locale menu", async () => {
+    render(<Default />);
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: "Language: en" }));
+
+    expect(screen.getByRole("menuitem", { name: "English" })).toHaveAttribute(
+      "aria-current",
+      "true",
+    );
+    expect(screen.getByRole("menuitem", { name: "日本語" })).not.toHaveAttribute("aria-current");
+  });
+
+  it("switches the UI language and closes the menu when a language is selected", async () => {
+    render(<Default />);
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: "Language: en" }));
+    await user.click(screen.getByRole("menuitem", { name: "日本語" }));
+
+    expect(screen.queryByRole("menu")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "言語: ja" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "スキーマ名を変更" })).toBeInTheDocument();
+  });
+
+  it("closes the locale menu when Escape is pressed", async () => {
+    render(<Default />);
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: "Language: en" }));
+    await user.keyboard("{Escape}");
+
+    expect(screen.queryByRole("menu")).not.toBeInTheDocument();
+  });
+
+  it("closes the locale menu when clicking outside of it", async () => {
+    render(<Default />);
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: "Language: en" }));
+    await user.click(document.body);
+
+    expect(screen.queryByRole("menu")).not.toBeInTheDocument();
   });
 });

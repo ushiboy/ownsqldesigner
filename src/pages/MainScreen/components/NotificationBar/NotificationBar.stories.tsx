@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { LocaleProvider } from "../../../../i18n/LocaleProvider";
 import { NotificationProvider } from "../../NotificationContext";
 import { NotificationBar } from "./NotificationBar";
 
@@ -7,11 +8,13 @@ const meta = {
   component: NotificationBar,
   decorators: [
     (Story) => (
-      <NotificationProvider initialNotification="Cannot delete column: referenced by a foreign key">
-        <div className="relative h-24">
-          <Story />
-        </div>
-      </NotificationProvider>
+      <LocaleProvider>
+        <NotificationProvider initialNotification="Cannot delete column: referenced by a foreign key">
+          <div className="relative h-24">
+            <Story />
+          </div>
+        </NotificationProvider>
+      </LocaleProvider>
     ),
   ],
 } satisfies Meta<typeof NotificationBar>;

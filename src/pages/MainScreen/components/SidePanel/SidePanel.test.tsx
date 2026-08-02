@@ -2,6 +2,7 @@ import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { fn } from "storybook/test";
 import { composeStories } from "@storybook/react-vite";
+import { LocaleProvider } from "../../../../i18n/LocaleProvider";
 import * as stories from "./SidePanel.stories";
 import { SidePanel } from "./SidePanel";
 
@@ -41,12 +42,20 @@ describe("SidePanel", () => {
   });
 
   it("is hidden from the accessibility tree while closed", () => {
-    const { container } = render(<SidePanel {...closedProps} />);
+    const { container } = render(
+      <LocaleProvider>
+        <SidePanel {...closedProps} />
+      </LocaleProvider>,
+    );
     expect(within(container).queryByRole("complementary")).not.toBeInTheDocument();
   });
 
   it("keeps its content mounted while closed so the width can animate", () => {
-    const { container } = render(<SidePanel {...closedProps} />);
+    const { container } = render(
+      <LocaleProvider>
+        <SidePanel {...closedProps} />
+      </LocaleProvider>,
+    );
     expect(within(container).getByText("Schema")).toBeInTheDocument();
   });
 

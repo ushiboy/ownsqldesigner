@@ -3,12 +3,17 @@ import type { ReactNode } from "react";
 import { useState } from "react";
 import { createSchema, type Schema } from "../../../domain/schema";
 import type { SchemaRepository } from "../../../domain/schemaRepository";
+import { LocaleProvider } from "../../../i18n/LocaleProvider";
 import { createFakeSchemaRepository } from "../../../test/fakeSchemaRepository";
 import { NotificationProvider, useNotification } from "../NotificationContext";
 import { useSchemaPersistence } from "./useSchemaPersistence";
 
 function wrapper({ children }: { children: ReactNode }) {
-  return <NotificationProvider>{children}</NotificationProvider>;
+  return (
+    <LocaleProvider>
+      <NotificationProvider>{children}</NotificationProvider>
+    </LocaleProvider>
+  );
 }
 
 /** Renders the hook behind a minimal harness that stands in for useUndoableSchema:

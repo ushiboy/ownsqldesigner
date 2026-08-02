@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { fn } from "storybook/test";
 import type { Column, ColumnKeyMembership } from "../../../../domain/schema";
+import { LocaleProvider } from "../../../../i18n/LocaleProvider";
 import { ColumnDialog } from "./ColumnDialog";
 
 const NO_KEY_MEMBERSHIP: ColumnKeyMembership = { PRIMARY_KEY: false, UNIQUE: false, INDEX: false };
@@ -37,6 +38,13 @@ const meta = {
     onSubmit: fn(),
     onCancel: fn(),
   },
+  decorators: [
+    (Story) => (
+      <LocaleProvider>
+        <Story />
+      </LocaleProvider>
+    ),
+  ],
 } satisfies Meta<typeof ColumnDialog>;
 
 export default meta;

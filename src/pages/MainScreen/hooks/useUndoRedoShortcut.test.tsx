@@ -2,6 +2,7 @@ import { act, renderHook, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ReactNode } from "react";
 import type { Schema } from "../../../domain/schema";
+import { LocaleProvider } from "../../../i18n/LocaleProvider";
 import { createFakeSchemaRepository } from "../../../test/fakeSchemaRepository";
 import { type DialogKind, ActiveDialogProvider } from "../ActiveDialogContext";
 import { CanvasApiProvider } from "../CanvasApiContext";
@@ -34,17 +35,19 @@ function renderShortcut(initialDialog: DialogKind | null = null) {
     },
     {
       wrapper: ({ children }: { children: ReactNode }) => (
-        <NotificationProvider>
-          <SchemaWorkspaceProvider repository={repository} initialSchema={blogSchema}>
-            <SelectionProvider>
-              <CanvasApiProvider>
-                <ActiveDialogProvider initialDialog={initialDialog}>
-                  {children}
-                </ActiveDialogProvider>
-              </CanvasApiProvider>
-            </SelectionProvider>
-          </SchemaWorkspaceProvider>
-        </NotificationProvider>
+        <LocaleProvider>
+          <NotificationProvider>
+            <SchemaWorkspaceProvider repository={repository} initialSchema={blogSchema}>
+              <SelectionProvider>
+                <CanvasApiProvider>
+                  <ActiveDialogProvider initialDialog={initialDialog}>
+                    {children}
+                  </ActiveDialogProvider>
+                </CanvasApiProvider>
+              </SelectionProvider>
+            </SchemaWorkspaceProvider>
+          </NotificationProvider>
+        </LocaleProvider>
       ),
     },
   );

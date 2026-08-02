@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 import { EMPTY_COLUMN_KEY_MEMBERSHIP, type Schema } from "../../../../domain/schema";
+import { LocaleProvider } from "../../../../i18n/LocaleProvider";
 import { createFakeSchemaRepository } from "../../../../test/fakeSchemaRepository";
 import { ActiveDialogProvider, type DialogKind } from "../../ActiveDialogContext";
 import { NotificationProvider } from "../../NotificationContext";
@@ -111,15 +112,17 @@ function SeededDialogHost({
     createFakeSchemaRepository({ schemas: [initialSchema], lastSchemaId: initialSchema.id }),
   );
   return (
-    <NotificationProvider>
-      <ActiveDialogProvider initialDialog={initialDialog}>
-        <SchemaWorkspaceProvider repository={repository} initialSchema={initialSchema}>
-          <SelectionProvider>
-            <DialogHost {...props} />
-          </SelectionProvider>
-        </SchemaWorkspaceProvider>
-      </ActiveDialogProvider>
-    </NotificationProvider>
+    <LocaleProvider>
+      <NotificationProvider>
+        <ActiveDialogProvider initialDialog={initialDialog}>
+          <SchemaWorkspaceProvider repository={repository} initialSchema={initialSchema}>
+            <SelectionProvider>
+              <DialogHost {...props} />
+            </SelectionProvider>
+          </SchemaWorkspaceProvider>
+        </ActiveDialogProvider>
+      </NotificationProvider>
+    </LocaleProvider>
   );
 }
 

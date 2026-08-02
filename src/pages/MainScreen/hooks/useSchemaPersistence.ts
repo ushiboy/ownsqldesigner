@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useTranslations } from "use-intl";
 import {
   DEFAULT_SCHEMA_NAME,
   type Schema,
@@ -24,6 +25,7 @@ export function useSchemaPersistence(
 ): SchemaPersistence {
   const [savedSchemas, setSavedSchemas] = useState<SchemaSummary[]>([]);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const t = useTranslations("notifications");
   // Failures surface through the notification context; each successful
   // operation clears any stale message.
   const { notify, dismissNotification } = useNotification();
@@ -35,6 +37,12 @@ export function useSchemaPersistence(
   useEffect(() => {
     notifyRef.current = notify;
   }, [notify]);
+  // Same rationale as notifyRef: the autosave effect must not re-run just
+  // because the locale (and thus this translator's identity) changed.
+  const tRef = useRef(t);
+  useEffect(() => {
+    tRef.current = t;
+  }, [t]);
 
   // Startup restore: the last-edited schema, or a fresh blank one on the
   // first visit (or when the last-edited pointer dangles). A seeded
@@ -76,7 +84,7 @@ export function useSchemaPersistence(
           // useUnsavedChangesWarning) stop the user from losing it silently.
           if (!cancelled) {
             setHasUnsavedChanges(true);
-            notifyRef.current("Could not save your changes. Leaving this page may lose them.");
+            notifyRef.current(tRef.current("couldNotSave"));
           }
           return;
         }
@@ -109,11 +117,7 @@ export function useSchemaPersistence(
         // keep the current schema, surface the failure, and refresh the
         // list so the stale entry disappears.
         const name = savedSchemas.find((summary) => summary.id === id)?.name;
-        notify(
-          name === undefined
-            ? "Could not load the selected schema. It may have been deleted or corrupted."
-            : `Could not load "${name}". It may have been deleted or corrupted.`,
-        );
+        notify(name === undefined ? t("couldNotLoadSelected") : t("couldNotLoadNamed", { name }));
         setSavedSchemas(await repository.list());
       })();
     },

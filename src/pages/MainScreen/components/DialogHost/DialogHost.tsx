@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { useTranslations } from "use-intl";
 import {
   hasPrimaryKey,
   type Column,
@@ -46,6 +47,12 @@ export function DialogHost({
   primaryKeyDisabled,
 }: DialogHostProps) {
   const { activeDialog, closeDialog } = useActiveDialog();
+  const tCommon = useTranslations("common");
+  const tSchema = useTranslations("schemaDialog");
+  const tTable = useTranslations("tableDialog");
+  const tColumn = useTranslations("columnDialog");
+  const tKey = useTranslations("keyDialog");
+  const tRelation = useTranslations("relationDialog");
   const tables = useTables();
   const { selectedTableId, selectRelation } = useSelection();
   const {
@@ -95,8 +102,8 @@ export function DialogHost({
     <>
       <SchemaNameDialog
         open={activeDialog === "createSchema"}
-        title="New Schema"
-        submitLabel="Create"
+        title={tSchema("newTitle")}
+        submitLabel={tCommon("create")}
         onSubmit={(name) => {
           onCreateSchema(name);
           closeDialog();
@@ -105,8 +112,8 @@ export function DialogHost({
       />
       <SchemaNameDialog
         open={activeDialog === "renameSchema"}
-        title="Rename Schema"
-        submitLabel="Rename"
+        title={tSchema("renameTitle")}
+        submitLabel={tCommon("rename")}
         initialName={schemaName}
         onSubmit={(name) => {
           onRenameSchema(name);
@@ -116,9 +123,9 @@ export function DialogHost({
       />
       <ConfirmDialog
         open={activeDialog === "deleteSchema"}
-        title="Delete Schema"
-        message={`Delete "${schemaName}"? This cannot be undone.`}
-        confirmLabel="Delete"
+        title={tSchema("deleteTitle")}
+        message={tSchema("deleteConfirmMessage", { name: schemaName })}
+        confirmLabel={tCommon("delete")}
         onConfirm={() => {
           onDeleteSchema();
           closeDialog();
@@ -127,8 +134,8 @@ export function DialogHost({
       />
       <TableNameDialog
         open={activeDialog === "createTable"}
-        title="New Table"
-        submitLabel="Create"
+        title={tTable("newTitle")}
+        submitLabel={tCommon("create")}
         existingNames={tableNames}
         onSubmit={(name) => {
           onCreateTable(name);
@@ -138,9 +145,9 @@ export function DialogHost({
       />
       <ConfirmDialog
         open={activeDialog === "deleteTable"}
-        title="Delete Table"
-        message={`Delete "${selectedTable?.name ?? ""}"? All its columns and keys will be removed too. This cannot be undone.`}
-        confirmLabel="Delete"
+        title={tTable("deleteTitle")}
+        message={tTable("deleteConfirmMessage", { name: selectedTable?.name ?? "" })}
+        confirmLabel={tCommon("delete")}
         onConfirm={() => {
           if (selectedTableId !== null) {
             onRemoveTable(selectedTableId);
@@ -151,8 +158,8 @@ export function DialogHost({
       />
       <ColumnDialog
         open={activeDialog === "addColumn"}
-        title="Add Column"
-        submitLabel="Add"
+        title={tColumn("addTitle")}
+        submitLabel={tCommon("add")}
         existingNames={columnNames}
         keyMembership={columnKeyMembership}
         keyMembershipDisabled={columnKeyMembershipDisabled}
@@ -170,8 +177,8 @@ export function DialogHost({
       />
       <ColumnDialog
         open={activeDialog === "editColumn"}
-        title="Edit Column"
-        submitLabel="Save"
+        title={tColumn("editTitle")}
+        submitLabel={tCommon("save")}
         initialColumn={selectedColumn}
         existingNames={siblingColumnNames}
         keyMembership={columnKeyMembership}
@@ -187,9 +194,9 @@ export function DialogHost({
       />
       <ConfirmDialog
         open={activeDialog === "deleteColumn"}
-        title="Delete Column"
-        message={`Delete column "${selectedColumn?.name ?? ""}"? This cannot be undone.`}
-        confirmLabel="Delete"
+        title={tColumn("deleteTitle")}
+        message={tColumn("deleteConfirmMessage", { name: selectedColumn?.name ?? "" })}
+        confirmLabel={tCommon("delete")}
         onConfirm={() => {
           if (selectedTableId !== null && selectedColumn !== null) {
             onRemoveColumn(selectedTableId, selectedColumn.id);
@@ -200,8 +207,8 @@ export function DialogHost({
       />
       <KeyDialog
         open={activeDialog === "addKey"}
-        title="Add Key"
-        submitLabel="Add"
+        title={tKey("addTitle")}
+        submitLabel={tCommon("add")}
         columns={selectedTable?.columns ?? NO_COLUMNS}
         primaryKeyDisabled={primaryKeyDisabled}
         onSubmit={(fields) => {
@@ -214,8 +221,8 @@ export function DialogHost({
       />
       <KeyDialog
         open={activeDialog === "editKey"}
-        title="Edit Key"
-        submitLabel="Save"
+        title={tKey("editTitle")}
+        submitLabel={tCommon("save")}
         columns={selectedTable?.columns ?? NO_COLUMNS}
         initialKey={selectedKey}
         primaryKeyDisabled={primaryKeyDisabled}
@@ -229,9 +236,14 @@ export function DialogHost({
       />
       <ConfirmDialog
         open={activeDialog === "deleteKey"}
-        title="Delete Key"
-        message={`Delete key "${selectedKey !== null ? describeKey(selectedKey, selectedTable?.columns ?? NO_COLUMNS) : ""}"? This cannot be undone.`}
-        confirmLabel="Delete"
+        title={tKey("deleteTitle")}
+        message={tKey("deleteConfirmMessage", {
+          label:
+            selectedKey !== null
+              ? describeKey(selectedKey, selectedTable?.columns ?? NO_COLUMNS)
+              : "",
+        })}
+        confirmLabel={tCommon("delete")}
         onConfirm={() => {
           if (selectedTableId !== null && selectedKey !== null) {
             onRemoveKey(selectedTableId, selectedKey.id);
@@ -242,13 +254,15 @@ export function DialogHost({
       />
       <ConfirmDialog
         open={activeDialog === "deleteRelation"}
-        title="Delete Relation"
-        message={describeDeleteRelationMessage(
-          tables,
-          selectedForeignKey,
-          selectedRelationOwnerTable,
-        )}
-        confirmLabel="Delete"
+        title={tRelation("deleteTitle")}
+        message={tRelation("deleteConfirmMessage", {
+          label: describeDeleteRelationLabel(
+            tables,
+            selectedForeignKey,
+            selectedRelationOwnerTable,
+          ),
+        })}
+        confirmLabel={tCommon("delete")}
         onConfirm={() => {
           if (selectedRelationOwnerTable !== null && selectedForeignKey !== null) {
             onRemoveForeignKey(selectedRelationOwnerTable.id, selectedForeignKey.id);
@@ -275,18 +289,16 @@ export function DialogHost({
   );
 }
 
-function describeDeleteRelationMessage(
+function describeDeleteRelationLabel(
   tables: Table[],
   selectedForeignKey: ForeignKey | null,
   selectedRelationOwnerTable: Table | null,
 ): string {
-  const label =
-    selectedForeignKey !== null && selectedRelationOwnerTable !== null
-      ? describeForeignKey(
-          selectedForeignKey,
-          selectedRelationOwnerTable.columns,
-          tables.find((table) => table.id === selectedForeignKey.referencedTableId),
-        )
-      : "";
-  return `Delete relation "${label}"? This cannot be undone.`;
+  return selectedForeignKey !== null && selectedRelationOwnerTable !== null
+    ? describeForeignKey(
+        selectedForeignKey,
+        selectedRelationOwnerTable.columns,
+        tables.find((table) => table.id === selectedForeignKey.referencedTableId),
+      )
+    : "";
 }

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { tv } from "tailwind-variants";
+import { useTranslations } from "use-intl";
 import { Dialog, dialogActionButton } from "../../../../components/parts/Dialog";
 import {
   type Column,
@@ -13,20 +14,6 @@ import {
 const fieldInput = tv({
   base: "mt-1 w-full rounded-md border border-edge bg-surface px-2.5 py-1.5 text-[14px] text-heading focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
 });
-
-// Sentence-case, matching this form's other checkboxes (Nullable, Auto
-// increment) — unlike KeyDialog/describeKey, which use SQL-flavored labels.
-const KEY_MEMBERSHIP_CHECKBOX_LABELS: Record<(typeof KEY_TYPES)[number], string> = {
-  PRIMARY_KEY: "Primary Key",
-  UNIQUE: "Unique",
-  INDEX: "Index",
-};
-
-const KEY_MEMBERSHIP_DISABLED_HINT: Record<(typeof KEY_TYPES)[number], string> = {
-  PRIMARY_KEY: "Another key already holds this table's PRIMARY KEY.",
-  UNIQUE: "This column is part of a composite UNIQUE key — manage it from the Keys section.",
-  INDEX: "This column is part of a composite INDEX key — manage it from the Keys section.",
-};
 
 type ColumnFields = Omit<Column, "id">;
 
@@ -101,6 +88,8 @@ function ColumnForm({
   onSubmit,
   onCancel,
 }: ColumnFormProps) {
+  const tCommon = useTranslations("common");
+  const t = useTranslations("columnDialog");
   const [fields, setFields] = useState<ColumnFields>(initialColumn ?? BLANK_COLUMN);
   const [keyMembership, setKeyMembership] = useState(initialKeyMembership);
   const trimmedName = fields.name.trim();
@@ -135,7 +124,7 @@ function ColumnForm({
         <div className="flex flex-col gap-3">
           <div>
             <label className="block text-[14px]">
-              Name
+              {tCommon("nameLabel")}
               <input
                 type="text"
                 value={fields.name}
@@ -145,17 +134,14 @@ function ColumnForm({
               />
             </label>
             {isNameInvalidShape && (
-              <p className="mt-1 text-[12px] text-body">
-                Must start with a letter or underscore and contain only letters, digits, and
-                underscores.
-              </p>
+              <p className="mt-1 text-[12px] text-body">{tCommon("invalidNameShapeHint")}</p>
             )}
             {isNameDuplicate && (
-              <p className="mt-1 text-[12px] text-body">A column with this name already exists.</p>
+              <p className="mt-1 text-[12px] text-body">{tCommon("duplicateColumnName")}</p>
             )}
           </div>
           <label className="block text-[14px]">
-            Type
+            {tCommon("typeLabel")}
             <select
               value={fields.type}
               onChange={(event) => setField("type", event.target.value as ColumnType)}
@@ -169,7 +155,7 @@ function ColumnForm({
             </select>
           </label>
           <label className="block text-[14px]">
-            Size
+            {t("sizeLabel")}
             <input
               type="text"
               value={fields.size}
@@ -178,7 +164,7 @@ function ColumnForm({
             />
           </label>
           <label className="block text-[14px]">
-            Default value
+            {t("defaultValueLabel")}
             <input
               type="text"
               value={fields.defaultValue}
@@ -192,7 +178,7 @@ function ColumnForm({
               checked={fields.nullable}
               onChange={(event) => setField("nullable", event.target.checked)}
             />
-            Nullable
+            {t("nullableLabel")}
           </label>
         </div>
         <div className="flex flex-col gap-3">
@@ -207,11 +193,11 @@ function ColumnForm({
                     setKeyMembership((prev) => ({ ...prev, [keyType]: event.target.checked }))
                   }
                 />
-                {KEY_MEMBERSHIP_CHECKBOX_LABELS[keyType]}
+                {t(`keyMembershipCheckboxLabels.${keyType}`)}
               </label>
               {keyMembershipDisabled[keyType] && (
                 <p className="mt-1 text-[12px] text-body">
-                  {KEY_MEMBERSHIP_DISABLED_HINT[keyType]}
+                  {t(`keyMembershipDisabledHint.${keyType}`)}
                 </p>
               )}
             </div>
@@ -224,18 +210,16 @@ function ColumnForm({
                 disabled={!autoIncrementAllowed}
                 onChange={(event) => setField("autoIncrement", event.target.checked)}
               />
-              Auto increment
+              {t("autoIncrementLabel")}
             </label>
             {!autoIncrementAllowed && (
-              <p className="mt-1 text-[12px] text-body">
-                Only available when this is the table's sole PRIMARY KEY column of type INTEGER.
-              </p>
+              <p className="mt-1 text-[12px] text-body">{t("autoIncrementHint")}</p>
             )}
           </div>
         </div>
       </div>
       <label className="mt-4 block text-[14px]">
-        Comment
+        {tCommon("commentLabel")}
         <textarea
           value={fields.comment}
           onChange={(event) => setField("comment", event.target.value)}
@@ -249,7 +233,7 @@ function ColumnForm({
           onClick={onCancel}
           className={dialogActionButton({ variant: "secondary" })}
         >
-          Cancel
+          {tCommon("cancel")}
         </button>
         <button
           type="submit"

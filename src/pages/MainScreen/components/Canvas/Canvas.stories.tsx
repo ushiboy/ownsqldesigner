@@ -5,6 +5,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 // standalone package.
 import { fn, userEvent, within } from "storybook/test";
 import type { Table } from "../../../../domain/schema";
+import { LocaleProvider } from "../../../../i18n/LocaleProvider";
 import { CanvasApiProvider } from "../../CanvasApiContext";
 import { Canvas } from "./Canvas";
 
@@ -99,11 +100,13 @@ const meta = {
   },
   decorators: [
     (Story) => (
-      <CanvasApiProvider>
-        <div className="h-[400px]">
-          <Story />
-        </div>
-      </CanvasApiProvider>
+      <LocaleProvider>
+        <CanvasApiProvider>
+          <div className="h-[400px]">
+            <Story />
+          </div>
+        </CanvasApiProvider>
+      </LocaleProvider>
     ),
   ],
 } satisfies Meta<typeof Canvas>;

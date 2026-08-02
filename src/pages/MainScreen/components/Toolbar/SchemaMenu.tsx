@@ -1,16 +1,9 @@
-import { useEffect } from "react";
 import { LuCheck } from "react-icons/lu";
-import { tv } from "tailwind-variants";
+import { useTranslations } from "use-intl";
+import { useEscapeKey } from "../../../../components/hooks/useEscapeKey";
 import type { SchemaSummary } from "../../../../domain/schema";
 import { useActiveDialog } from "../../ActiveDialogContext";
-
-const menuBox = tv({
-  base: "absolute top-full left-0 z-50 mt-1 w-56 rounded-md border border-edge bg-surface py-1 shadow-card",
-});
-
-const menuItem = tv({
-  base: "flex w-full items-center gap-2 px-3 py-1.5 text-left text-[14px] text-heading transition-colors hover:bg-accent-bg",
-});
+import { menuBox, menuItem } from "./dropdownMenu";
 
 type SchemaMenuProps = {
   savedSchemas: SchemaSummary[];
@@ -26,19 +19,12 @@ export function SchemaMenu({
   onClose,
 }: SchemaMenuProps) {
   const { openDialog } = useActiveDialog();
+  const t = useTranslations("schemaMenu");
 
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        onClose();
-      }
-    };
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [onClose]);
+  useEscapeKey(onClose);
 
   return (
-    <div role="menu" aria-label="Schemas" className={menuBox()}>
+    <div role="menu" aria-label={t("ariaLabel")} className={menuBox()}>
       {savedSchemas.map((schema) => {
         const isCurrent = schema.id === currentSchemaId;
         return (
@@ -72,7 +58,8 @@ export function SchemaMenu({
         }}
         className={menuItem()}
       >
-        <span aria-hidden="true" className="size-4 shrink-0" />+ New Schema
+        <span aria-hidden="true" className="size-4 shrink-0" />
+        {t("newSchema")}
       </button>
     </div>
   );

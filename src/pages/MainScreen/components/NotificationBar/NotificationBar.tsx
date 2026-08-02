@@ -1,5 +1,6 @@
 import { LuX } from "react-icons/lu";
 import { tv } from "tailwind-variants";
+import { useTranslations } from "use-intl";
 import { useNotification } from "../../NotificationContext";
 
 const bar = tv({
@@ -12,6 +13,7 @@ const dismissButton = tv({
 
 export function NotificationBar() {
   const { notification, dismissNotification } = useNotification();
+  const t = useTranslations("notificationBar");
 
   if (notification === null) {
     return null;
@@ -22,7 +24,7 @@ export function NotificationBar() {
       {notification}
       <button
         type="button"
-        aria-label="Dismiss notification"
+        aria-label={t("dismissAriaLabel")}
         onClick={dismissNotification}
         className={dismissButton()}
       >

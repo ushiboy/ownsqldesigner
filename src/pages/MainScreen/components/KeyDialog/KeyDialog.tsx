@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { tv } from "tailwind-variants";
+import { useTranslations } from "use-intl";
 import { Dialog, dialogActionButton } from "../../../../components/parts/Dialog";
 import { type Column, type Key, KEY_TYPES, type KeyType } from "../../../../domain/schema";
 import { KEY_TYPE_LABELS } from "../../keyTypeLabels";
@@ -70,6 +71,8 @@ function KeyForm({
   onSubmit,
   onCancel,
 }: KeyFormProps) {
+  const tCommon = useTranslations("common");
+  const t = useTranslations("keyDialog");
   const [type, setType] = useState(initialKey?.type ?? BLANK_KEY.type);
   const [columnIds, setColumnIds] = useState(initialKey?.columnIds ?? BLANK_KEY.columnIds);
 
@@ -85,7 +88,7 @@ function KeyForm({
       }}
     >
       <label className="mt-4 block text-[14px]">
-        Type
+        {tCommon("typeLabel")}
         <select
           value={type}
           onChange={(event) => setType(event.target.value as KeyType)}
@@ -103,7 +106,7 @@ function KeyForm({
         </select>
       </label>
       <fieldset className="mt-4 text-[14px]">
-        <legend>Columns</legend>
+        <legend>{t("columnsLegend")}</legend>
         <ul className="mt-1 space-y-1">
           {columns.map((column) => (
             <li key={column.id}>
@@ -125,7 +128,7 @@ function KeyForm({
           onClick={onCancel}
           className={dialogActionButton({ variant: "secondary" })}
         >
-          Cancel
+          {tCommon("cancel")}
         </button>
         <button
           type="submit"

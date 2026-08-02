@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { tv } from "tailwind-variants";
+import { useTranslations } from "use-intl";
 import { Dialog, dialogActionButton } from "../../../../components/parts/Dialog";
 import { describeNameValidity } from "../../../../domain/schema";
 
@@ -56,6 +57,8 @@ function TableNameForm({
   onSubmit,
   onCancel,
 }: TableNameFormProps) {
+  const tCommon = useTranslations("common");
+  const t = useTranslations("tableDialog");
   const [name, setName] = useState(initialName);
   const trimmedName = name.trim();
   const { isEmpty, isInvalidShape, isDuplicate } = describeNameValidity(trimmedName, existingNames);
@@ -68,7 +71,7 @@ function TableNameForm({
       }}
     >
       <label className="mt-4 block text-[14px]">
-        Table name
+        {t("fieldLabel")}
         <input
           type="text"
           value={name}
@@ -78,20 +81,16 @@ function TableNameForm({
         />
       </label>
       {isInvalidShape && (
-        <p className="mt-1 text-[12px] text-body">
-          Must start with a letter or underscore and contain only letters, digits, and underscores.
-        </p>
+        <p className="mt-1 text-[12px] text-body">{tCommon("invalidNameShapeHint")}</p>
       )}
-      {isDuplicate && (
-        <p className="mt-1 text-[12px] text-body">A table with this name already exists.</p>
-      )}
+      {isDuplicate && <p className="mt-1 text-[12px] text-body">{tCommon("duplicateTableName")}</p>}
       <div className="mt-6 flex justify-end gap-2">
         <button
           type="button"
           onClick={onCancel}
           className={dialogActionButton({ variant: "secondary" })}
         >
-          Cancel
+          {tCommon("cancel")}
         </button>
         <button
           type="submit"

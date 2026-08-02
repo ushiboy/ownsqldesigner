@@ -1,5 +1,6 @@
 import {
   LuChevronDown,
+  LuLanguages,
   LuMonitor,
   LuMoon,
   LuPanelRight,
@@ -11,11 +12,14 @@ import {
   LuUndo2,
 } from "react-icons/lu";
 import { tv } from "tailwind-variants";
+import { useLocale, useTranslations } from "use-intl";
 import type { SchemaSummary } from "../../../../domain/schema";
+import { useLocaleSwitch } from "../../../../i18n/LocaleProvider";
 import { useActiveDialog } from "../../ActiveDialogContext";
 import { useUndoRedo } from "../../hooks/useUndoRedo";
 import type { Theme } from "../../hooks/useThemePreference";
 import { LoadSchemaButton } from "./LoadSchemaButton";
+import { LocaleMenu } from "./LocaleMenu";
 import { SchemaMenu } from "./SchemaMenu";
 import { useToolbarMenu } from "./useToolbarMenu";
 
@@ -64,8 +68,17 @@ export function Toolbar({
   onCycleTheme,
 }: ToolbarProps) {
   const { isOpen: isMenuOpen, wrapperRef: menuWrapperRef, toggle, close } = useToolbarMenu();
+  const {
+    isOpen: isLocaleMenuOpen,
+    wrapperRef: localeMenuWrapperRef,
+    toggle: toggleLocaleMenu,
+    close: closeLocaleMenu,
+  } = useToolbarMenu();
   const { openDialog } = useActiveDialog();
   const { undo, redo, canUndo, canRedo } = useUndoRedo();
+  const locale = useLocale();
+  const t = useTranslations("toolbar");
+  const { setLocale } = useLocaleSwitch();
   const ThemeIcon = THEME_ICON[theme];
 
   return (
@@ -91,7 +104,7 @@ export function Toolbar({
       </div>
       <button
         type="button"
-        aria-label="Rename schema"
+        aria-label={t("renameSchemaAriaLabel")}
         onClick={() => openDialog("renameSchema")}
         className={toolButton()}
       >
@@ -99,7 +112,7 @@ export function Toolbar({
       </button>
       <button
         type="button"
-        aria-label="Delete schema"
+        aria-label={t("deleteSchemaAriaLabel")}
         onClick={() => openDialog("deleteSchema")}
         className={toolButton()}
       >
@@ -108,7 +121,7 @@ export function Toolbar({
       <div className="ml-auto flex items-center gap-1">
         <button
           type="button"
-          aria-label="Undo"
+          aria-label={t("undo")}
           disabled={!canUndo}
           onClick={undo}
           className={toolButton()}
@@ -117,7 +130,7 @@ export function Toolbar({
         </button>
         <button
           type="button"
-          aria-label="Redo"
+          aria-label={t("redo")}
           disabled={!canRedo}
           onClick={redo}
           className={toolButton()}
@@ -126,10 +139,10 @@ export function Toolbar({
         </button>
         <button type="button" onClick={() => openDialog("createTable")} className={toolButton()}>
           <LuPlus aria-hidden="true" className="size-4" />
-          Add Table
+          {t("addTable")}
         </button>
         <button type="button" onClick={() => openDialog("exportSql")} className={toolButton()}>
-          Export SQL
+          {t("exportSql")}
         </button>
         <button
           type="button"
@@ -137,20 +150,39 @@ export function Toolbar({
           onClick={onDownloadSchema}
           className={toolButton()}
         >
-          Download JSON
+          {t("downloadJson")}
         </button>
         <LoadSchemaButton />
         <button
           type="button"
-          aria-label={`Theme: ${theme}`}
+          aria-label={t("themeAriaLabel", { theme })}
           onClick={onCycleTheme}
           className={toolButton()}
         >
           <ThemeIcon aria-hidden="true" className="size-4" />
         </button>
+        <div ref={localeMenuWrapperRef} className="relative">
+          <button
+            type="button"
+            aria-haspopup="menu"
+            aria-expanded={isLocaleMenuOpen}
+            aria-label={t("localeAriaLabel", { locale })}
+            onClick={toggleLocaleMenu}
+            className={toolButton()}
+          >
+            <LuLanguages aria-hidden="true" className="size-4" />
+          </button>
+          {isLocaleMenuOpen && (
+            <LocaleMenu
+              currentLocale={locale}
+              onSelectLocale={setLocale}
+              onClose={closeLocaleMenu}
+            />
+          )}
+        </div>
         <button
           type="button"
-          aria-label="Toggle side panel"
+          aria-label={t("toggleSidePanelAriaLabel")}
           aria-pressed={isSidePanelOpen}
           onClick={onToggleSidePanel}
           className={toolButton({ pressed: isSidePanelOpen })}
