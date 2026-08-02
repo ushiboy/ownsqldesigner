@@ -42,6 +42,11 @@ describe("Canvas", () => {
     expect(screen.getByRole("button", { name: /zoom out/i })).toBeInTheDocument();
   });
 
+  it("renders a minimap", () => {
+    render(<Default />);
+    expect(screen.getByRole("img", { name: /mini map/i })).toBeInTheDocument();
+  });
+
   it("renders a node per table", async () => {
     render(<WithTables />);
     expect(await screen.findByRole("button", { name: "Table users" })).toBeInTheDocument();

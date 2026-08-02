@@ -26,7 +26,7 @@ The Phase column gives a rough implementation order: Phase 1 = core MVP, Phase 2
 | REQ-004 | Multi-select (Shift+click / rubber-band) with group move ([0015](design/0015-multi-select-and-group-move.md))                                                                                              | 2     |
 | REQ-005 | Undo / redo ([0016](design/0016-undo-redo.md))                                                                                                                                                             | 2     |
 | REQ-006 | Snap to grid ([0022](design/0022-snap-to-grid.md))                                                                                                                                                         | 3     |
-| REQ-007 | Minimap (overview with draggable viewport)                                                                                                                                                                 | 3     |
+| REQ-007 | Minimap (overview with draggable viewport) ([0023](design/0023-minimap.md))                                                                                                                                | 3     |
 | REQ-008 | Auto-align tables                                                                                                                                                                                          | 3     |
 
 ### Table / column definition

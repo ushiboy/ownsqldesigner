@@ -153,8 +153,10 @@ REQ-012).
 
 ## Open Questions
 
-- Where inside the canvas the minimap should sit (bottom-right is the
+- ~~Where inside the canvas the minimap should sit (bottom-right is the
   convention, but its relation to the zoom controls is to be decided in
-  Phase 3).
+  Phase 3).~~ Resolved in [0023](0023-minimap.md): `<MiniMap>` defaults to
+  bottom-right, `<Controls>` defaults to bottom-left — no conflict, no
+  custom `position` prop needed.
 - With auto-save, REQ-028 (warn before leaving with unsaved changes) is
   likely unnecessary; revisit the requirement when implementing persistence.

@@ -3,6 +3,7 @@ import {
   Background,
   BackgroundVariant,
   Controls,
+  MiniMap,
   ReactFlow,
   useNodesState,
   useStoreApi,
@@ -213,6 +214,13 @@ export function Canvas({
         <Background
           gap={SNAP_GRID_SIZE}
           variant={snapToGrid ? BackgroundVariant.Lines : BackgroundVariant.Dots}
+        />
+        <MiniMap
+          pannable
+          bgColor="var(--color-surface)"
+          nodeColor="var(--color-accent)"
+          nodeStrokeColor="var(--color-accent)"
+          maskColor="var(--color-accent-bg)"
         />
         <Controls showInteractive={false} />
         <CanvasApiBridge />
