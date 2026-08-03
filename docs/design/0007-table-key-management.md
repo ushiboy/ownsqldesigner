@@ -1,8 +1,8 @@
 # Table Key Management
 
-- **Status**: Accepted
+- **Status**: Implemented
 - **Created**: 2026-07-22
-- **Updated**: 2026-07-23
+- **Updated**: 2026-08-03
 
 ## Context
 
