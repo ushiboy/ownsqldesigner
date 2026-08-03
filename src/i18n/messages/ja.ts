@@ -30,6 +30,7 @@ export default {
     toggleSidePanelAriaLabel: "サイドパネルの表示切り替え",
     toggleColumnDetailsAriaLabel: "列の型・サイズの表示切り替え",
     toggleSnapToGridAriaLabel: "グリッドへのスナップの切り替え",
+    settingsAriaLabel: "設定",
   },
   schemaMenu: {
     ariaLabel: "スキーマ一覧",
@@ -141,5 +142,15 @@ export default {
   notFound: {
     heading: "404 Not Found",
     body: "お探しのページは見つかりませんでした。",
+  },
+  settings: {
+    heading: "設定",
+    backLinkLabel: "エディタに戻る",
+    foreignKeysCategoryHeading: "外部キー",
+    namingPatternLegend: "子カラムの命名パターン",
+    namingPatternTableColumnLabel: "テーブル名 + 参照先カラム名",
+    namingPatternTableColumnExample: "例: users_id",
+    namingPatternTableIdLabel: "テーブル名 + 「id」",
+    namingPatternTableIdExample: "例: users_id",
   },
 } satisfies Messages;

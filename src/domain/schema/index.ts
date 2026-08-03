@@ -1,5 +1,11 @@
 export { addColumn, formatColumnType, removeColumn, updateColumn } from "./column";
-export { addForeignKey, addForeignKeyWithNewColumn, removeForeignKey } from "./foreignKey";
+export {
+  addForeignKey,
+  addForeignKeyWithNewColumn,
+  DEFAULT_FK_NAMING_PATTERN,
+  removeForeignKey,
+  type FkNamingPattern,
+} from "./foreignKey";
 export { importSchema, isSchemaIntegrityValid, parseSchemaFile } from "./integrity";
 export {
   EMPTY_COLUMN_KEY_MEMBERSHIP,

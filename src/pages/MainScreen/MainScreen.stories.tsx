@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
+import { MemoryRouter } from "react-router";
 import type { Schema } from "../../domain/schema";
 import { createFakeSchemaRepository } from "../../test/fakeSchemaRepository";
 import MainScreen from "./MainScreen";
@@ -35,6 +36,13 @@ const meta = {
   parameters: {
     layout: "fullscreen",
   },
+  decorators: [
+    (Story) => (
+      <MemoryRouter>
+        <Story />
+      </MemoryRouter>
+    ),
+  ],
   render: () => <SeededMainScreen />,
 } satisfies Meta<typeof MainScreen>;
 

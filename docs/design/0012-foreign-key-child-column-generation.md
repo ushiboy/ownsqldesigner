@@ -75,6 +75,9 @@ all three landed in the same round of work:
   concern (Phase 3, persisted settings), and no settings-persistence module
   exists anywhere in this codebase yet. This doc hardcodes one fixed pattern;
   REQ-032 can later make it a setting without changing anything here.
+  (Done in [0025](0025-fk-naming-pattern-setting.md): the pattern this doc
+  hardcoded became the `"tableColumn"` default of a selectable, persisted
+  setting.)
 - REQ-017 (propagating parent type changes to already-linked child columns) —
   separate doc.
 - Touch-drag precision for this gesture — `event.target` on touch end events
@@ -291,9 +294,11 @@ uses.
 
 ## Open Questions
 
-- Whether REQ-032, once built, should let this doc's hardcoded naming
+- ~~Whether REQ-032, once built, should let this doc's hardcoded naming
   pattern become one of several selectable templates, or replace it
-  outright.
+  outright.~~ Resolved by [0025](0025-fk-naming-pattern-setting.md): it
+  became a selectable template, with this doc's original pattern kept as
+  the default.
 - Whether touch-drag precision for this specific gesture is worth solving
   later if mobile/tablet use becomes a real usage pattern.
 - Whether this same drop-target highlighting treatment should extend to the

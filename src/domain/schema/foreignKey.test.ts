@@ -1,5 +1,6 @@
 import { addColumn, removeColumn } from "./column";
 import { addForeignKey, addForeignKeyWithNewColumn, removeForeignKey } from "./foreignKey";
+import { addKey } from "./key";
 import { removeTable } from "./table";
 import {
   POSTS_FOREIGN_KEY_ID,
@@ -128,6 +129,56 @@ describe("addForeignKeyWithNewColumn", () => {
       },
     ]);
     expect(updated.updatedAt).toEqual(new Date("2026-07-19T09:00:00.000Z"));
+  });
+
+  it("defaults to the tableColumn naming pattern when none is specified", () => {
+    const updated = addForeignKeyWithNewColumn(
+      original,
+      POSTS_TABLE_ID,
+      USERS_TABLE_ID,
+      USERS_ID_COLUMN_ID,
+      { now: new Date("2026-07-19T09:00:00.000Z") },
+    );
+
+    expect(getTable(updated, POSTS_TABLE_ID).columns.at(-1)?.name).toBe("users_id");
+  });
+
+  it("ignores the referenced column's own name under the tableId naming pattern", () => {
+    const withUniqueEmail = addKey(
+      original,
+      USERS_TABLE_ID,
+      { type: "UNIQUE", columnIds: [USERS_EMAIL_COLUMN_ID] },
+      { now: new Date("2026-07-18T09:00:00.000Z") },
+    );
+
+    const updated = addForeignKeyWithNewColumn(
+      withUniqueEmail,
+      POSTS_TABLE_ID,
+      USERS_TABLE_ID,
+      USERS_EMAIL_COLUMN_ID,
+      { namingPattern: "tableId", now: new Date("2026-07-19T09:00:00.000Z") },
+    );
+
+    expect(getTable(updated, POSTS_TABLE_ID).columns.at(-1)?.name).toBe("users_id");
+  });
+
+  it("uses the referenced column's own name under the tableColumn naming pattern", () => {
+    const withUniqueEmail = addKey(
+      original,
+      USERS_TABLE_ID,
+      { type: "UNIQUE", columnIds: [USERS_EMAIL_COLUMN_ID] },
+      { now: new Date("2026-07-18T09:00:00.000Z") },
+    );
+
+    const updated = addForeignKeyWithNewColumn(
+      withUniqueEmail,
+      POSTS_TABLE_ID,
+      USERS_TABLE_ID,
+      USERS_EMAIL_COLUMN_ID,
+      { namingPattern: "tableColumn", now: new Date("2026-07-19T09:00:00.000Z") },
+    );
+
+    expect(getTable(updated, POSTS_TABLE_ID).columns.at(-1)?.name).toBe("users_email");
   });
 
   it("auto-suffixes the generated name on collision", () => {

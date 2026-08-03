@@ -1,6 +1,8 @@
 import { useMemo, useState } from "react";
+import { useFkNamingPattern } from "../../components/hooks/useFkNamingPattern";
 import {
   EMPTY_COLUMN_KEY_MEMBERSHIP,
+  type FkNamingPattern,
   type ForeignKey,
   getColumnKeyMembership,
   getColumnKeyMembershipDisabled,
@@ -37,6 +39,7 @@ export type MainScreenSeed = {
   initialLocale?: Locale;
   initialShowColumnDetails?: boolean;
   initialSnapToGrid?: boolean;
+  initialFkNamingPattern?: FkNamingPattern;
 };
 
 type MainScreenProps = MainScreenSeed & {
@@ -55,6 +58,7 @@ function MainScreen({
   initialLocale,
   initialShowColumnDetails,
   initialSnapToGrid,
+  initialFkNamingPattern,
 }: MainScreenProps) {
   return (
     <LocaleProvider initialLocale={initialLocale}>
@@ -68,6 +72,7 @@ function MainScreen({
                   initialTheme={initialTheme}
                   initialShowColumnDetails={initialShowColumnDetails}
                   initialSnapToGrid={initialSnapToGrid}
+                  initialFkNamingPattern={initialFkNamingPattern}
                 />
               </CanvasApiProvider>
             </SelectionProvider>
@@ -85,6 +90,7 @@ type MainScreenContentProps = {
   initialTheme?: Theme;
   initialShowColumnDetails?: boolean;
   initialSnapToGrid?: boolean;
+  initialFkNamingPattern?: FkNamingPattern;
 };
 
 function MainScreenContent({
@@ -92,12 +98,14 @@ function MainScreenContent({
   initialTheme,
   initialShowColumnDetails,
   initialSnapToGrid,
+  initialFkNamingPattern,
 }: MainScreenContentProps) {
   const [isSidePanelOpen, setIsSidePanelOpen] = useState(initialSidePanelOpen ?? true);
   const { theme, cycleTheme } = useThemePreference(initialTheme);
   const { showColumnDetails, toggleShowColumnDetails } =
     useColumnDetailsVisibility(initialShowColumnDetails);
   const { snapToGrid, toggleSnapToGrid } = useSnapToGrid(initialSnapToGrid);
+  const { fkNamingPattern } = useFkNamingPattern(initialFkNamingPattern);
   const { selectedTableId, selectedColumnId, selectedKeyId, selectedRelationId } = useSelection();
 
   const tables = useTables();
@@ -152,6 +160,7 @@ function MainScreenContent({
       onToggleColumnDetails={toggleShowColumnDetails}
       snapToGrid={snapToGrid}
       onToggleSnapToGrid={toggleSnapToGrid}
+      fkNamingPattern={fkNamingPattern}
     />
   );
 }

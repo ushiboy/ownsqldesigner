@@ -3,6 +3,11 @@ import { isReferenceableColumn } from "./key";
 import { hasColumn } from "./shared";
 import type { Column, ForeignKey, Schema, Table } from "./types";
 
+/** Selects how `addForeignKeyWithNewColumn` names the generated child column (REQ-016/REQ-032). */
+export type FkNamingPattern = "tableColumn" | "tableId";
+
+export const DEFAULT_FK_NAMING_PATTERN: FkNamingPattern = "tableColumn";
+
 type AddForeignKeyOptions = {
   id?: string;
   now?: Date;
@@ -33,6 +38,7 @@ type AddForeignKeyWithNewColumnOptions = {
   columnId?: string;
   foreignKeyId?: string;
   now?: Date;
+  namingPattern?: FkNamingPattern;
 };
 
 /**
@@ -59,12 +65,20 @@ export function addForeignKeyWithNewColumn(
     return schema;
   }
   const { childTable, referencedTable, referencedColumn } = targets;
-  const { columnId = crypto.randomUUID(), foreignKeyId, now = new Date() } = options;
+  const {
+    columnId = crypto.randomUUID(),
+    foreignKeyId,
+    now = new Date(),
+    namingPattern = DEFAULT_FK_NAMING_PATTERN,
+  } = options;
   const withColumn = addColumn(
     schema,
     childTableId,
     {
-      name: uniqueColumnName(childTable, `${referencedTable.name}_${referencedColumn.name}`),
+      name: uniqueColumnName(
+        childTable,
+        buildForeignKeyChildColumnName(namingPattern, referencedTable, referencedColumn),
+      ),
       type: referencedColumn.type,
       size: "",
       defaultValue: "",
@@ -80,6 +94,20 @@ export function addForeignKeyWithNewColumn(
     { columnId, referencedTableId, referencedColumnId },
     { id: foreignKeyId, now },
   );
+}
+
+/** Builds the pre-collision-check name for a generated child column, per the selected pattern (see docs/design/0025). */
+function buildForeignKeyChildColumnName(
+  pattern: FkNamingPattern,
+  referencedTable: Table,
+  referencedColumn: Column,
+): string {
+  switch (pattern) {
+    case "tableColumn":
+      return `${referencedTable.name}_${referencedColumn.name}`;
+    case "tableId":
+      return `${referencedTable.name}_id`;
+  }
 }
 
 type RemoveForeignKeyOptions = {

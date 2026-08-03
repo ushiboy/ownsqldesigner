@@ -1,6 +1,7 @@
 import { type ComponentProps, useEffect, useState } from "react";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { MemoryRouter } from "react-router";
 import { fn } from "storybook/test";
 import { composeStories } from "@storybook/react-vite";
 import type { Schema } from "../../../../domain/schema";
@@ -36,35 +37,37 @@ function ToolbarWithEditTrigger() {
     createFakeSchemaRepository({ schemas: [editableSchema], lastSchemaId: editableSchema.id }),
   );
   return (
-    <LocaleProvider>
-      <NotificationProvider>
-        <ActiveDialogProvider>
-          <SchemaWorkspaceProvider repository={repository} initialSchema={editableSchema}>
-            <SelectionProvider>
-              <CanvasApiProvider>
-                <CreateTableTrigger />
-                <Toolbar
-                  schemaName="Blog Schema"
-                  savedSchemas={[]}
-                  currentSchemaId={editableSchema.id}
-                  canDownloadSchema={false}
-                  onDownloadSchema={fn()}
-                  onSelectSchema={fn()}
-                  isSidePanelOpen
-                  onToggleSidePanel={fn()}
-                  theme="system"
-                  onCycleTheme={fn()}
-                  showColumnDetails
-                  onToggleColumnDetails={fn()}
-                  snapToGrid={false}
-                  onToggleSnapToGrid={fn()}
-                />
-              </CanvasApiProvider>
-            </SelectionProvider>
-          </SchemaWorkspaceProvider>
-        </ActiveDialogProvider>
-      </NotificationProvider>
-    </LocaleProvider>
+    <MemoryRouter>
+      <LocaleProvider>
+        <NotificationProvider>
+          <ActiveDialogProvider>
+            <SchemaWorkspaceProvider repository={repository} initialSchema={editableSchema}>
+              <SelectionProvider>
+                <CanvasApiProvider>
+                  <CreateTableTrigger />
+                  <Toolbar
+                    schemaName="Blog Schema"
+                    savedSchemas={[]}
+                    currentSchemaId={editableSchema.id}
+                    canDownloadSchema={false}
+                    onDownloadSchema={fn()}
+                    onSelectSchema={fn()}
+                    isSidePanelOpen
+                    onToggleSidePanel={fn()}
+                    theme="system"
+                    onCycleTheme={fn()}
+                    showColumnDetails
+                    onToggleColumnDetails={fn()}
+                    snapToGrid={false}
+                    onToggleSnapToGrid={fn()}
+                  />
+                </CanvasApiProvider>
+              </SelectionProvider>
+            </SchemaWorkspaceProvider>
+          </ActiveDialogProvider>
+        </NotificationProvider>
+      </LocaleProvider>
+    </MemoryRouter>
   );
 }
 
@@ -84,41 +87,43 @@ function CreateTableTrigger() {
  */
 function ToolbarWithMockedCanvasApi({ autoAlignTables }: { autoAlignTables: () => void }) {
   return (
-    <LocaleProvider>
-      <NotificationProvider>
-        <ActiveDialogProvider>
-          <SchemaWorkspaceProvider
-            repository={createFakeSchemaRepository({
-              schemas: [editableSchema],
-              lastSchemaId: editableSchema.id,
-            })}
-            initialSchema={editableSchema}
-          >
-            <SelectionProvider>
-              <CanvasApiProvider>
-                <CanvasApiSpy autoAlignTables={autoAlignTables} />
-                <Toolbar
-                  schemaName="Blog Schema"
-                  savedSchemas={[]}
-                  currentSchemaId={editableSchema.id}
-                  canDownloadSchema={false}
-                  onDownloadSchema={fn()}
-                  onSelectSchema={fn()}
-                  isSidePanelOpen
-                  onToggleSidePanel={fn()}
-                  theme="system"
-                  onCycleTheme={fn()}
-                  showColumnDetails
-                  onToggleColumnDetails={fn()}
-                  snapToGrid={false}
-                  onToggleSnapToGrid={fn()}
-                />
-              </CanvasApiProvider>
-            </SelectionProvider>
-          </SchemaWorkspaceProvider>
-        </ActiveDialogProvider>
-      </NotificationProvider>
-    </LocaleProvider>
+    <MemoryRouter>
+      <LocaleProvider>
+        <NotificationProvider>
+          <ActiveDialogProvider>
+            <SchemaWorkspaceProvider
+              repository={createFakeSchemaRepository({
+                schemas: [editableSchema],
+                lastSchemaId: editableSchema.id,
+              })}
+              initialSchema={editableSchema}
+            >
+              <SelectionProvider>
+                <CanvasApiProvider>
+                  <CanvasApiSpy autoAlignTables={autoAlignTables} />
+                  <Toolbar
+                    schemaName="Blog Schema"
+                    savedSchemas={[]}
+                    currentSchemaId={editableSchema.id}
+                    canDownloadSchema={false}
+                    onDownloadSchema={fn()}
+                    onSelectSchema={fn()}
+                    isSidePanelOpen
+                    onToggleSidePanel={fn()}
+                    theme="system"
+                    onCycleTheme={fn()}
+                    showColumnDetails
+                    onToggleColumnDetails={fn()}
+                    snapToGrid={false}
+                    onToggleSnapToGrid={fn()}
+                  />
+                </CanvasApiProvider>
+              </SelectionProvider>
+            </SchemaWorkspaceProvider>
+          </ActiveDialogProvider>
+        </NotificationProvider>
+      </LocaleProvider>
+    </MemoryRouter>
   );
 }
 
@@ -163,6 +168,11 @@ describe("Toolbar", () => {
     expect(screen.getByRole("button", { name: "Export SQL" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Download JSON" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Load JSON" })).toBeInTheDocument();
+  });
+
+  it("renders a link to the settings page", () => {
+    render(<Default />);
+    expect(screen.getByRole("link", { name: "Settings" })).toHaveAttribute("href", "/settings");
   });
 
   it("disables Undo and Redo when there is no history", () => {

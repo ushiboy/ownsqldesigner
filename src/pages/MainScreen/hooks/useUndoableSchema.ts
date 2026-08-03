@@ -2,6 +2,7 @@ import { useCallback, useReducer, useState } from "react";
 import {
   type Column,
   type ColumnKeyMembership,
+  type FkNamingPattern,
   type ForeignKey,
   type Key,
   type Position,
@@ -61,6 +62,7 @@ export type UndoableSchemaActions = {
     childTableId: string,
     referencedTableId: string,
     referencedColumnId: string,
+    namingPattern?: FkNamingPattern,
   ) => void;
   removeForeignKey: (tableId: string, foreignKeyId: string) => void;
 };
@@ -218,9 +220,16 @@ export function useUndoableSchema(initialSchema?: Schema): UndoableSchema {
     addForeignKey: (tableId, fields) => {
       commitEdit((prev) => addForeignKey(prev, tableId, fields));
     },
-    addForeignKeyWithNewColumn: (childTableId, referencedTableId, referencedColumnId) => {
+    addForeignKeyWithNewColumn: (
+      childTableId,
+      referencedTableId,
+      referencedColumnId,
+      namingPattern,
+    ) => {
       commitEdit((prev) =>
-        addForeignKeyWithNewColumn(prev, childTableId, referencedTableId, referencedColumnId),
+        addForeignKeyWithNewColumn(prev, childTableId, referencedTableId, referencedColumnId, {
+          namingPattern,
+        }),
       );
     },
     removeForeignKey: (tableId, foreignKeyId) => {

@@ -30,6 +30,7 @@ export default {
     toggleSidePanelAriaLabel: "Toggle side panel",
     toggleColumnDetailsAriaLabel: "Toggle column type/size",
     toggleSnapToGridAriaLabel: "Toggle snap to grid",
+    settingsAriaLabel: "Settings",
   },
   schemaMenu: {
     ariaLabel: "Schemas",
@@ -139,5 +140,15 @@ export default {
   notFound: {
     heading: "404 Not Found",
     body: "The page you are looking for does not exist.",
+  },
+  settings: {
+    heading: "Settings",
+    backLinkLabel: "Back to editor",
+    foreignKeysCategoryHeading: "Foreign Keys",
+    namingPatternLegend: "Child column naming pattern",
+    namingPatternTableColumnLabel: "Table + referenced column name",
+    namingPatternTableColumnExample: "e.g. users_id",
+    namingPatternTableIdLabel: 'Table name + "id"',
+    namingPatternTableIdExample: "e.g. users_id",
   },
 } satisfies Messages;

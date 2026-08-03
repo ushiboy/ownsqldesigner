@@ -40,13 +40,13 @@ The Phase column gives a rough implementation order: Phase 1 = core MVP, Phase 2
 
 ### Keys and relations
 
-| ID      | Requirement                                                                                                                                         | Phase |
-| ------- | --------------------------------------------------------------------------------------------------------------------------------------------------- | ----- |
-| REQ-013 | Define PRIMARY KEY / UNIQUE / INDEX keys, including composite keys ([0007](design/0007-table-key-management.md))                                    | 1     |
-| REQ-014 | Create and remove foreign-key relations by connecting existing columns ([0009](design/0009-foreign-key-relations.md))                               | 1     |
-| REQ-015 | Render relation connectors (curved, auto-routed) with highlight on selection ([0009](design/0009-foreign-key-relations.md))                         | 1     |
-| REQ-016 | Auto-generate a child column when creating a foreign key (configurable naming pattern) ([0012](design/0012-foreign-key-child-column-generation.md)) | 2     |
-| REQ-017 | Propagate parent column type changes to connected child columns ([0013](design/0013-foreign-key-type-propagation.md))                               | 2     |
+| ID      | Requirement                                                                                                                                                                                           | Phase |
+| ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----- |
+| REQ-013 | Define PRIMARY KEY / UNIQUE / INDEX keys, including composite keys ([0007](design/0007-table-key-management.md))                                                                                      | 1     |
+| REQ-014 | Create and remove foreign-key relations by connecting existing columns ([0009](design/0009-foreign-key-relations.md))                                                                                 | 1     |
+| REQ-015 | Render relation connectors (curved, auto-routed) with highlight on selection ([0009](design/0009-foreign-key-relations.md))                                                                           | 1     |
+| REQ-016 | Auto-generate a child column when creating a foreign key (configurable naming pattern) ([0012](design/0012-foreign-key-child-column-generation.md), [0025](design/0025-fk-naming-pattern-setting.md)) | 2     |
+| REQ-017 | Propagate parent column type changes to connected child columns ([0013](design/0013-foreign-key-type-propagation.md))                                                                                 | 2     |
 
 ### Integrity and validation
 
@@ -76,12 +76,12 @@ The Phase column gives a rough implementation order: Phase 1 = core MVP, Phase 2
 
 ### UI / UX
 
-| ID      | Requirement                                                                                             | Phase |
-| ------- | ------------------------------------------------------------------------------------------------------- | ----- |
-| REQ-029 | Dark mode (theme switching) ([0018](design/0018-dark-mode-toggle.md))                                   | 2     |
-| REQ-030 | Japanese / English UI switching (i18n) ([0019](design/0019-i18n-locale-switching.md))                   | 2     |
-| REQ-031 | Keyboard shortcuts (delete, undo/redo, confirm/cancel, ...) ([0017](design/0017-keyboard-shortcuts.md)) | 2     |
-| REQ-032 | Persist settings (dialect, snap, FK naming pattern, display toggles)                                    | 3     |
+| ID      | Requirement                                                                                                             | Phase |
+| ------- | ----------------------------------------------------------------------------------------------------------------------- | ----- |
+| REQ-029 | Dark mode (theme switching) ([0018](design/0018-dark-mode-toggle.md))                                                   | 2     |
+| REQ-030 | Japanese / English UI switching (i18n) ([0019](design/0019-i18n-locale-switching.md))                                   | 2     |
+| REQ-031 | Keyboard shortcuts (delete, undo/redo, confirm/cancel, ...) ([0017](design/0017-keyboard-shortcuts.md))                 | 2     |
+| REQ-032 | Persist settings (dialect, snap, FK naming pattern, display toggles) ([0025](design/0025-fk-naming-pattern-setting.md)) | 3     |
 
 ## Non-Goals
 

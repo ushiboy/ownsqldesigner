@@ -510,6 +510,39 @@ describe("useUndoableSchema", () => {
     );
   });
 
+  it("names the generated column via the tableColumn pattern by default", () => {
+    const blog = buildBlogWithReferenceableColumn();
+    const { result } = renderUndoableSchema(blog);
+
+    act(() => {
+      result.current.editing.addForeignKeyWithNewColumn(
+        "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12",
+        "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12",
+        "f1a2b3c4-5d6e-4f7a-8b9c-0d1e2f3a4b5c",
+      );
+    });
+
+    expect(result.current.editing.currentSchema?.tables[0]?.columns.at(-1)?.name).toBe(
+      "posts_title",
+    );
+  });
+
+  it("passes an explicit naming pattern through to the domain layer", () => {
+    const blog = buildBlogWithReferenceableColumn();
+    const { result } = renderUndoableSchema(blog);
+
+    act(() => {
+      result.current.editing.addForeignKeyWithNewColumn(
+        "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12",
+        "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12",
+        "f1a2b3c4-5d6e-4f7a-8b9c-0d1e2f3a4b5c",
+        "tableId",
+      );
+    });
+
+    expect(result.current.editing.currentSchema?.tables[0]?.columns.at(-1)?.name).toBe("posts_id");
+  });
+
   it("removes a foreign key from a table and bumps updatedAt", () => {
     const blog = addForeignKey(
       buildBlogWithReferenceableColumn(),

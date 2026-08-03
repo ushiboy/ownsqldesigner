@@ -1,6 +1,13 @@
 import { useMemo, useState } from "react";
 import { format } from "date-fns";
-import type { Column, ColumnKeyMembership, ForeignKey, Key, Table } from "../../domain/schema";
+import type {
+  Column,
+  ColumnKeyMembership,
+  FkNamingPattern,
+  ForeignKey,
+  Key,
+  Table,
+} from "../../domain/schema";
 import { useActiveDialog } from "./ActiveDialogContext";
 import { Canvas } from "./components/Canvas";
 import { DialogHost } from "./components/DialogHost";
@@ -41,6 +48,7 @@ type MainScreenViewProps = {
   onToggleColumnDetails: () => void;
   snapToGrid: boolean;
   onToggleSnapToGrid: () => void;
+  fkNamingPattern: FkNamingPattern;
 };
 
 export function MainScreenView({
@@ -61,6 +69,7 @@ export function MainScreenView({
   onToggleColumnDetails,
   snapToGrid,
   onToggleSnapToGrid,
+  fkNamingPattern,
 }: MainScreenViewProps) {
   const { openDialog } = useActiveDialog();
   const currentSchema = useCurrentSchema();
@@ -90,6 +99,18 @@ export function MainScreenView({
   } = useSchemaActions();
   const { canDownload: canDownloadSchema, downloadSchemaFile: onDownloadSchema } =
     useDownloadSchemaFile();
+
+  const handleAddForeignKeyWithNewColumn = (
+    childTableId: string,
+    referencedTableId: string,
+    referencedColumnId: string,
+  ) =>
+    onAddForeignKeyWithNewColumn(
+      childTableId,
+      referencedTableId,
+      referencedColumnId,
+      fkNamingPattern,
+    );
 
   const schemaName = currentSchema?.name ?? NO_VALUE;
   const createdDate =
@@ -134,7 +155,7 @@ export function MainScreenView({
             onSelectRelation={selectRelation}
             onMoveTables={onMoveTables}
             onAddForeignKey={onAddForeignKey}
-            onAddForeignKeyWithNewColumn={onAddForeignKeyWithNewColumn}
+            onAddForeignKeyWithNewColumn={handleAddForeignKeyWithNewColumn}
           />
         </main>
         <SidePanel

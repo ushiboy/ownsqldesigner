@@ -9,11 +9,13 @@ import {
   LuPencil,
   LuPlus,
   LuRedo2,
+  LuSettings,
   LuSun,
   LuTrash2,
   LuType,
   LuUndo2,
 } from "react-icons/lu";
+import { Link } from "react-router";
 import { tv } from "tailwind-variants";
 import { useLocale, useTranslations } from "use-intl";
 import type { SchemaSummary } from "../../../../domain/schema";
@@ -219,6 +221,9 @@ export function Toolbar({
             />
           )}
         </div>
+        <Link to="/settings" aria-label={t("settingsAriaLabel")} className={toolButton()}>
+          <LuSettings aria-hidden="true" className="size-4" />
+        </Link>
         <button
           type="button"
           aria-label={t("toggleSidePanelAriaLabel")}

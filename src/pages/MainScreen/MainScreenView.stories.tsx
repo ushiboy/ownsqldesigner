@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
+import { MemoryRouter } from "react-router";
 import type { Schema } from "../../domain/schema";
 import { createFakeSchemaRepository } from "../../test/fakeSchemaRepository";
 import MainScreen, { type MainScreenSeed } from "./MainScreen";
@@ -121,6 +122,13 @@ const meta = {
   args: {
     initialSchema: blogSchema,
   },
+  decorators: [
+    (Story) => (
+      <MemoryRouter>
+        <Story />
+      </MemoryRouter>
+    ),
+  ],
   render: ({ repository: _repository, ...seed }) => <SeededMainScreen {...seed} />,
 } satisfies Meta<typeof MainScreen>;
 

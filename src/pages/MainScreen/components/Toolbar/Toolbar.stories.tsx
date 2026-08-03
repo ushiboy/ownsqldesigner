@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { type ComponentProps, useState } from "react";
+import { MemoryRouter } from "react-router";
 import { fn } from "storybook/test";
 import type { Schema } from "../../../../domain/schema";
 import { LocaleProvider } from "../../../../i18n/LocaleContext";
@@ -39,19 +40,21 @@ function ToolbarWithProviders(props: ComponentProps<typeof Toolbar>) {
     createFakeSchemaRepository({ schemas: [currentSchema], lastSchemaId: currentSchema.id }),
   );
   return (
-    <LocaleProvider>
-      <NotificationProvider>
-        <ActiveDialogProvider>
-          <SchemaWorkspaceProvider repository={repository} initialSchema={currentSchema}>
-            <SelectionProvider>
-              <CanvasApiProvider>
-                <Toolbar {...props} />
-              </CanvasApiProvider>
-            </SelectionProvider>
-          </SchemaWorkspaceProvider>
-        </ActiveDialogProvider>
-      </NotificationProvider>
-    </LocaleProvider>
+    <MemoryRouter>
+      <LocaleProvider>
+        <NotificationProvider>
+          <ActiveDialogProvider>
+            <SchemaWorkspaceProvider repository={repository} initialSchema={currentSchema}>
+              <SelectionProvider>
+                <CanvasApiProvider>
+                  <Toolbar {...props} />
+                </CanvasApiProvider>
+              </SelectionProvider>
+            </SchemaWorkspaceProvider>
+          </ActiveDialogProvider>
+        </NotificationProvider>
+      </LocaleProvider>
+    </MemoryRouter>
   );
 }
 

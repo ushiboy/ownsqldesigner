@@ -29,6 +29,7 @@ export type Messages = {
     toggleSidePanelAriaLabel: string;
     toggleColumnDetailsAriaLabel: string;
     toggleSnapToGridAriaLabel: string;
+    settingsAriaLabel: string;
   };
   schemaMenu: {
     ariaLabel: string;
@@ -147,5 +148,15 @@ export type Messages = {
   notFound: {
     heading: string;
     body: string;
+  };
+  settings: {
+    heading: string;
+    backLinkLabel: string;
+    foreignKeysCategoryHeading: string;
+    namingPatternLegend: string;
+    namingPatternTableColumnLabel: string;
+    namingPatternTableColumnExample: string;
+    namingPatternTableIdLabel: string;
+    namingPatternTableIdExample: string;
   };
 };

@@ -40,7 +40,9 @@ and where later-phase features will go.
 
 The app is a **single editor screen** at `/`. There are no other routes and
 no page navigation; schema management happens in place via a dropdown and
-dialogs.
+dialogs. (Later amended by [0025](0025-fk-naming-pattern-setting.md): a
+`/settings` route was added as a deliberate, isolated exception — see that
+doc's Design section for why.)
 
 ### Persistence model
 
@@ -134,7 +136,10 @@ before export (REQ-034) appear inside the SQL Export dialog. Schema file
 download / load (REQ-027) sits in the toolbar next to Export SQL. A
 settings button in the toolbar opens a settings dialog, the entry point for
 REQ-032 (dialect, snap, FK naming pattern, and the display toggles of
-REQ-012).
+REQ-012). ([0025](0025-fk-naming-pattern-setting.md) later replaced the
+dialog part of this plan with a dedicated `/settings` route for the first
+REQ-032 setting; snap, theme, and the display toggles were deliberately left
+in the toolbar for now — see that doc.)
 
 ## Alternatives Considered
 

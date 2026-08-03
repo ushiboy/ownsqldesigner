@@ -1,6 +1,7 @@
 import type {
   Column,
   ColumnKeyMembership,
+  FkNamingPattern,
   ForeignKey,
   Key,
   Position,
@@ -39,6 +40,7 @@ export type SchemaActions = {
     childTableId: string,
     referencedTableId: string,
     referencedColumnId: string,
+    namingPattern?: FkNamingPattern,
   ) => void;
   removeForeignKey: (tableId: string, foreignKeyId: string) => void;
 };
