@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { fn } from "storybook/test";
-import { DEFAULT_SQL_DIALECT } from "../../../../domain/dialect";
 import type { Table } from "../../../../domain/schema";
+import { sqliteDialectStrategy } from "../../../../domain/sqlite/sqliteDialectStrategy";
 import { LocaleProvider } from "../../../../i18n/LocaleContext";
 import { SidePanel } from "./SidePanel";
 
@@ -68,7 +68,7 @@ const meta = {
     tableCount: 0,
     createdDate: "2026-07-01",
     selectedTable: null,
-    dialect: DEFAULT_SQL_DIALECT,
+    strategy: sqliteDialectStrategy,
     existingTableNames: [],
     relations: [],
     onUpdateTableName: fn(),

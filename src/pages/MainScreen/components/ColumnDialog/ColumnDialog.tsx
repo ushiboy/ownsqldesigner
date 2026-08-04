@@ -2,7 +2,7 @@ import { useState } from "react";
 import { tv } from "tailwind-variants";
 import { useTranslations } from "use-intl";
 import { Dialog, dialogActionButton } from "../../../../components/parts/Dialog";
-import { getDialectStrategy, type SqlDialect } from "../../../../domain/dialect";
+import type { DialectStrategy } from "../../../../domain/dialect";
 import {
   type Column,
   type ColumnKeyMembership,
@@ -14,6 +14,11 @@ const fieldInput = tv({
   base: "mt-1 w-full rounded-md border border-edge bg-surface px-2.5 py-1.5 text-[14px] text-heading focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
 });
 
+// A hypothetical column/PK id pair used solely to ask the strategy "would a
+// column with these fields be auto-increment eligible if it were the
+// table's sole PRIMARY KEY column?" — see `autoIncrementAllowed` below.
+const PK_CANDIDATE_ID = "candidate";
+
 type ColumnFields = Omit<Column, "id">;
 
 type ColumnDialogProps = {
@@ -21,8 +26,8 @@ type ColumnDialogProps = {
   title: string;
   submitLabel: string;
   initialColumn?: Column | null;
-  /** The current schema's dialect; resolves the allowed column types and identifier-comparison rule. */
-  dialect: SqlDialect;
+  /** The current schema's dialect strategy; resolves allowed column types and validation rules. */
+  strategy: DialectStrategy;
   /** Sibling column names to validate against (REQ-018); caller excludes the column being edited. */
   existingNames: string[];
   /** Whether this column currently solely owns each single-column key type; seeds the checkboxes. */
@@ -38,7 +43,7 @@ export function ColumnDialog({
   title,
   submitLabel,
   initialColumn,
-  dialect,
+  strategy,
   existingNames,
   keyMembership,
   keyMembershipDisabled,
@@ -50,7 +55,7 @@ export function ColumnDialog({
       <ColumnForm
         submitLabel={submitLabel}
         initialColumn={initialColumn ?? null}
-        dialect={dialect}
+        strategy={strategy}
         existingNames={existingNames}
         keyMembership={keyMembership}
         keyMembershipDisabled={keyMembershipDisabled}
@@ -64,7 +69,7 @@ export function ColumnDialog({
 type ColumnFormProps = {
   submitLabel: string;
   initialColumn: Column | null;
-  dialect: SqlDialect;
+  strategy: DialectStrategy;
   existingNames: string[];
   keyMembership: ColumnKeyMembership;
   keyMembershipDisabled: ColumnKeyMembership;
@@ -86,7 +91,7 @@ const BLANK_COLUMN: ColumnFields = {
 function ColumnForm({
   submitLabel,
   initialColumn,
-  dialect,
+  strategy,
   existingNames,
   keyMembership: initialKeyMembership,
   keyMembershipDisabled,
@@ -102,11 +107,17 @@ function ColumnForm({
     isEmpty: isNameEmpty,
     isInvalidShape: isNameInvalidShape,
     isDuplicate: isNameDuplicate,
-  } = describeNameValidity(trimmedName, existingNames, dialect);
-  const columnTypes = getDialectStrategy(dialect).columnTypes;
+  } = describeNameValidity(trimmedName, existingNames, strategy);
+  const columnTypes = strategy.columnTypes;
   // Live against the checkbox above, not the seeded initial value: checking
   // Primary Key and Auto increment together in one submit is the point.
-  const autoIncrementAllowed = keyMembership.PRIMARY_KEY && fields.type === "INTEGER";
+  // Asks the strategy directly rather than hardcoding a type check, so a
+  // future dialect's own eligibility rule (not necessarily "INTEGER only")
+  // is reflected here too.
+  const autoIncrementAllowed = strategy.isAutoIncrementEligible(
+    { ...fields, id: PK_CANDIDATE_ID },
+    keyMembership.PRIMARY_KEY ? PK_CANDIDATE_ID : undefined,
+  );
 
   const setField = <K extends keyof ColumnFields>(key: K, value: ColumnFields[K]) => {
     setFields((prev) => ({ ...prev, [key]: value }));

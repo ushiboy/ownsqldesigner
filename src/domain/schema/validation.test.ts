@@ -1,4 +1,4 @@
-import { DEFAULT_SQL_DIALECT } from "../dialect";
+import { sqliteDialectStrategy } from "../sqlite/sqliteDialectStrategy";
 import {
   POSTS_TABLE_ID,
   USERS_EMAIL_COLUMN_ID,
@@ -36,7 +36,7 @@ describe("isValidIdentifierName", () => {
 
 describe("describeNameValidity", () => {
   it("flags an empty name as empty, not invalid-shape or duplicate", () => {
-    expect(describeNameValidity("", ["posts"], DEFAULT_SQL_DIALECT)).toEqual({
+    expect(describeNameValidity("", ["posts"], sqliteDialectStrategy)).toEqual({
       isEmpty: true,
       isInvalidShape: false,
       isDuplicate: false,
@@ -45,7 +45,7 @@ describe("describeNameValidity", () => {
   });
 
   it("flags an invalid identifier shape", () => {
-    expect(describeNameValidity("1posts", ["users"], DEFAULT_SQL_DIALECT)).toEqual({
+    expect(describeNameValidity("1posts", ["users"], sqliteDialectStrategy)).toEqual({
       isEmpty: false,
       isInvalidShape: true,
       isDuplicate: false,
@@ -54,7 +54,7 @@ describe("describeNameValidity", () => {
   });
 
   it("flags a name already used by a sibling, case-insensitively", () => {
-    expect(describeNameValidity("Posts", ["posts", "users"], DEFAULT_SQL_DIALECT)).toEqual({
+    expect(describeNameValidity("Posts", ["posts", "users"], sqliteDialectStrategy)).toEqual({
       isEmpty: false,
       isInvalidShape: false,
       isDuplicate: true,
@@ -63,7 +63,7 @@ describe("describeNameValidity", () => {
   });
 
   it("is fully valid for a well-formed, unused name", () => {
-    expect(describeNameValidity("comments", ["posts", "users"], DEFAULT_SQL_DIALECT)).toEqual({
+    expect(describeNameValidity("comments", ["posts", "users"], sqliteDialectStrategy)).toEqual({
       isEmpty: false,
       isInvalidShape: false,
       isDuplicate: false,
@@ -97,20 +97,20 @@ describe("isColumnNameAvailable", () => {
   const users = getTable(schema, USERS_TABLE_ID);
 
   it("is true for a valid, unused name", () => {
-    expect(isColumnNameAvailable(users, "created_at", DEFAULT_SQL_DIALECT)).toBe(true);
+    expect(isColumnNameAvailable(users, "created_at", sqliteDialectStrategy)).toBe(true);
   });
 
   it("is false for a name already used by another column, case-insensitively", () => {
-    expect(isColumnNameAvailable(users, "Email", DEFAULT_SQL_DIALECT)).toBe(false);
+    expect(isColumnNameAvailable(users, "Email", sqliteDialectStrategy)).toBe(false);
   });
 
   it("is false for an invalid identifier shape", () => {
-    expect(isColumnNameAvailable(users, "1created_at", DEFAULT_SQL_DIALECT)).toBe(false);
+    expect(isColumnNameAvailable(users, "1created_at", sqliteDialectStrategy)).toBe(false);
   });
 
   it("is true for a column's own current name when excluded", () => {
-    expect(isColumnNameAvailable(users, "email", DEFAULT_SQL_DIALECT, USERS_EMAIL_COLUMN_ID)).toBe(
-      true,
-    );
+    expect(
+      isColumnNameAvailable(users, "email", sqliteDialectStrategy, USERS_EMAIL_COLUMN_ID),
+    ).toBe(true);
   });
 });

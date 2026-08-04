@@ -1,4 +1,4 @@
-import { getDialectStrategy, type DialectStrategy, type SqlDialect } from "../dialect";
+import { getDialectStrategy, type DialectStrategy } from "../dialect";
 import { hasColumn, removeForeignKeysInvolvingColumn } from "./shared";
 import type { Column, Key, Schema, Table } from "./types";
 import { isColumnNameAvailable } from "./validation";
@@ -15,7 +15,8 @@ export function addColumn(
   options: AddColumnOptions = {},
 ): Schema {
   const targetTable = schema.tables.find((table) => table.id === tableId);
-  if (!canAddColumn(targetTable, fields, schema.dialect)) {
+  const strategy = getDialectStrategy(schema.dialect);
+  if (!canAddColumn(targetTable, fields, strategy)) {
     return schema;
   }
   const { id = crypto.randomUUID(), now = new Date() } = options;
@@ -40,11 +41,11 @@ export function updateColumn(
   options: UpdateColumnOptions = {},
 ): Schema {
   const targetTable = schema.tables.find((table) => table.id === tableId);
-  if (!canUpdateColumn(targetTable, columnId, fields, schema.dialect)) {
+  const strategy = getDialectStrategy(schema.dialect);
+  if (!canUpdateColumn(targetTable, columnId, fields, strategy)) {
     return schema;
   }
   const { now = new Date() } = options;
-  const strategy = getDialectStrategy(schema.dialect);
   const originalType = targetTable?.columns.find((column) => column.id === columnId)?.type;
   const tables = schema.tables.map((table) =>
     table.id === tableId
@@ -103,10 +104,14 @@ export function formatColumnType(column: Pick<Column, "type" | "size">): string 
 }
 
 /** Suffixes `baseName` with `_2`, `_3`, ... until it doesn't collide with an existing column. */
-export function uniqueColumnName(table: Table, baseName: string, dialect: SqlDialect): string {
+export function uniqueColumnName(
+  table: Table,
+  baseName: string,
+  strategy: DialectStrategy,
+): string {
   let candidate = baseName;
   let suffix = 2;
-  while (!isColumnNameAvailable(table, candidate, dialect)) {
+  while (!isColumnNameAvailable(table, candidate, strategy)) {
     candidate = `${baseName}_${suffix}`;
     suffix += 1;
   }
@@ -116,18 +121,20 @@ export function uniqueColumnName(table: Table, baseName: string, dialect: SqlDia
 function canAddColumn(
   table: Table | undefined,
   fields: Omit<Column, "id">,
-  dialect: SqlDialect,
+  strategy: DialectStrategy,
 ): boolean {
-  return table !== undefined && isColumnNameAvailable(table, fields.name, dialect);
+  return table !== undefined && isColumnNameAvailable(table, fields.name, strategy);
 }
 
 function canUpdateColumn(
   table: Table | undefined,
   columnId: string,
   fields: Omit<Column, "id">,
-  dialect: SqlDialect,
+  strategy: DialectStrategy,
 ): boolean {
-  return hasColumn(table, columnId) && isColumnNameAvailable(table, fields.name, dialect, columnId);
+  return (
+    hasColumn(table, columnId) && isColumnNameAvailable(table, fields.name, strategy, columnId)
+  );
 }
 
 function removeColumnFromKeys(keys: Key[], columnId: string): Key[] {

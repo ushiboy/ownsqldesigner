@@ -2,7 +2,7 @@ import { useState } from "react";
 import { LuPencil, LuPlus, LuTrash2 } from "react-icons/lu";
 import { tv } from "tailwind-variants";
 import { useTranslations } from "use-intl";
-import type { SqlDialect } from "../../../../domain/dialect";
+import type { DialectStrategy } from "../../../../domain/dialect";
 import { describeNameValidity, type Table } from "../../../../domain/schema";
 import { describeKey } from "./describeKey";
 
@@ -39,8 +39,8 @@ type SidePanelProps = {
   /** Pre-formatted display date (e.g. "2026-07-01"); "—" while nothing is loaded. */
   createdDate: string;
   selectedTable: Table | null;
-  /** The current schema's dialect; resolves the identifier-comparison rule for a table rename. */
-  dialect: SqlDialect;
+  /** The current schema's dialect strategy; resolves the identifier-comparison rule for a table rename. */
+  strategy: DialectStrategy;
   /** Sibling table names to validate a rename against (REQ-018); excludes the selected table. */
   existingTableNames: string[];
   relations: RelationSummary[];
@@ -62,7 +62,7 @@ export function SidePanel({
   tableCount,
   createdDate,
   selectedTable,
-  dialect,
+  strategy,
   existingTableNames,
   relations,
   onUpdateTableName,
@@ -95,7 +95,7 @@ export function SidePanel({
           <TableProperties
             key={selectedTable.id}
             table={selectedTable}
-            dialect={dialect}
+            strategy={strategy}
             existingTableNames={existingTableNames}
             relations={relations}
             onUpdateTableName={onUpdateTableName}
@@ -145,7 +145,7 @@ const sectionActionButton = tv({
 
 type TablePropertiesProps = {
   table: Table;
-  dialect: SqlDialect;
+  strategy: DialectStrategy;
   existingTableNames: string[];
   relations: RelationSummary[];
   onUpdateTableName: (tableId: string, name: string) => void;
@@ -162,7 +162,7 @@ type TablePropertiesProps = {
 
 function TableProperties({
   table,
-  dialect,
+  strategy,
   existingTableNames,
   relations,
   onUpdateTableName,
@@ -184,7 +184,7 @@ function TableProperties({
     isInvalidShape: isNameInvalidShape,
     isDuplicate: isNameDuplicate,
     isInvalid: isNameInvalid,
-  } = describeNameValidity(trimmedName, existingTableNames, dialect);
+  } = describeNameValidity(trimmedName, existingTableNames, strategy);
 
   return (
     <>
@@ -209,7 +209,7 @@ function TableProperties({
               const value = event.target.value;
               setName(value);
               const trimmed = value.trim();
-              if (!describeNameValidity(trimmed, existingTableNames, dialect).isInvalid) {
+              if (!describeNameValidity(trimmed, existingTableNames, strategy).isInvalid) {
                 onUpdateTableName(table.id, trimmed);
               }
             }}

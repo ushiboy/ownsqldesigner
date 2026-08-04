@@ -1,6 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
+import type { DialectStrategy } from "../../../../domain/dialect";
 import { EMPTY_COLUMN_KEY_MEMBERSHIP, type Schema } from "../../../../domain/schema";
+import { sqliteDialectStrategy } from "../../../../domain/sqlite/sqliteDialectStrategy";
 import { LocaleProvider } from "../../../../i18n/LocaleContext";
 import { createFakeSchemaRepository } from "../../../../test/fakeSchemaRepository";
 import { ActiveDialogProvider, type DialogKind } from "../../ActiveDialogContext";
@@ -90,7 +92,7 @@ type SeededDialogHostProps = {
   initialSchema?: Schema;
   initialDialog?: DialogKind | null;
   schemaName: string;
-  dialect: "sqlite";
+  strategy: DialectStrategy;
   selectedTable: typeof usersTable | null;
   selectedColumn: (typeof usersTable.columns)[number] | null;
   selectedKey: (typeof usersTable.keys)[number] | null;
@@ -135,7 +137,7 @@ const meta = {
     initialSchema: blogSchema,
     initialDialog: null,
     schemaName: "Blog Schema",
-    dialect: "sqlite",
+    strategy: sqliteDialectStrategy,
     selectedTable: null,
     selectedColumn: null,
     selectedKey: null,

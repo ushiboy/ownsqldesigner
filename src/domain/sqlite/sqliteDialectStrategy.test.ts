@@ -33,6 +33,13 @@ describe("sqliteDialectStrategy", () => {
     ]);
   });
 
+  it("delegates isAutoIncrementEligible to the SQLite rule", () => {
+    expect(sqliteDialectStrategy.isAutoIncrementEligible(TABLE.columns[0], "col-1")).toBe(true);
+    expect(sqliteDialectStrategy.isAutoIncrementEligible(TABLE.columns[0], "other-col")).toBe(
+      false,
+    );
+  });
+
   it("delegates normalizeAutoIncrement to the SQLite rule", () => {
     const normalized = sqliteDialectStrategy.normalizeAutoIncrement({
       ...TABLE,

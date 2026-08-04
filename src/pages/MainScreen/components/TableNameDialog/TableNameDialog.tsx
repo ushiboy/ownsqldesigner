@@ -2,7 +2,7 @@ import { useState } from "react";
 import { tv } from "tailwind-variants";
 import { useTranslations } from "use-intl";
 import { Dialog, dialogActionButton } from "../../../../components/parts/Dialog";
-import type { SqlDialect } from "../../../../domain/dialect";
+import type { DialectStrategy } from "../../../../domain/dialect";
 import { describeNameValidity } from "../../../../domain/schema";
 
 const nameInput = tv({
@@ -14,8 +14,8 @@ type TableNameDialogProps = {
   title: string;
   submitLabel: string;
   initialName?: string;
-  /** The current schema's dialect; resolves the identifier-comparison rule. */
-  dialect: SqlDialect;
+  /** The current schema's dialect strategy; resolves the identifier-comparison rule. */
+  strategy: DialectStrategy;
   /** Sibling table names to validate against (REQ-018); caller excludes the table being renamed. */
   existingNames: string[];
   onSubmit: (name: string) => void;
@@ -27,7 +27,7 @@ export function TableNameDialog({
   title,
   submitLabel,
   initialName,
-  dialect,
+  strategy,
   existingNames,
   onSubmit,
   onCancel,
@@ -37,7 +37,7 @@ export function TableNameDialog({
       <TableNameForm
         submitLabel={submitLabel}
         initialName={initialName ?? ""}
-        dialect={dialect}
+        strategy={strategy}
         existingNames={existingNames}
         onSubmit={onSubmit}
         onCancel={onCancel}
@@ -49,7 +49,7 @@ export function TableNameDialog({
 type TableNameFormProps = {
   submitLabel: string;
   initialName: string;
-  dialect: SqlDialect;
+  strategy: DialectStrategy;
   existingNames: string[];
   onSubmit: (name: string) => void;
   onCancel: () => void;
@@ -59,7 +59,7 @@ type TableNameFormProps = {
 function TableNameForm({
   submitLabel,
   initialName,
-  dialect,
+  strategy,
   existingNames,
   onSubmit,
   onCancel,
@@ -71,7 +71,7 @@ function TableNameForm({
   const { isEmpty, isInvalidShape, isDuplicate } = describeNameValidity(
     trimmedName,
     existingNames,
-    dialect,
+    strategy,
   );
 
   return (

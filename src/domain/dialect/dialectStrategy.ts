@@ -3,6 +3,7 @@ import type { Column, Table } from "../schema/types";
 /** Per-dialect behavior for the pieces of the domain that vary by SQL engine. */
 export type DialectStrategy = {
   readonly columnTypes: readonly string[];
+  isAutoIncrementEligible(column: Column, pkColumnId: string | undefined): boolean;
   normalizeAutoIncrement(table: Table): Table;
   isNameTaken(name: string, existingNames: string[]): boolean;
   hasDuplicateNames(names: string[]): boolean;
@@ -25,6 +26,7 @@ export type DialectStrategyConfig = {
 export function buildDialectStrategy(config: DialectStrategyConfig): DialectStrategy {
   return {
     columnTypes: config.columnTypes,
+    isAutoIncrementEligible: config.isAutoIncrementEligible,
     normalizeAutoIncrement: (table) =>
       normalizeAutoIncrement(table, config.isAutoIncrementEligible),
     isNameTaken: config.isNameTaken,

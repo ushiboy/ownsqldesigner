@@ -1,4 +1,4 @@
-import { getDialectStrategy, type SqlDialect } from "../dialect";
+import { getDialectStrategy, type DialectStrategy } from "../dialect";
 import type { Schema, Table } from "./types";
 
 const IDENTIFIER_PATTERN = /^[A-Za-z_][A-Za-z0-9_]*$/;
@@ -28,10 +28,9 @@ export function isTableNameAvailable(
 export function isColumnNameAvailable(
   table: Table,
   name: string,
-  dialect: SqlDialect,
+  strategy: DialectStrategy,
   excludeColumnId?: string,
 ): boolean {
-  const strategy = getDialectStrategy(dialect);
   return (
     isValidIdentifierName(name) &&
     !strategy.isNameTaken(
@@ -52,14 +51,12 @@ export type NameValidity = {
 export function describeNameValidity(
   trimmedName: string,
   existingNames: string[],
-  dialect: SqlDialect,
+  strategy: DialectStrategy,
 ): NameValidity {
   const isEmpty = trimmedName === "";
   const isInvalidShape = !isEmpty && !isValidIdentifierName(trimmedName);
   const isDuplicate =
-    !isEmpty &&
-    !isInvalidShape &&
-    getDialectStrategy(dialect).isNameTaken(trimmedName, existingNames);
+    !isEmpty && !isInvalidShape && strategy.isNameTaken(trimmedName, existingNames);
   return {
     isEmpty,
     isInvalidShape,

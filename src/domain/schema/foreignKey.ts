@@ -1,3 +1,4 @@
+import { getDialectStrategy } from "../dialect";
 import { addColumn, uniqueColumnName } from "./column";
 import { isReferenceableColumn } from "./key";
 import { hasColumn } from "./shared";
@@ -71,6 +72,7 @@ export function addForeignKeyWithNewColumn(
     now = new Date(),
     namingPattern = DEFAULT_FK_NAMING_PATTERN,
   } = options;
+  const strategy = getDialectStrategy(schema.dialect);
   const withColumn = addColumn(
     schema,
     childTableId,
@@ -78,7 +80,7 @@ export function addForeignKeyWithNewColumn(
       name: uniqueColumnName(
         childTable,
         buildForeignKeyChildColumnName(namingPattern, referencedTable, referencedColumn),
-        schema.dialect,
+        strategy,
       ),
       type: referencedColumn.type,
       size: "",

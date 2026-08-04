@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { format } from "date-fns";
-import { DEFAULT_SQL_DIALECT } from "../../domain/dialect";
+import { DEFAULT_SQL_DIALECT, getDialectStrategy } from "../../domain/dialect";
 import type {
   Column,
   ColumnKeyMembership,
@@ -114,7 +114,10 @@ export function MainScreenView({
     );
 
   const schemaName = currentSchema?.name ?? NO_VALUE;
-  const dialect = currentSchema?.dialect ?? DEFAULT_SQL_DIALECT;
+  const strategy = useMemo(
+    () => getDialectStrategy(currentSchema?.dialect ?? DEFAULT_SQL_DIALECT),
+    [currentSchema?.dialect],
+  );
   const createdDate =
     currentSchema === null ? NO_VALUE : format(currentSchema.createdAt, "yyyy-MM-dd");
   const siblingTableNames = useMemo(
@@ -166,7 +169,7 @@ export function MainScreenView({
           tableCount={tables.length}
           createdDate={createdDate}
           selectedTable={selectedTable}
-          dialect={dialect}
+          strategy={strategy}
           existingTableNames={siblingTableNames}
           relations={relations}
           onUpdateTableName={onUpdateTableName}
@@ -204,7 +207,7 @@ export function MainScreenView({
       </div>
       <DialogHost
         schemaName={schemaName}
-        dialect={dialect}
+        strategy={strategy}
         selectedTable={selectedTable}
         selectedColumn={selectedColumn}
         selectedKey={selectedKey}

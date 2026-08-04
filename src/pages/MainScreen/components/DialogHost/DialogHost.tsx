@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { useTranslations } from "use-intl";
-import { getDialectStrategy, type SqlDialect } from "../../../../domain/dialect";
+import type { DialectStrategy } from "../../../../domain/dialect";
 import {
   hasPrimaryKey,
   type Column,
@@ -25,7 +25,7 @@ const NO_NAMES: string[] = [];
 
 type DialogHostProps = {
   schemaName: string;
-  dialect: SqlDialect;
+  strategy: DialectStrategy;
   selectedTable: Table | null;
   selectedColumn: Column | null;
   selectedKey: Key | null;
@@ -38,7 +38,7 @@ type DialogHostProps = {
 
 export function DialogHost({
   schemaName,
-  dialect,
+  strategy,
   selectedTable,
   selectedColumn,
   selectedKey,
@@ -73,7 +73,6 @@ export function DialogHost({
     removeForeignKey: onRemoveForeignKey,
   } = useSchemaActions();
 
-  const strategy = useMemo(() => getDialectStrategy(dialect), [dialect]);
   // Generated only while the export dialog is open: the dialog is closed
   // for nearly every table mutation that would otherwise trigger this.
   const ddl = useMemo(
@@ -139,7 +138,7 @@ export function DialogHost({
         open={activeDialog === "createTable"}
         title={tTable("newTitle")}
         submitLabel={tCommon("create")}
-        dialect={dialect}
+        strategy={strategy}
         existingNames={tableNames}
         onSubmit={(name) => {
           onCreateTable(name);
@@ -164,7 +163,7 @@ export function DialogHost({
         open={activeDialog === "addColumn"}
         title={tColumn("addTitle")}
         submitLabel={tCommon("add")}
-        dialect={dialect}
+        strategy={strategy}
         existingNames={columnNames}
         keyMembership={columnKeyMembership}
         keyMembershipDisabled={columnKeyMembershipDisabled}
@@ -185,7 +184,7 @@ export function DialogHost({
         title={tColumn("editTitle")}
         submitLabel={tCommon("save")}
         initialColumn={selectedColumn}
-        dialect={dialect}
+        strategy={strategy}
         existingNames={siblingColumnNames}
         keyMembership={columnKeyMembership}
         keyMembershipDisabled={columnKeyMembershipDisabled}
