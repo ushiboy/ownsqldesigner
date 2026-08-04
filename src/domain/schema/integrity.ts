@@ -1,3 +1,4 @@
+import { getDialectStrategy } from "../dialect";
 import { isReferenceableColumn } from "./key";
 import { schemaSchema, type ForeignKey, type Schema, type Table } from "./types";
 import { isValidIdentifierName } from "./validation";
@@ -6,7 +7,7 @@ import { isValidIdentifierName } from "./validation";
 export function isSchemaIntegrityValid(schema: Schema): boolean {
   const tableNames = schema.tables.map((table) => table.name);
   return (
-    !hasDuplicateNames(tableNames) &&
+    !getDialectStrategy(schema.dialect).hasDuplicateNames(tableNames) &&
     schema.tables.every(
       (table) => isValidIdentifierName(table.name) && isTableIntegrityValid(schema, table),
     )
@@ -42,9 +43,12 @@ export function importSchema(schema: Schema, options: ImportSchemaOptions = {}):
 function isTableIntegrityValid(schema: Schema, table: Table): boolean {
   const columnIds = new Set(table.columns.map((column) => column.id));
   const columnNames = table.columns.map((column) => column.name);
+  const strategy = getDialectStrategy(schema.dialect);
   return (
-    !hasDuplicateNames(columnNames) &&
-    table.columns.every((column) => isValidIdentifierName(column.name)) &&
+    !strategy.hasDuplicateNames(columnNames) &&
+    table.columns.every(
+      (column) => isValidIdentifierName(column.name) && strategy.columnTypes.includes(column.type),
+    ) &&
     table.keys.filter((key) => key.type === "PRIMARY_KEY").length <= 1 &&
     table.keys.every((key) => key.columnIds.every((id) => columnIds.has(id))) &&
     table.foreignKeys.every((fk) => isForeignKeyIntegrityValid(schema, table, fk))
@@ -59,10 +63,4 @@ function isForeignKeyIntegrityValid(schema: Schema, table: Table, fk: ForeignKey
   return (
     referencedTable !== undefined && isReferenceableColumn(referencedTable, fk.referencedColumnId)
   );
-}
-
-/** Case-insensitive duplicate check, matching SQLite's own identifier comparison. */
-function hasDuplicateNames(names: string[]): boolean {
-  const normalized = names.map((name) => name.toLowerCase());
-  return new Set(normalized).size !== normalized.length;
 }

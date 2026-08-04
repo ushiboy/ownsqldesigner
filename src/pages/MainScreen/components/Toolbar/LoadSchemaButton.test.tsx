@@ -11,6 +11,7 @@ import { LoadSchemaButton } from "./LoadSchemaButton";
 const DUPLICATE_TABLE_NAME_SCHEMA: Schema = {
   id: "33333333-3333-4333-8333-333333333333",
   name: "Broken Schema",
+  dialect: "sqlite",
   tables: [
     {
       id: "11111111-1111-4111-8111-111111111111",

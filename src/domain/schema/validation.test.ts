@@ -1,3 +1,4 @@
+import { DEFAULT_SQL_DIALECT } from "../dialect";
 import {
   POSTS_TABLE_ID,
   USERS_EMAIL_COLUMN_ID,
@@ -8,7 +9,6 @@ import {
 import {
   describeNameValidity,
   isColumnNameAvailable,
-  isNameTaken,
   isTableNameAvailable,
   isValidIdentifierName,
 } from "./validation";
@@ -34,23 +34,9 @@ describe("isValidIdentifierName", () => {
   });
 });
 
-describe("isNameTaken", () => {
-  it("is true for an exact match", () => {
-    expect(isNameTaken("users", ["posts", "users"])).toBe(true);
-  });
-
-  it("is true for a case-insensitive match", () => {
-    expect(isNameTaken("Users", ["posts", "users"])).toBe(true);
-  });
-
-  it("is false when no existing name matches", () => {
-    expect(isNameTaken("comments", ["posts", "users"])).toBe(false);
-  });
-});
-
 describe("describeNameValidity", () => {
   it("flags an empty name as empty, not invalid-shape or duplicate", () => {
-    expect(describeNameValidity("", ["posts"])).toEqual({
+    expect(describeNameValidity("", ["posts"], DEFAULT_SQL_DIALECT)).toEqual({
       isEmpty: true,
       isInvalidShape: false,
       isDuplicate: false,
@@ -59,7 +45,7 @@ describe("describeNameValidity", () => {
   });
 
   it("flags an invalid identifier shape", () => {
-    expect(describeNameValidity("1posts", ["users"])).toEqual({
+    expect(describeNameValidity("1posts", ["users"], DEFAULT_SQL_DIALECT)).toEqual({
       isEmpty: false,
       isInvalidShape: true,
       isDuplicate: false,
@@ -68,7 +54,7 @@ describe("describeNameValidity", () => {
   });
 
   it("flags a name already used by a sibling, case-insensitively", () => {
-    expect(describeNameValidity("Posts", ["posts", "users"])).toEqual({
+    expect(describeNameValidity("Posts", ["posts", "users"], DEFAULT_SQL_DIALECT)).toEqual({
       isEmpty: false,
       isInvalidShape: false,
       isDuplicate: true,
@@ -77,7 +63,7 @@ describe("describeNameValidity", () => {
   });
 
   it("is fully valid for a well-formed, unused name", () => {
-    expect(describeNameValidity("comments", ["posts", "users"])).toEqual({
+    expect(describeNameValidity("comments", ["posts", "users"], DEFAULT_SQL_DIALECT)).toEqual({
       isEmpty: false,
       isInvalidShape: false,
       isDuplicate: false,
@@ -111,18 +97,20 @@ describe("isColumnNameAvailable", () => {
   const users = getTable(schema, USERS_TABLE_ID);
 
   it("is true for a valid, unused name", () => {
-    expect(isColumnNameAvailable(users, "created_at")).toBe(true);
+    expect(isColumnNameAvailable(users, "created_at", DEFAULT_SQL_DIALECT)).toBe(true);
   });
 
   it("is false for a name already used by another column, case-insensitively", () => {
-    expect(isColumnNameAvailable(users, "Email")).toBe(false);
+    expect(isColumnNameAvailable(users, "Email", DEFAULT_SQL_DIALECT)).toBe(false);
   });
 
   it("is false for an invalid identifier shape", () => {
-    expect(isColumnNameAvailable(users, "1created_at")).toBe(false);
+    expect(isColumnNameAvailable(users, "1created_at", DEFAULT_SQL_DIALECT)).toBe(false);
   });
 
   it("is true for a column's own current name when excluded", () => {
-    expect(isColumnNameAvailable(users, "email", USERS_EMAIL_COLUMN_ID)).toBe(true);
+    expect(isColumnNameAvailable(users, "email", DEFAULT_SQL_DIALECT, USERS_EMAIL_COLUMN_ID)).toBe(
+      true,
+    );
   });
 });

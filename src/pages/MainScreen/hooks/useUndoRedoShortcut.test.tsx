@@ -18,6 +18,7 @@ import { useUndoRedoShortcut } from "./useUndoRedoShortcut";
 const blogSchema: Schema = {
   id: "0b54b945-13c9-4d38-9ba6-b81bbe1cbc21",
   name: "Blog Schema",
+  dialect: "sqlite",
   tables: [],
   createdAt: new Date("2026-07-01T09:00:00.000Z"),
   updatedAt: new Date("2026-07-01T09:00:00.000Z"),

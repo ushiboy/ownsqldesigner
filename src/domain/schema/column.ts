@@ -1,5 +1,6 @@
-import { hasColumn, removeForeignKeysInvolvingColumn, withNormalizedAutoIncrement } from "./shared";
-import type { Column, ColumnType, Key, Schema, Table } from "./types";
+import { getDialectStrategy, type DialectStrategy, type SqlDialect } from "../dialect";
+import { hasColumn, removeForeignKeysInvolvingColumn } from "./shared";
+import type { Column, Key, Schema, Table } from "./types";
 import { isColumnNameAvailable } from "./validation";
 
 type AddColumnOptions = {
@@ -14,7 +15,7 @@ export function addColumn(
   options: AddColumnOptions = {},
 ): Schema {
   const targetTable = schema.tables.find((table) => table.id === tableId);
-  if (!canAddColumn(targetTable, fields)) {
+  if (!canAddColumn(targetTable, fields, schema.dialect)) {
     return schema;
   }
   const { id = crypto.randomUUID(), now = new Date() } = options;
@@ -39,14 +40,15 @@ export function updateColumn(
   options: UpdateColumnOptions = {},
 ): Schema {
   const targetTable = schema.tables.find((table) => table.id === tableId);
-  if (!canUpdateColumn(targetTable, columnId, fields)) {
+  if (!canUpdateColumn(targetTable, columnId, fields, schema.dialect)) {
     return schema;
   }
   const { now = new Date() } = options;
+  const strategy = getDialectStrategy(schema.dialect);
   const originalType = targetTable?.columns.find((column) => column.id === columnId)?.type;
   const tables = schema.tables.map((table) =>
     table.id === tableId
-      ? withNormalizedAutoIncrement({
+      ? strategy.normalizeAutoIncrement({
           ...table,
           columns: table.columns.map((column) =>
             column.id === columnId ? { id: columnId, ...fields } : column,
@@ -58,7 +60,7 @@ export function updateColumn(
     ...schema,
     tables:
       originalType !== fields.type
-        ? propagateColumnTypeChange(tables, columnId, fields.type)
+        ? propagateColumnTypeChange(tables, columnId, fields.type, strategy)
         : tables,
     updatedAt: now,
   };
@@ -79,9 +81,10 @@ export function removeColumn(
     return schema;
   }
   const { now = new Date() } = options;
+  const strategy = getDialectStrategy(schema.dialect);
   const tables = schema.tables.map((table) =>
     table.id === tableId
-      ? withNormalizedAutoIncrement({
+      ? strategy.normalizeAutoIncrement({
           ...table,
           columns: table.columns.filter((column) => column.id !== columnId),
           keys: removeColumnFromKeys(table.keys, columnId),
@@ -100,26 +103,31 @@ export function formatColumnType(column: Pick<Column, "type" | "size">): string 
 }
 
 /** Suffixes `baseName` with `_2`, `_3`, ... until it doesn't collide with an existing column. */
-export function uniqueColumnName(table: Table, baseName: string): string {
+export function uniqueColumnName(table: Table, baseName: string, dialect: SqlDialect): string {
   let candidate = baseName;
   let suffix = 2;
-  while (!isColumnNameAvailable(table, candidate)) {
+  while (!isColumnNameAvailable(table, candidate, dialect)) {
     candidate = `${baseName}_${suffix}`;
     suffix += 1;
   }
   return candidate;
 }
 
-function canAddColumn(table: Table | undefined, fields: Omit<Column, "id">): boolean {
-  return table !== undefined && isColumnNameAvailable(table, fields.name);
+function canAddColumn(
+  table: Table | undefined,
+  fields: Omit<Column, "id">,
+  dialect: SqlDialect,
+): boolean {
+  return table !== undefined && isColumnNameAvailable(table, fields.name, dialect);
 }
 
 function canUpdateColumn(
   table: Table | undefined,
   columnId: string,
   fields: Omit<Column, "id">,
+  dialect: SqlDialect,
 ): boolean {
-  return hasColumn(table, columnId) && isColumnNameAvailable(table, fields.name, columnId);
+  return hasColumn(table, columnId) && isColumnNameAvailable(table, fields.name, dialect, columnId);
 }
 
 function removeColumnFromKeys(keys: Key[], columnId: string): Key[] {
@@ -135,7 +143,12 @@ function removeColumnFromKeys(keys: Key[], columnId: string): Key[] {
  * `type` is never reprocessed — this doubles as cycle protection without a
  * separate visited-set.
  */
-function propagateColumnTypeChange(tables: Table[], columnId: string, type: ColumnType): Table[] {
+function propagateColumnTypeChange(
+  tables: Table[],
+  columnId: string,
+  type: string,
+  strategy: DialectStrategy,
+): Table[] {
   let result = tables;
   const queue = [columnId];
   while (queue.length > 0) {
@@ -159,7 +172,7 @@ function propagateColumnTypeChange(tables: Table[], columnId: string, type: Colu
         }
         return column;
       });
-      return changed ? withNormalizedAutoIncrement({ ...table, columns }) : table;
+      return changed ? strategy.normalizeAutoIncrement({ ...table, columns }) : table;
     });
     queue.push(...changedChildColumnIds);
   }

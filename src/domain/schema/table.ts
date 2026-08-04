@@ -1,3 +1,4 @@
+import { DEFAULT_SQL_DIALECT, type SqlDialect } from "../dialect/sqlDialect";
 import { removeForeignKeysReferencingTable } from "./shared";
 import type { Position, Schema } from "./types";
 import { isTableNameAvailable } from "./validation";
@@ -13,13 +14,15 @@ export const GRID_CELL_HEIGHT = 160;
 type CreateSchemaOptions = {
   id?: string;
   now?: Date;
+  dialect?: SqlDialect;
 };
 
 export function createSchema(name: string, options: CreateSchemaOptions = {}): Schema {
-  const { id = crypto.randomUUID(), now = new Date() } = options;
+  const { id = crypto.randomUUID(), now = new Date(), dialect = DEFAULT_SQL_DIALECT } = options;
   return {
     id,
     name,
+    dialect,
     tables: [],
     createdAt: now,
     updatedAt: now,

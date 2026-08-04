@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { fn } from "storybook/test";
+import { DEFAULT_SQL_DIALECT } from "../../../../domain/dialect";
 import { LocaleProvider } from "../../../../i18n/LocaleContext";
 import { TableNameDialog } from "./TableNameDialog";
 
@@ -7,6 +8,7 @@ const meta = {
   title: "pages/MainScreen/TableNameDialog",
   component: TableNameDialog,
   args: {
+    dialect: DEFAULT_SQL_DIALECT,
     existingNames: [],
     onSubmit: fn(),
     onCancel: fn(),

@@ -28,6 +28,7 @@ const savedSchemas = [
 const currentSchema: Schema = {
   id: savedSchemas[0].id,
   name: "Blog Schema",
+  dialect: "sqlite",
   tables: [],
   createdAt: new Date("2026-07-01T09:00:00.000Z"),
   updatedAt: savedSchemas[0].updatedAt,

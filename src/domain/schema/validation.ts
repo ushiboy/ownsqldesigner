@@ -1,3 +1,4 @@
+import { getDialectStrategy, type SqlDialect } from "../dialect";
 import type { Schema, Table } from "./types";
 
 const IDENTIFIER_PATTERN = /^[A-Za-z_][A-Za-z0-9_]*$/;
@@ -7,21 +8,16 @@ export function isValidIdentifierName(name: string): boolean {
   return IDENTIFIER_PATTERN.test(name);
 }
 
-/** Case-insensitive membership check, matching SQLite's own identifier comparison. */
-export function isNameTaken(name: string, existingNames: string[]): boolean {
-  const normalized = name.toLowerCase();
-  return existingNames.some((existing) => existing.toLowerCase() === normalized);
-}
-
 /** Whether `name` is a valid identifier not already used by another table in `schema` (REQ-018/019). */
 export function isTableNameAvailable(
   schema: Schema,
   name: string,
   excludeTableId?: string,
 ): boolean {
+  const strategy = getDialectStrategy(schema.dialect);
   return (
     isValidIdentifierName(name) &&
-    !isNameTaken(
+    !strategy.isNameTaken(
       name,
       schema.tables.filter((table) => table.id !== excludeTableId).map((table) => table.name),
     )
@@ -32,11 +28,13 @@ export function isTableNameAvailable(
 export function isColumnNameAvailable(
   table: Table,
   name: string,
+  dialect: SqlDialect,
   excludeColumnId?: string,
 ): boolean {
+  const strategy = getDialectStrategy(dialect);
   return (
     isValidIdentifierName(name) &&
-    !isNameTaken(
+    !strategy.isNameTaken(
       name,
       table.columns.filter((column) => column.id !== excludeColumnId).map((column) => column.name),
     )
@@ -51,10 +49,17 @@ export type NameValidity = {
 };
 
 /** Live (REQ-023) validity of a name field being typed in a form, against sibling names (REQ-018/019). */
-export function describeNameValidity(trimmedName: string, existingNames: string[]): NameValidity {
+export function describeNameValidity(
+  trimmedName: string,
+  existingNames: string[],
+  dialect: SqlDialect,
+): NameValidity {
   const isEmpty = trimmedName === "";
   const isInvalidShape = !isEmpty && !isValidIdentifierName(trimmedName);
-  const isDuplicate = !isEmpty && !isInvalidShape && isNameTaken(trimmedName, existingNames);
+  const isDuplicate =
+    !isEmpty &&
+    !isInvalidShape &&
+    getDialectStrategy(dialect).isNameTaken(trimmedName, existingNames);
   return {
     isEmpty,
     isInvalidShape,

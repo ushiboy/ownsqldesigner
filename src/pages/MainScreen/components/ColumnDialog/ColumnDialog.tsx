@@ -2,13 +2,12 @@ import { useState } from "react";
 import { tv } from "tailwind-variants";
 import { useTranslations } from "use-intl";
 import { Dialog, dialogActionButton } from "../../../../components/parts/Dialog";
+import { getDialectStrategy, type SqlDialect } from "../../../../domain/dialect";
 import {
   type Column,
   type ColumnKeyMembership,
-  type ColumnType,
   describeNameValidity,
   KEY_TYPES,
-  SQLITE_COLUMN_TYPES,
 } from "../../../../domain/schema";
 
 const fieldInput = tv({
@@ -22,6 +21,8 @@ type ColumnDialogProps = {
   title: string;
   submitLabel: string;
   initialColumn?: Column | null;
+  /** The current schema's dialect; resolves the allowed column types and identifier-comparison rule. */
+  dialect: SqlDialect;
   /** Sibling column names to validate against (REQ-018); caller excludes the column being edited. */
   existingNames: string[];
   /** Whether this column currently solely owns each single-column key type; seeds the checkboxes. */
@@ -37,6 +38,7 @@ export function ColumnDialog({
   title,
   submitLabel,
   initialColumn,
+  dialect,
   existingNames,
   keyMembership,
   keyMembershipDisabled,
@@ -48,6 +50,7 @@ export function ColumnDialog({
       <ColumnForm
         submitLabel={submitLabel}
         initialColumn={initialColumn ?? null}
+        dialect={dialect}
         existingNames={existingNames}
         keyMembership={keyMembership}
         keyMembershipDisabled={keyMembershipDisabled}
@@ -61,6 +64,7 @@ export function ColumnDialog({
 type ColumnFormProps = {
   submitLabel: string;
   initialColumn: Column | null;
+  dialect: SqlDialect;
   existingNames: string[];
   keyMembership: ColumnKeyMembership;
   keyMembershipDisabled: ColumnKeyMembership;
@@ -82,6 +86,7 @@ const BLANK_COLUMN: ColumnFields = {
 function ColumnForm({
   submitLabel,
   initialColumn,
+  dialect,
   existingNames,
   keyMembership: initialKeyMembership,
   keyMembershipDisabled,
@@ -97,7 +102,8 @@ function ColumnForm({
     isEmpty: isNameEmpty,
     isInvalidShape: isNameInvalidShape,
     isDuplicate: isNameDuplicate,
-  } = describeNameValidity(trimmedName, existingNames);
+  } = describeNameValidity(trimmedName, existingNames, dialect);
+  const columnTypes = getDialectStrategy(dialect).columnTypes;
   // Live against the checkbox above, not the seeded initial value: checking
   // Primary Key and Auto increment together in one submit is the point.
   const autoIncrementAllowed = keyMembership.PRIMARY_KEY && fields.type === "INTEGER";
@@ -144,10 +150,10 @@ function ColumnForm({
             {tCommon("typeLabel")}
             <select
               value={fields.type}
-              onChange={(event) => setField("type", event.target.value as ColumnType)}
+              onChange={(event) => setField("type", event.target.value)}
               className={fieldInput()}
             >
-              {SQLITE_COLUMN_TYPES.map((columnType) => (
+              {columnTypes.map((columnType) => (
                 <option key={columnType} value={columnType}>
                   {columnType}
                 </option>

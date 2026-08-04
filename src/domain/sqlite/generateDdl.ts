@@ -1,4 +1,4 @@
-import { type Column, type ForeignKey, formatColumnType, type Key, type Table } from "../schema";
+import type { Column, ForeignKey, Key, Table } from "../schema/types";
 
 const DEFAULT_VALUE_NUMERIC_PATTERN = /^-?\d+(\.\d+)?$/;
 
@@ -26,8 +26,13 @@ function generateCreateIndexStatements(table: Table, usedIndexNames: Set<string>
     .map((key) => generateCreateIndexStatement(table, key, usedIndexNames));
 }
 
+// Duplicates schema/column.ts's formatColumnType rather than importing it:
+// this module is reached from getDialectStrategy, so a runtime import back
+// into schema/column.ts (which itself calls getDialectStrategy) would be
+// circular. Only type-only imports from schema/types are safe here.
 function generateColumnDefinition(column: Column): string {
-  const parts = [column.name, formatColumnType(column)];
+  const type = column.size === "" ? column.type : `${column.type}(${column.size})`;
+  const parts = [column.name, type];
   if (column.autoIncrement) {
     parts.push("PRIMARY KEY AUTOINCREMENT");
   }
@@ -64,8 +69,8 @@ function formatDefaultValue(raw: string): string {
 
 function generatePrimaryKeyConstraint(table: Table): string[] {
   // AUTOINCREMENT is rendered inline on the column instead (see
-  // generateColumnDefinition); REQ-033's withNormalizedAutoIncrement
-  // invariant guarantees it only ever applies to a sole INTEGER PK column.
+  // generateColumnDefinition); REQ-033's normalizeAutoIncrement invariant
+  // guarantees it only ever applies to a sole INTEGER PK column.
   if (table.columns.some((column) => column.autoIncrement)) {
     return [];
   }

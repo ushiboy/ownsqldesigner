@@ -31,12 +31,12 @@ The Phase column gives a rough implementation order: Phase 1 = core MVP, Phase 2
 
 ### Table / column definition
 
-| ID      | Requirement                                                                                                                                                        | Phase |
-| ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----- |
-| REQ-009 | Create, rename, and comment tables ([0004](design/0004-table-creation-and-placement.md))                                                                           | 1     |
-| REQ-010 | Add, edit, remove, and reorder columns (name / type / size / default value / nullable / auto-increment / comment) ([0006](design/0006-table-column-management.md)) | 1     |
-| REQ-011 | Column type selection from a per-dialect datatype set (SQLite initially) ([0006](design/0006-table-column-management.md))                                          | 1     |
-| REQ-012 | Toggle display of column type / size on the canvas ([0021](design/0021-column-type-size-toggle.md))                                                                | 3     |
+| ID      | Requirement                                                                                                                                                            | Phase |
+| ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----- |
+| REQ-009 | Create, rename, and comment tables ([0004](design/0004-table-creation-and-placement.md))                                                                               | 1     |
+| REQ-010 | Add, edit, remove, and reorder columns (name / type / size / default value / nullable / auto-increment / comment) ([0006](design/0006-table-column-management.md))     | 1     |
+| REQ-011 | Column type selection from a per-dialect datatype set (SQLite initially) ([0006](design/0006-table-column-management.md), [0026](design/0026-sql-dialect-strategy.md)) | 1     |
+| REQ-012 | Toggle display of column type / size on the canvas ([0021](design/0021-column-type-size-toggle.md))                                                                    | 3     |
 
 ### Keys and relations
 
@@ -50,29 +50,29 @@ The Phase column gives a rough implementation order: Phase 1 = core MVP, Phase 2
 
 ### Integrity and validation
 
-| ID      | Requirement                                                                                                                                                                              | Phase |
-| ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----- |
-| REQ-018 | Table names are unique within the schema; column names are unique within their table ([0010](design/0010-name-validation-and-sql-export.md))                                             | 1     |
-| REQ-019 | Table and column names are non-empty and can be output as valid SQL identifiers (exact naming rules are settled in a design doc) ([0010](design/0010-name-validation-and-sql-export.md)) | 1     |
-| REQ-020 | A foreign key may only reference a PRIMARY KEY or UNIQUE column ([0009](design/0009-foreign-key-relations.md))                                                                           | 1     |
-| REQ-021 | Deleting a table or column never leaves dangling relations or key members ([0009](design/0009-foreign-key-relations.md))                                                                 | 1     |
-| REQ-022 | A table has at most one PRIMARY KEY; a key has at least one column ([0007](design/0007-table-key-management.md))                                                                         | 1     |
-| REQ-023 | When an edit violates an integrity rule, the UI shows why it was rejected ([0001](design/0001-main-screen.md), [0010](design/0010-name-validation-and-sql-export.md))                    | 1     |
-| REQ-033 | Auto-increment is allowed only where the dialect permits it (SQLite: a single INTEGER PRIMARY KEY column) ([0007](design/0007-table-key-management.md))                                  | 1     |
-| REQ-034 | Validation warnings (e.g. a table without a primary key) are visible before SQL export ([0010](design/0010-name-validation-and-sql-export.md))                                           | 2     |
+| ID      | Requirement                                                                                                                                                                                          | Phase |
+| ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----- |
+| REQ-018 | Table names are unique within the schema; column names are unique within their table ([0010](design/0010-name-validation-and-sql-export.md))                                                         | 1     |
+| REQ-019 | Table and column names are non-empty and can be output as valid SQL identifiers (exact naming rules are settled in a design doc) ([0010](design/0010-name-validation-and-sql-export.md))             | 1     |
+| REQ-020 | A foreign key may only reference a PRIMARY KEY or UNIQUE column ([0009](design/0009-foreign-key-relations.md))                                                                                       | 1     |
+| REQ-021 | Deleting a table or column never leaves dangling relations or key members ([0009](design/0009-foreign-key-relations.md))                                                                             | 1     |
+| REQ-022 | A table has at most one PRIMARY KEY; a key has at least one column ([0007](design/0007-table-key-management.md))                                                                                     | 1     |
+| REQ-023 | When an edit violates an integrity rule, the UI shows why it was rejected ([0001](design/0001-main-screen.md), [0010](design/0010-name-validation-and-sql-export.md))                                | 1     |
+| REQ-033 | Auto-increment is allowed only where the dialect permits it (SQLite: a single INTEGER PRIMARY KEY column) ([0007](design/0007-table-key-management.md), [0026](design/0026-sql-dialect-strategy.md)) | 1     |
+| REQ-034 | Validation warnings (e.g. a table without a primary key) are visible before SQL export ([0010](design/0010-name-validation-and-sql-export.md))                                                       | 2     |
 
 ### Input / output and persistence (browser-only)
 
-| ID      | Requirement                                                                                                                                                           | Phase |
-| ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----- |
-| REQ-024 | Save and load the entire schema losslessly (diagram layout included) ([0002](design/0002-schema-persistence-and-creation.md))                                         | 1     |
-| REQ-025 | Save, list, and load named schemas in browser storage ([0002](design/0002-schema-persistence-and-creation.md), [0003](design/0003-schema-selection-rename-delete.md)) | 1     |
-| REQ-026 | Export SQL (DDL): CREATE TABLE with keys and foreign-key constraints (SQLite dialect) ([0010](design/0010-name-validation-and-sql-export.md))                         | 1     |
-| REQ-027 | Download the schema as a file / load from a local file ([0014](design/0014-schema-file-download-and-load.md))                                                         | 2     |
-| REQ-028 | Warn before leaving the page with unsaved changes ([0002](design/0002-schema-persistence-and-creation.md))                                                            | 2     |
-| REQ-035 | Create a new blank schema ([0002](design/0002-schema-persistence-and-creation.md))                                                                                    | 1     |
-| REQ-036 | Delete saved schemas from browser storage ([0003](design/0003-schema-selection-rename-delete.md))                                                                     | 1     |
-| REQ-037 | Rename saved schemas in browser storage ([0003](design/0003-schema-selection-rename-delete.md))                                                                       | 2     |
+| ID      | Requirement                                                                                                                                                                                | Phase |
+| ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----- |
+| REQ-024 | Save and load the entire schema losslessly (diagram layout included) ([0002](design/0002-schema-persistence-and-creation.md))                                                              | 1     |
+| REQ-025 | Save, list, and load named schemas in browser storage ([0002](design/0002-schema-persistence-and-creation.md), [0003](design/0003-schema-selection-rename-delete.md))                      | 1     |
+| REQ-026 | Export SQL (DDL): CREATE TABLE with keys and foreign-key constraints (SQLite dialect) ([0010](design/0010-name-validation-and-sql-export.md), [0026](design/0026-sql-dialect-strategy.md)) | 1     |
+| REQ-027 | Download the schema as a file / load from a local file ([0014](design/0014-schema-file-download-and-load.md))                                                                              | 2     |
+| REQ-028 | Warn before leaving the page with unsaved changes ([0002](design/0002-schema-persistence-and-creation.md))                                                                                 | 2     |
+| REQ-035 | Create a new blank schema ([0002](design/0002-schema-persistence-and-creation.md))                                                                                                         | 1     |
+| REQ-036 | Delete saved schemas from browser storage ([0003](design/0003-schema-selection-rename-delete.md))                                                                                          | 1     |
+| REQ-037 | Rename saved schemas in browser storage ([0003](design/0003-schema-selection-rename-delete.md))                                                                                            | 2     |
 
 ### UI / UX
 

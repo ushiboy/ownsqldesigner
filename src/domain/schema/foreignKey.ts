@@ -78,6 +78,7 @@ export function addForeignKeyWithNewColumn(
       name: uniqueColumnName(
         childTable,
         buildForeignKeyChildColumnName(namingPattern, referencedTable, referencedColumn),
+        schema.dialect,
       ),
       type: referencedColumn.type,
       size: "",

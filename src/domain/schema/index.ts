@@ -36,7 +36,6 @@ export {
 } from "./table";
 export {
   DEFAULT_SCHEMA_NAME,
-  SQLITE_COLUMN_TYPES,
   KEY_TYPES,
   columnSchema,
   foreignKeySchema,
@@ -44,7 +43,6 @@ export {
   schemaSchema,
   tableSchema,
   type Column,
-  type ColumnType,
   type ForeignKey,
   type Key,
   type KeyType,
@@ -56,7 +54,6 @@ export {
 export {
   describeNameValidity,
   isColumnNameAvailable,
-  isNameTaken,
   isTableNameAvailable,
   isValidIdentifierName,
   type NameValidity,

@@ -2,6 +2,7 @@ import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { fn } from "storybook/test";
 import { composeStories } from "@storybook/react-vite";
+import { DEFAULT_SQL_DIALECT } from "../../../../domain/dialect";
 import { LocaleProvider } from "../../../../i18n/LocaleContext";
 import * as stories from "./SidePanel.stories";
 import { SidePanel } from "./SidePanel";
@@ -21,6 +22,7 @@ const closedProps = {
   tableCount: 0,
   createdDate: "2026-07-01",
   selectedTable: null,
+  dialect: DEFAULT_SQL_DIALECT,
   existingTableNames: [],
   relations: [],
   onUpdateTableName: () => {},

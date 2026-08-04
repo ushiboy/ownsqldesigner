@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { fn } from "storybook/test";
+import { DEFAULT_SQL_DIALECT } from "../../../../domain/dialect";
 import type { Column, ColumnKeyMembership } from "../../../../domain/schema";
 import { LocaleProvider } from "../../../../i18n/LocaleContext";
 import { ColumnDialog } from "./ColumnDialog";
@@ -32,6 +33,7 @@ const meta = {
   title: "pages/MainScreen/ColumnDialog",
   component: ColumnDialog,
   args: {
+    dialect: DEFAULT_SQL_DIALECT,
     existingNames: [],
     keyMembership: NO_KEY_MEMBERSHIP,
     keyMembershipDisabled: NO_KEY_MEMBERSHIP,

@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { useTranslations } from "use-intl";
+import { getDialectStrategy, type SqlDialect } from "../../../../domain/dialect";
 import {
   hasPrimaryKey,
   type Column,
@@ -8,7 +9,6 @@ import {
   type Key,
   type Table,
 } from "../../../../domain/schema";
-import { generateSqliteDdl } from "../../../../domain/sqlite/generateDdl";
 import { useActiveDialog } from "../../ActiveDialogContext";
 import { useSchemaActions, useTables } from "../../SchemaWorkspaceContext";
 import { useSelection } from "../../SelectionContext";
@@ -25,6 +25,7 @@ const NO_NAMES: string[] = [];
 
 type DialogHostProps = {
   schemaName: string;
+  dialect: SqlDialect;
   selectedTable: Table | null;
   selectedColumn: Column | null;
   selectedKey: Key | null;
@@ -37,6 +38,7 @@ type DialogHostProps = {
 
 export function DialogHost({
   schemaName,
+  dialect,
   selectedTable,
   selectedColumn,
   selectedKey,
@@ -71,11 +73,12 @@ export function DialogHost({
     removeForeignKey: onRemoveForeignKey,
   } = useSchemaActions();
 
+  const strategy = useMemo(() => getDialectStrategy(dialect), [dialect]);
   // Generated only while the export dialog is open: the dialog is closed
   // for nearly every table mutation that would otherwise trigger this.
   const ddl = useMemo(
-    () => (activeDialog === "exportSql" ? generateSqliteDdl(tables) : ""),
-    [activeDialog, tables],
+    () => (activeDialog === "exportSql" ? strategy.generateDdl(tables) : ""),
+    [activeDialog, strategy, tables],
   );
   // Same "only while the export dialog is open" scoping as `ddl` above.
   const tablesWithoutPrimaryKey = useMemo(
@@ -136,6 +139,7 @@ export function DialogHost({
         open={activeDialog === "createTable"}
         title={tTable("newTitle")}
         submitLabel={tCommon("create")}
+        dialect={dialect}
         existingNames={tableNames}
         onSubmit={(name) => {
           onCreateTable(name);
@@ -160,6 +164,7 @@ export function DialogHost({
         open={activeDialog === "addColumn"}
         title={tColumn("addTitle")}
         submitLabel={tCommon("add")}
+        dialect={dialect}
         existingNames={columnNames}
         keyMembership={columnKeyMembership}
         keyMembershipDisabled={columnKeyMembershipDisabled}
@@ -180,6 +185,7 @@ export function DialogHost({
         title={tColumn("editTitle")}
         submitLabel={tCommon("save")}
         initialColumn={selectedColumn}
+        dialect={dialect}
         existingNames={siblingColumnNames}
         keyMembership={columnKeyMembership}
         keyMembershipDisabled={columnKeyMembershipDisabled}

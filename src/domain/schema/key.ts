@@ -1,4 +1,5 @@
-import { hasColumn, withNormalizedAutoIncrement } from "./shared";
+import { getDialectStrategy } from "../dialect";
+import { hasColumn } from "./shared";
 import { KEY_TYPES, type Column, type Key, type KeyType, type Schema, type Table } from "./types";
 
 /** Whether each key type is a single-column key solely owned by `columnId` (`null` for a not-yet-created column). */
@@ -26,11 +27,12 @@ export function addKey(
     return schema;
   }
   const { id = crypto.randomUUID(), now = new Date() } = options;
+  const strategy = getDialectStrategy(schema.dialect);
   return {
     ...schema,
     tables: schema.tables.map((table) =>
       table.id === tableId
-        ? withNormalizedAutoIncrement({ ...table, keys: [...table.keys, { id, ...fields }] })
+        ? strategy.normalizeAutoIncrement({ ...table, keys: [...table.keys, { id, ...fields }] })
         : table,
     ),
     updatedAt: now,
@@ -53,11 +55,12 @@ export function updateKey(
     return schema;
   }
   const { now = new Date() } = options;
+  const strategy = getDialectStrategy(schema.dialect);
   return {
     ...schema,
     tables: schema.tables.map((table) =>
       table.id === tableId
-        ? withNormalizedAutoIncrement({
+        ? strategy.normalizeAutoIncrement({
             ...table,
             keys: table.keys.map((key) => (key.id === keyId ? { id: keyId, ...fields } : key)),
           })
@@ -82,11 +85,12 @@ export function removeKey(
     return schema;
   }
   const { now = new Date() } = options;
+  const strategy = getDialectStrategy(schema.dialect);
   return {
     ...schema,
     tables: schema.tables.map((table) =>
       table.id === tableId
-        ? withNormalizedAutoIncrement({
+        ? strategy.normalizeAutoIncrement({
             ...table,
             keys: table.keys.filter((key) => key.id !== keyId),
           })
