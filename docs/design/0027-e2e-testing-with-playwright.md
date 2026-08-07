@@ -31,18 +31,30 @@ were reset to comment-only outlines (one comment per intended
 action/assertion) and the page objects to empty classes; the rebuild is
 proceeding scenario by scenario, and a spec only gets real code once its
 page-object methods are written and the spec passes repeatedly
-(`--repeat-each`) without flaking. As of this update, `MainScreenPage` has
-been rebuilt with `tableNode`, `addTable`, `selectTable`, `openSidePanel`,
-`tableColumnRow`, plus a nested `SidePanel` class (exposed as
-`MainScreenPage.sidePanel`, with `addColumn`, `columnNames`, `keyLabels`) —
-enough to drive a new `table-and-column-creation.spec.ts`, chosen first
-because it needs neither pointer-drag nor keyboard-modifier gestures. The
-three flows above are still comment-only stubs: none of the drag,
-box-select, shift-click, or connect-columns page-object methods described
-in the Design section below exist yet. That section is retained as the
-target design and as notes carried forward from the first attempt, not as a
-description of current code — it needs re-verification (including whether
-it explains the flakiness) as each flow is rebuilt.
+(`--repeat-each`, under Playwright's default parallelism — see below on why
+that specifically matters) without flaking.
+
+As of this update: `table-and-column-creation.spec.ts` (no drag, no keyboard
+modifier), both non-drag `multi-select-group-move.spec.ts` scenarios
+(shift-click accumulate; rubber-band select — the latter drags, but only
+asserts a selection count, not a position), and both drag-and-reload
+scenarios (`table-creation-and-drag.spec.ts`; `multi-select-group-move.spec.ts`'s
+group-move test) are rebuilt and passing repeatedly. Only
+`fk-connection-drawing.spec.ts` remains a comment-only stub — it needs a
+`connectColumns` gesture that, unlike table dragging, must land exactly on a
+target handle, so the drag-precision findings below may not transfer
+directly. Diagnosing the drag-and-reload flakiness (see the rewritten Drag
+bullet under Selector strategy) turned up a real root cause, not just a
+wider tolerance: the live on-screen render right after a drop and the value
+actually committed to state already disagree by a few pixels — verified via
+direct `localStorage` inspection — and that gap grows and gets noisier under
+parallel test-worker contention (single digits px serial, over 20px under
+`fullyParallel: true`'s default worker count). Comparing that noisy live
+render against a reload was the flaky assertion; comparing two consecutive
+reloads (both rendered purely from storage, no live-drag involved) is 0px
+stable across 40+ runs under full parallel load and is now the actual
+persistence check, with the live-vs-reload comparison kept only as a loose
+sanity check that something roughly reasonable got saved at all.
 
 ## Goals / Non-Goals
 
@@ -89,6 +101,7 @@ Open Question for whenever CI is added.
 e2e/
   fixtures/
     cleanStorage.ts
+    geometry.ts               (Position type, distance() — shared by drag specs)
   pages/
     MainScreenPage.ts        (includes a nested, non-exported SidePanel class)
   specs/
@@ -107,11 +120,12 @@ next to.
 The Page Object Model is adopted from this first round. `e2e/pages/` holds
 plain classes (`new MainScreenPage(page)`) that encapsulate every locator and
 gesture behind intent-named methods (`addTable(name)`, `selectTable(name)`,
-and — once rebuilt — `dragTableNode(name, dx, dy)`, `shiftClickSelect(names)`,
-`boxSelect(from, to)`, `connectColumns(...)`). `e2e/specs/` holds the
-scenario files, which call only page-object methods and assert outcomes —
-they read as a sequence of user actions, not raw Playwright locators.
-`playwright.config.ts`'s `testDir` points at `./e2e/specs`.
+`dragTableNode(name, dx, dy)`, `shiftClickSelect(names)`,
+`boxSelectPane(from, to)`, and — still pending — `connectColumns(...)`).
+`e2e/specs/` holds the scenario files, which call only page-object methods
+and assert outcomes — they read as a sequence of user actions, not raw
+Playwright locators. `playwright.config.ts`'s `testDir` points at
+`./e2e/specs`.
 
 - **`MainScreenPage`** — toolbar (add table) and canvas (`.react-flow__pane`,
   node/handle locators, drag and box-select gestures, selection-state
@@ -173,20 +187,35 @@ tests:
   objects use `mouse.down()` → `mouse.move(x, y, { steps: 10 })` →
   `mouse.up()` — multiple intermediate steps so React Flow's internal
   drag-threshold handling registers each tick, not just start and end.
-  **Implementation-discovered gotcha**: React Flow drops the first
-  pointermove segment of a drag, so an interpolated move straight to the
-  target lands short by roughly `1/steps` of the total distance (e.g. ~10%
-  short with `steps: 10`). `MainScreenPage`'s `primeDrag` helper issues a
-  1-2px no-op move immediately after `mouse.down()` to absorb that loss
-  cheaply before the real move, used by both `dragTableNode` and
-  `connectColumns`. Separately, the _committed_ position React Flow reports
-  through its position-change event (what actually gets saved) can still
-  land a few extra pixels short of the live drag render on the axis
-  affected by the toolbar's vertical offset — a library discretization
-  detail distinct from the dropped-first-segment issue above, not a
-  persistence bug. Position assertions comparing a reload against the
-  pre-reload drag render (rather than against the originally-requested
-  delta) use a wider tolerance (20px vs 5px) for this reason.
+  **Don't assert against a computed target position.** The first
+  implementation asserted the drag landed at `before + {dx, dy}` (plus a
+  `primeDrag` helper working around React Flow dropping the drag's first
+  pointermove segment, so an interpolated move lands short of that target).
+  That's asserting on Playwright's pointer-simulation fidelity, not on the
+  app. Instead, page objects only take a `{dx, dy}` to perform _a_ drag;
+  specs read back wherever the node actually landed (`tableNodeBoundingBox`)
+  and treat that as ground truth, with only a loose sanity check
+  (`distance(before, afterDrag) > 50px`) that a drag happened at all.
+  **Don't assert a reload matches the live post-drag render, even loosely
+  tuned.** Diagnosed empirically (direct `localStorage` inspection): the
+  stored position is byte-identical before and after a reload, and a
+  reload's rendered position always equals `paneOffset + storedPosition`
+  exactly — reload is not the source of any drift. The drift is entirely
+  pre-reload: the live render immediately after `mouse.up()` already
+  disagrees with what got committed to state, by a few px on the axis
+  affected by the toolbar's vertical offset, confirmed stable after waiting
+  (not an animation/settling artifact) and confirmed _not_ proportional to
+  drag distance (not a scaling error). Under Playwright's default
+  parallelism this gap is also noisy and grows with worker contention (single
+  digits px serial in isolation, 21–24px observed over 100 runs under full
+  `fullyParallel: true` load) — so no fixed tolerance tuned against a quiet
+  machine is safe. The fix: assert reload persistence by comparing **two
+  consecutive reloads** to each other (both rendered purely from storage, no
+  live drag involved) instead of comparing the live drag render to a reload.
+  That comparison is 0px stable across 40+ runs under full parallel load. The
+  live-vs-first-reload comparison is kept only as a generous (60px) sanity
+  check that persistence isn't grossly broken (e.g. silently keeping the
+  pre-drag position), not as the precision check.
 - Multi-select accumulate (shift+click): `Canvas.tsx` sets
   `multiSelectionKeyCode="Shift"` — click the first node, then
   `keyboard.down("Shift")` + click the second + `keyboard.up("Shift")`.
