@@ -34,6 +34,27 @@ export class MainScreenPage {
     await this.tableNode(name).click();
   }
 
+  // Each click must complete before the next starts: the first establishes
+  // the selection and every later one brackets its own click with Shift
+  // down/up, so this loop's awaits cannot be parallelized.
+  /* eslint-disable no-await-in-loop */
+  async shiftClickSelect(names: string[]): Promise<void> {
+    for (const [index, name] of names.entries()) {
+      if (index === 0) {
+        await this.tableNode(name).click();
+        continue;
+      }
+      await this.page.keyboard.down("Shift");
+      await this.tableNode(name).click();
+      await this.page.keyboard.up("Shift");
+    }
+  }
+  /* eslint-enable no-await-in-loop */
+
+  async selectedTableNodeCount(): Promise<number> {
+    return this.page.locator(".react-flow__node.selected").count();
+  }
+
   async openSidePanel(): Promise<void> {
     const toggle = this.page.getByRole("button", { name: "Toggle side panel" });
     if ((await toggle.getAttribute("aria-pressed")) !== "true") {

@@ -1,15 +1,20 @@
-import { test } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import { resetAppState } from "../fixtures/cleanStorage.ts";
+import { MainScreenPage } from "../pages/MainScreenPage.ts";
 
 test.beforeEach(async ({ page }) => {
   await resetAppState(page);
 });
 
-test("shift+click accumulates a multi-selection", async () => {
-  // Create a "Users" table
-  // Create an "Orders" table
-  // Shift+click "Users" then "Orders" to accumulate a multi-selection
-  // Verify: 2 table nodes are marked as selected
+test("shift+click accumulates a multi-selection", async ({ page }) => {
+  const mainScreen = new MainScreenPage(page);
+
+  await mainScreen.addTable("Users");
+  await mainScreen.addTable("Orders");
+
+  await mainScreen.shiftClickSelect(["Users", "Orders"]);
+
+  expect(await mainScreen.selectedTableNodeCount()).toBe(2);
 });
 
 test("rubber-band drag over the pane selects the enclosed tables", async () => {
