@@ -12,7 +12,17 @@ export default defineConfig({
   projects: [
     {
       name: "chromium",
-      use: { ...devices["Desktop Chrome"] },
+      use: {
+        ...devices["Desktop Chrome"],
+        // Fixed and generous so canvas geometry (table grid layout, drag
+        // deltas, side panel width) stays clear of React Flow's own
+        // bottom-corner panels (MiniMap, Controls) across runs, rather than
+        // depending on the Desktop Chrome preset's default (1280x720) —
+        // this must come after the devices(...) spread, since that preset
+        // sets its own viewport and a project's `use` wins over the
+        // top-level `use` for the same key.
+        viewport: { width: 1440, height: 900 },
+      },
     },
   ],
   webServer: {

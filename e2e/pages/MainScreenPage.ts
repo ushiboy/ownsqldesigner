@@ -1,5 +1,7 @@
 import type { Locator, Page } from "@playwright/test";
 
+type BoundingBox = { x: number; y: number; width: number; height: number };
+
 type AddColumnFields = {
   name: string;
   primaryKey?: boolean;
@@ -20,6 +22,23 @@ export class MainScreenPage {
 
   tableNode(name: string): Locator {
     return this.page.getByRole("button", { name: `Table ${name}` });
+  }
+
+  async tableNodeBoundingBox(name: string): Promise<BoundingBox | null> {
+    return this.tableNode(name).boundingBox();
+  }
+
+  async dragTableNode(name: string, dx: number, dy: number): Promise<void> {
+    const box = await this.tableNodeBoundingBox(name);
+    if (box === null) {
+      throw new Error(`Table node "${name}" is not visible`);
+    }
+    const startX = box.x + box.width / 2;
+    const startY = box.y + box.height / 2;
+    await this.page.mouse.move(startX, startY);
+    await this.page.mouse.down();
+    await this.page.mouse.move(startX + dx, startY + dy, { steps: 10 });
+    await this.page.mouse.up();
   }
 
   async addTable(name: string): Promise<void> {
