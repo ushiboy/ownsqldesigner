@@ -11,6 +11,7 @@ Tooling: oxfmt (format), oxlint (lint), tsc (typecheck), Vitest (test), Storyboo
 | Lint       | `pnpm lint`      |
 | Typecheck  | `pnpm typecheck` |
 | Test       | `pnpm test`      |
+| E2E test   | `pnpm test:e2e`  |
 | Build      | `pnpm build`     |
 | Dev server | `pnpm dev`       |
 | Storybook  | `pnpm storybook` |

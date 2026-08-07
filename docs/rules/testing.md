@@ -50,6 +50,18 @@ Choose the testing style by the kind of code (see [Component Design](component-d
 - Simulate user interaction with `@testing-library/user-event`: `userEvent.setup()` + `await user.click(...)`.
 - When a rendered tree can contain more than one element with the same accessible name at once (e.g. a "Name" field open in both a dialog and an inline form elsewhere on the page), scope the query with `within(container)` instead of querying from `screen` — a page-level `getByLabelText`/`getByRole` call throws on multiple matches.
 
+## E2E Tests
+
+Canvas drag, rubber-band multi-select, and foreign-key connection drawing are jsdom-hard: no real pointer geometry, so the unit-test rules above deliberately don't cover them. That gap is filled by a Playwright-based E2E layer — see [0027](../design/0027-e2e-testing-with-playwright.md) for the full design.
+
+- **When required**: only for new canvas-level pointer interactions that unit tests structurally cannot exercise. This is not a blanket requirement like the Vitest rule at the top of this doc — most new components still only need a unit test and story.
+- **File placement**: `e2e/specs/<slug>.spec.ts`, one file per user-facing scenario, not per component — contrast with the colocation rule above; an E2E scenario usually spans several components and has no single source file to colocate next to. Page objects live in `e2e/pages/<Name>Page.ts`.
+- **Page Object Model**: specs call intent-named page-object methods (`addTable(name)`, `selectTable(name)`, `sidePanel.addColumn(fields)`) rather than holding raw Playwright locators or pointer-event sequences directly. One page object per screen (e.g. `MainScreenPage` for the toolbar and canvas). A persistent UI area nested within that screen (e.g. the table detail side panel) is not itself a "page" — it never navigates to independently and can already be open when a spec starts — so it's a private, non-exported class colocated in the owning page object's file and exposed as a public readonly property (e.g. `MainScreenPage.sidePanel`), not a separate `<Name>Page.ts`.
+- **Selectors**: reuse existing accessible attributes (`aria-label`, role) and React Flow's own DOM (`data-id`, `data-handleid`) — no `data-testid` convention, consistent with the role-based-query preference above. Only add a `data-testid` when a scenario genuinely has no accessible or structural hook, and justify it inline where it's added.
+- **State isolation**: each spec clears storage and reloads once via `resetAppState` (`e2e/fixtures/cleanStorage.ts`) before the app's own startup logic runs, then drives table/column setup through the UI rather than seeding the localStorage envelope directly — this avoids coupling specs to `{version, schema}`'s internal shape.
+- **Running locally**: `pnpm test:e2e` (headless) or `pnpm test:e2e:ui` (interactive debugging). This is **not** part of `pnpm test` or the pre-commit gate (see [Pre-Commit Checks](pre-commit-checks.md)) — it spins up a real browser and dev server, too slow and timing-sensitive for a per-commit gate.
+- **Out of scope today** (deliberate, not forgotten): CI wiring, a multi-browser matrix, and broader flow coverage (undo/redo, table deletion, keyboard shortcuts, snap-to-grid, zoom) — see 0027's Non-Goals.
+
 ## Example
 
 `Home.test.tsx` — renders via `composeStories`, all assertions live here:
