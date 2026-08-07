@@ -74,6 +74,19 @@ export class MainScreenPage {
     return this.page.locator(".react-flow__node.selected").count();
   }
 
+  paneBoundingBox(): Promise<BoundingBox | null> {
+    return this.page.locator(".react-flow__pane").boundingBox();
+  }
+
+  async boxSelectPane(from: { x: number; y: number }, to: { x: number; y: number }): Promise<void> {
+    await this.page.keyboard.down("Shift");
+    await this.page.mouse.move(from.x, from.y);
+    await this.page.mouse.down();
+    await this.page.mouse.move(to.x, to.y, { steps: 10 });
+    await this.page.mouse.up();
+    await this.page.keyboard.up("Shift");
+  }
+
   async openSidePanel(): Promise<void> {
     const toggle = this.page.getByRole("button", { name: "Toggle side panel" });
     if ((await toggle.getAttribute("aria-pressed")) !== "true") {
