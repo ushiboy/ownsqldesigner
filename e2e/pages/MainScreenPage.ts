@@ -9,6 +9,7 @@ type AddColumnFields = {
 
 const EDIT_COLUMN_LABEL_PATTERN = /^Edit column /i;
 const EDIT_KEY_LABEL_PATTERN = /^Edit key /i;
+const DELETE_RELATION_LABEL_PATTERN = /^Delete relation /i;
 
 /** Wraps the toolbar and canvas: table creation, drag, multi-select, and FK connection gestures. */
 export class MainScreenPage {
@@ -97,6 +98,35 @@ export class MainScreenPage {
   tableColumnRow(tableName: string, columnName: string): Locator {
     return this.tableNode(tableName).locator("li").filter({ hasText: columnName });
   }
+
+  async connectColumns(
+    child: { table: string; column: string },
+    parent: { table: string; column: string },
+  ): Promise<void> {
+    const sourceHandle = this.tableColumnRow(child.table, child.column).locator(
+      '.react-flow__handle[data-handleid^="source:"]',
+    );
+    const targetHandle = this.tableColumnRow(parent.table, parent.column).locator(
+      '.react-flow__handle[data-handleid^="target:"]',
+    );
+    const sourceBox = await sourceHandle.boundingBox();
+    const targetBox = await targetHandle.boundingBox();
+    if (sourceBox === null || targetBox === null) {
+      throw new Error("Could not locate connection handles");
+    }
+    const sourceX = sourceBox.x + sourceBox.width / 2;
+    const sourceY = sourceBox.y + sourceBox.height / 2;
+    const targetX = targetBox.x + targetBox.width / 2;
+    const targetY = targetBox.y + targetBox.height / 2;
+    await this.page.mouse.move(sourceX, sourceY);
+    await this.page.mouse.down();
+    await this.page.mouse.move(targetX, targetY, { steps: 10 });
+    await this.page.mouse.up();
+  }
+
+  async edgeCount(): Promise<number> {
+    return this.page.locator(".react-flow__edge").count();
+  }
 }
 
 /** The table detail side panel nested within the main screen: column management and the relation list. */
@@ -138,5 +168,14 @@ class SidePanel {
         elements.map((element) => element.getAttribute("aria-label") ?? ""),
       );
     return labels.map((label) => label.replace(EDIT_KEY_LABEL_PATTERN, ""));
+  }
+
+  async relationLabels(): Promise<string[]> {
+    const labels = await this.panel
+      .getByRole("button", { name: DELETE_RELATION_LABEL_PATTERN })
+      .evaluateAll((elements) =>
+        elements.map((element) => element.getAttribute("aria-label") ?? ""),
+      );
+    return labels.map((label) => label.replace(DELETE_RELATION_LABEL_PATTERN, ""));
   }
 }

@@ -1,6 +1,6 @@
 # E2E Testing with Playwright
 
-- **Status**: Accepted
+- **Status**: Implemented
 - **Created**: 2026-08-04
 - **Updated**: 2026-08-07
 
@@ -28,33 +28,39 @@ move (REQ-004), and foreign-key connection drawing (REQ-014, REQ-015).
 The first implementation attempt built all three flows in one round and
 turned out flaky. Rather than debug that implementation in place, the specs
 were reset to comment-only outlines (one comment per intended
-action/assertion) and the page objects to empty classes; the rebuild is
-proceeding scenario by scenario, and a spec only gets real code once its
-page-object methods are written and the spec passes repeatedly
-(`--repeat-each`, under Playwright's default parallelism — see below on why
-that specifically matters) without flaking.
+action/assertion) and the page objects to empty classes, and the rebuild
+proceeded scenario by scenario: each spec only got real code once its
+page-object methods were written and the spec passed repeatedly
+(`--repeat-each`, 40-160 runs depending on the scenario) under Playwright's
+default parallelism — not just a serial repeat, since that turned out to
+matter (see below). All four specs (`table-and-column-creation`,
+`table-creation-and-drag`, `multi-select-group-move`'s three scenarios,
+`fk-connection-drawing`) are now rebuilt this way. Two real, non-obvious
+findings came out of the process:
 
-As of this update: `table-and-column-creation.spec.ts` (no drag, no keyboard
-modifier), both non-drag `multi-select-group-move.spec.ts` scenarios
-(shift-click accumulate; rubber-band select — the latter drags, but only
-asserts a selection count, not a position), and both drag-and-reload
-scenarios (`table-creation-and-drag.spec.ts`; `multi-select-group-move.spec.ts`'s
-group-move test) are rebuilt and passing repeatedly. Only
-`fk-connection-drawing.spec.ts` remains a comment-only stub — it needs a
-`connectColumns` gesture that, unlike table dragging, must land exactly on a
-target handle, so the drag-precision findings below may not transfer
-directly. Diagnosing the drag-and-reload flakiness (see the rewritten Drag
-bullet under Selector strategy) turned up a real root cause, not just a
-wider tolerance: the live on-screen render right after a drop and the value
-actually committed to state already disagree by a few pixels — verified via
-direct `localStorage` inspection — and that gap grows and gets noisier under
-parallel test-worker contention (single digits px serial, over 20px under
-`fullyParallel: true`'s default worker count). Comparing that noisy live
-render against a reload was the flaky assertion; comparing two consecutive
-reloads (both rendered purely from storage, no live-drag involved) is 0px
-stable across 40+ runs under full parallel load and is now the actual
-persistence check, with the live-vs-reload comparison kept only as a loose
-sanity check that something roughly reasonable got saved at all.
+- **Table drag position assertions must not compare a live post-drag render
+  against a reload, even with a generous tolerance.** Diagnosed via direct
+  `localStorage` inspection: a reload's rendered position always equals
+  `paneOffset + storedPosition` exactly — reload introduces no drift itself.
+  The drift is entirely pre-reload: the live render right after
+  `mouse.up()` already disagrees with the value actually committed to
+  state, by a few px on the axis affected by the toolbar's vertical offset
+  — confirmed stable after waiting (not a settling/animation artifact) and
+  not proportional to drag distance (not a scaling error). Under
+  `fullyParallel: true`'s default worker count this gap also grows and gets
+  noisier with contention (single digits px serial in isolation, 21-24px
+  observed over 100 runs under full parallel load), so no fixed tolerance
+  tuned against a quiet machine is safe. Fix: compare two _consecutive
+  reloads_ to each other (both rendered purely from storage, no live drag
+  involved) instead — 0px stable across 40+ runs under full parallel load.
+  See the rewritten Drag bullet under Selector strategy.
+- **FK connection dragging didn't need the same treatment.** `connectColumns`
+  moves the pointer to the target handle's actual on-screen coordinates
+  (not a `start + delta` offset the way table dragging does), so
+  Playwright's `mouse.move(x, y, { steps })` always lands exactly on that
+  literal endpoint regardless of intermediate step count — a
+  straightforward implementation passed 100/100 runs under full parallel
+  load with no precision workaround needed.
 
 ## Goals / Non-Goals
 
@@ -121,7 +127,7 @@ The Page Object Model is adopted from this first round. `e2e/pages/` holds
 plain classes (`new MainScreenPage(page)`) that encapsulate every locator and
 gesture behind intent-named methods (`addTable(name)`, `selectTable(name)`,
 `dragTableNode(name, dx, dy)`, `shiftClickSelect(names)`,
-`boxSelectPane(from, to)`, and — still pending — `connectColumns(...)`).
+`boxSelectPane(from, to)`, `connectColumns(child, parent)`).
 `e2e/specs/` holds the scenario files, which call only page-object methods
 and assert outcomes — they read as a sequence of user actions, not raw
 Playwright locators. `playwright.config.ts`'s `testDir` points at
@@ -234,16 +240,21 @@ tests:
   node, since React Flow's own pointer capture keeps subsequent move/up
   events routed to the pane once the drag has genuinely started there.
 - FK connection: per-column `<Handle>` elements expose
-  `.react-flow__handle[data-handleid="source:<columnId>"]` (child/source
-  side) and `[data-handleid="target:<columnId>"]` (parent/target side,
-  conditionally rendered — only referenceable columns get one), ids built by
-  `columnHandleId.ts`. Same low-level pointer sequence as node drag; the
-  final `mouse.move` must land exactly on the target handle's bounding-box
-  center before `mouse.up()`, since `Canvas.tsx`'s connection-end handling
-  reads the drop target at pointerup. Success is asserted two ways: a new
-  `.react-flow__edge` appears (the visual product of the gesture), and the
-  child table's relation list in the side panel shows the new FK/generated
-  child column (the actual product — REQ-016/REQ-017,
+  `.react-flow__handle[data-handleid^="source:"]` (child/source side) and
+  `[data-handleid^="target:"]` (parent/target side, conditionally rendered —
+  only referenceable columns get one), ids built by `columnHandleId.ts` as
+  `source:<columnId>`/`target:<columnId>`; `connectColumns` scopes each
+  selector to its column's `<li>` row (via `tableColumnRow`) to disambiguate.
+  Same low-level pointer sequence as node drag, but **no precision workaround
+  needed here** unlike table dragging: `mouse.move(targetX, targetY, {
+steps })` moves to the target handle's literal on-screen coordinates, not
+  a `start + delta` offset, so the final step always lands exactly on that
+  point regardless of intermediate step count — confirmed reliable at
+  100/100 runs under full parallel load with a straightforward
+  implementation. Success is asserted two ways: a new `.react-flow__edge`
+  appears (the visual product of the gesture), and the child table's
+  relation list in the side panel shows the new FK/generated child column
+  (the actual product — REQ-016/REQ-017,
   [0012](0012-foreign-key-child-column-generation.md),
   [0013](0013-foreign-key-type-propagation.md)).
 
