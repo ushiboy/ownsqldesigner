@@ -2,7 +2,7 @@
 
 - **Status**: Implemented
 - **Created**: 2026-08-04
-- **Updated**: 2026-08-07
+- **Updated**: 2026-08-08
 
 ## Context
 
@@ -79,15 +79,18 @@ findings came out of the process:
   all today; adding one is a separate, later decision).
 - Broader flow coverage: undo/redo, table deletion, keyboard shortcuts,
   snap-to-grid, zoom. Explicit follow-ups, not built now.
-- The child-column auto-generation FK gesture (REQ-016: dragging from a
+- FK type propagation (REQ-017, [0013](0013-foreign-key-type-propagation.md)):
+  editing an already-linked parent column's type afterward and asserting the
+  cascade to its children. This is a distinct mutation path from connection
+  drawing (see [0013](0013-foreign-key-type-propagation.md)) and is not
+  exercised by any spec in this round.
+  (The child-column auto-generation FK gesture, REQ-016 — dragging from a
   parent's key/target handle and dropping onto a table's body rather than an
-  existing column) and FK type propagation (REQ-017). The implemented
-  `fk-connection-drawing.spec.ts` only exercises connecting two
-  already-existing columns (`onConnect`/`onAddForeignKey`, REQ-014/015) —
-  a forward drag from a `source` handle never reaches
-  `onConnectEnd`/`resolveForeignKeyDrop`'s `newColumn` branch
-  (`onAddForeignKeyWithNewColumn`), which is a different, reversed gesture.
-  Still zero E2E coverage; a real follow-up, not resolved by this round.
+  existing column — was originally listed here as a second uncovered gap.
+  That gap has since been closed by
+  `e2e/specs/fk-child-column-generation.spec.ts`; see the "Reversed FK
+  gesture" design subsection below for what that spec covers and what it
+  found.)
 - A multi-browser matrix (Firefox/WebKit).
 - Folding `pnpm test:e2e` into `pnpm test` or into
   `docs/rules/pre-commit-checks.md`'s required sequence.
@@ -124,6 +127,7 @@ e2e/
     table-creation-and-drag.spec.ts
     multi-select-group-move.spec.ts
     fk-connection-drawing.spec.ts
+    fk-child-column-generation.spec.ts  (added later — see "Reversed FK gesture" below)
 ```
 
 Root-level `e2e/`, not colocated under `src/`: `docs/rules/testing.md`'s
@@ -268,9 +272,44 @@ steps })` moves to the target handle's literal on-screen coordinates, not
   appears (the visual product of the gesture), and the child table's
   relation list in the side panel shows the new relation (the actual
   product). This does **not** cover child-column auto-generation
-  (REQ-016, [0012](0012-foreign-key-child-column-generation.md)) or type
-  propagation (REQ-017, [0013](0013-foreign-key-type-propagation.md)) — see
-  Non-Goals.
+  (REQ-016, [0012](0012-foreign-key-child-column-generation.md) — see
+  "Reversed FK gesture" below, now covered by a separate spec) or type
+  propagation (REQ-017, [0013](0013-foreign-key-type-propagation.md) — still
+  a Non-Goal).
+
+### Reversed FK gesture: `fk-child-column-generation.spec.ts`
+
+Added after this round's initial three flows, to close the REQ-016 gap noted
+above. `Canvas.tsx`'s `onConnectEnd` resolves a drag that started from a
+parent's `target:` handle into one of two branches depending on where it's
+released: dropped on an existing column's `source:` handle links that column
+(`resolveForeignKeyDrop`'s `existingColumn` branch, `onAddForeignKey`), while
+dropped anywhere else on a table's card body auto-generates a new child
+column there (`newColumn` branch, `onAddForeignKeyWithNewColumn`). The spec
+covers both branches with two scenarios reusing the same fixtures
+(`users.id` PK dragged onto an `orders` table).
+
+**Implementation-discovered gotcha**: starting this drag (`onConnectStart`)
+adds a drop-target hint overlay to every table card (see `TableNode.tsx`'s
+`dropHint`), and rendering that overlay shifts the canvas viewport — reading
+a target card's rect mid-drag confirmed it differs from a pre-drag read.
+`MainScreenPage`'s `dragFromKeyHandleToTableBody`/`dragFromKeyHandleToColumn`
+therefore don't pre-compute a single drop point the way `connectColumns`
+does for the forward gesture; they call a shared `moveToTarget(locator)`
+helper instead. Without any correction, the "drop on table body" scenario
+missed roughly 40% of the time under full parallel load (diagnosed by
+comparing `document.elementFromPoint` against the target's rect at drop time
+in a throwaway repro spec). A _single_ correction pass (move once toward an
+initial read, re-read, move once more toward the corrected position) cut
+that but didn't eliminate it — a follow-up run with both moves at the same
+step count used elsewhere in this file (`steps: 10`) still missed 29/120
+under full parallel load, showing the shift can still be in progress after
+one correction lands. `moveToTarget` instead loops — re-read, and if the
+target moved, a fast (`steps: 3`) correction move toward the new position,
+repeated until two consecutive reads agree or a generous attempt budget is
+spent — deliberately fast per iteration so a correction doesn't itself get
+outrun by an ongoing shift. 200/200 runs passed under full parallel load
+with the loop.
 
 ### State isolation
 

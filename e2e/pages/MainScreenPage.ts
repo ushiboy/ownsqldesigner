@@ -29,6 +29,53 @@ export class MainScreenPage {
     return this.tableNode(name).boundingBox();
   }
 
+  // Starting a key-handle drag (onConnectStart) triggers a canvas viewport
+  // shift to accommodate the drop-target hint overlays that appear on every
+  // table card (see TableNode.tsx's dropHint) — confirmed empirically by
+  // reading a card's rect mid-drag and seeing it differ from a pre-drag
+  // read. The shift can still be in progress after the first move lands
+  // (a single correction pass measurably reduced but didn't eliminate
+  // misses under full parallel load), so keep re-reading the same target
+  // and correcting toward it — with a fast, few-step move each time so a
+  // correction doesn't itself get outrun by an ongoing shift — until two
+  // consecutive reads agree or a generous attempt budget is spent.
+  private async moveToTarget(target: Locator, description: string): Promise<void> {
+    const box = await target.boundingBox();
+    if (box === null) {
+      throw new Error(`${description} is not visible`);
+    }
+    await this.page.mouse.move(box.x + box.width / 2, box.y + box.height / 2, { steps: 10 });
+
+    let last = box;
+    /* eslint-disable no-await-in-loop */
+    for (let attempt = 0; attempt < 10; attempt += 1) {
+      const current = await target.boundingBox();
+      if (current === null) {
+        throw new Error(`${description} is not visible`);
+      }
+      if (current.x === last.x && current.y === last.y) {
+        return;
+      }
+      last = current;
+      await this.page.mouse.move(current.x + current.width / 2, current.y + current.height / 2, {
+        steps: 3,
+      });
+    }
+    /* eslint-enable no-await-in-loop */
+  }
+
+  private async pressKeyHandle(parent: { table: string; column: string }): Promise<void> {
+    const keyHandle = this.tableColumnRow(parent.table, parent.column).locator(
+      '.react-flow__handle[data-handleid^="target:"]',
+    );
+    const keyBox = await keyHandle.boundingBox();
+    if (keyBox === null) {
+      throw new Error("Could not locate key handle");
+    }
+    await this.page.mouse.move(keyBox.x + keyBox.width / 2, keyBox.y + keyBox.height / 2);
+    await this.page.mouse.down();
+  }
+
   async dragTableNode(name: string, dx: number, dy: number): Promise<void> {
     const box = await this.tableNodeBoundingBox(name);
     if (box === null) {
@@ -121,6 +168,39 @@ export class MainScreenPage {
     await this.page.mouse.move(sourceX, sourceY);
     await this.page.mouse.down();
     await this.page.mouse.move(targetX, targetY, { steps: 10 });
+    await this.page.mouse.up();
+  }
+
+  /**
+   * REQ-016 "new column" branch: drags from the parent's key/target handle
+   * and drops on `childTable`'s card body (not a handle), which
+   * auto-generates a new child column there. `childTable` must have zero
+   * columns at drop time — TableNode renders no <Handle> elements for an
+   * empty table, so its whole bounding box is safe to drop on.
+   */
+  async dragFromKeyHandleToTableBody(
+    parent: { table: string; column: string },
+    childTable: string,
+  ): Promise<void> {
+    await this.pressKeyHandle(parent);
+    await this.moveToTarget(this.tableNode(childTable), `Table node "${childTable}"`);
+    await this.page.mouse.up();
+  }
+
+  /**
+   * REQ-016 "existing column" branch: drags from the parent's key/target
+   * handle and drops precisely on `child`'s own source handle, linking that
+   * existing column as the foreign key's child instead of creating a new one.
+   */
+  async dragFromKeyHandleToColumn(
+    parent: { table: string; column: string },
+    child: { table: string; column: string },
+  ): Promise<void> {
+    const sourceHandle = this.tableColumnRow(child.table, child.column).locator(
+      '.react-flow__handle[data-handleid^="source:"]',
+    );
+    await this.pressKeyHandle(parent);
+    await this.moveToTarget(sourceHandle, `Source handle for ${child.table}.${child.column}`);
     await this.page.mouse.up();
   }
 
