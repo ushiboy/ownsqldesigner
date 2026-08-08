@@ -69,7 +69,7 @@ findings came out of the process:
 - Stand up Playwright (Chromium only) against the Vite dev server.
 - Cover three representative, highest-risk flows: table creation + drag
   persistence, multi-select (shift-click and rubber-band) + group move, and
-  FK connection drawing with generated child column.
+  FK connection drawing between two existing columns.
 - Establish selector and state-isolation conventions, and a Page Object
   Model structure, for future E2E specs to follow.
 
@@ -79,6 +79,15 @@ findings came out of the process:
   all today; adding one is a separate, later decision).
 - Broader flow coverage: undo/redo, table deletion, keyboard shortcuts,
   snap-to-grid, zoom. Explicit follow-ups, not built now.
+- The child-column auto-generation FK gesture (REQ-016: dragging from a
+  parent's key/target handle and dropping onto a table's body rather than an
+  existing column) and FK type propagation (REQ-017). The implemented
+  `fk-connection-drawing.spec.ts` only exercises connecting two
+  already-existing columns (`onConnect`/`onAddForeignKey`, REQ-014/015) —
+  a forward drag from a `source` handle never reaches
+  `onConnectEnd`/`resolveForeignKeyDrop`'s `newColumn` branch
+  (`onAddForeignKeyWithNewColumn`), which is a different, reversed gesture.
+  Still zero E2E coverage; a real follow-up, not resolved by this round.
 - A multi-browser matrix (Firefox/WebKit).
 - Folding `pnpm test:e2e` into `pnpm test` or into
   `docs/rules/pre-commit-checks.md`'s required sequence.
@@ -107,7 +116,7 @@ Open Question for whenever CI is added.
 e2e/
   fixtures/
     cleanStorage.ts
-    geometry.ts               (Position type, distance() — shared by drag specs)
+    geometry.ts               (Position, distance(), drag tolerance constants — shared by drag specs)
   pages/
     MainScreenPage.ts        (includes a nested, non-exported SidePanel class)
   specs/
@@ -251,12 +260,17 @@ steps })` moves to the target handle's literal on-screen coordinates, not
   a `start + delta` offset, so the final step always lands exactly on that
   point regardless of intermediate step count — confirmed reliable at
   100/100 runs under full parallel load with a straightforward
-  implementation. Success is asserted two ways: a new `.react-flow__edge`
+  implementation. The spec pre-adds the child column (`user_id`) through the
+  UI before dragging, then connects that existing column's source handle to
+  the parent's existing PK column's target handle — a forward drag, which
+  xyflow routes through its native `onConnect` → `onAddForeignKey`
+  (REQ-014/015). Success is asserted two ways: a new `.react-flow__edge`
   appears (the visual product of the gesture), and the child table's
-  relation list in the side panel shows the new FK/generated child column
-  (the actual product — REQ-016/REQ-017,
-  [0012](0012-foreign-key-child-column-generation.md),
-  [0013](0013-foreign-key-type-propagation.md)).
+  relation list in the side panel shows the new relation (the actual
+  product). This does **not** cover child-column auto-generation
+  (REQ-016, [0012](0012-foreign-key-child-column-generation.md)) or type
+  propagation (REQ-017, [0013](0013-foreign-key-type-propagation.md)) — see
+  Non-Goals.
 
 ### State isolation
 

@@ -25,7 +25,7 @@ test("dragging from a child column to a parent's key column creates a foreign ke
     { table: "Users", column: "id" },
   );
 
-  expect(await mainScreen.edgeCount()).toBe(1);
+  await expect(mainScreen.edges()).toHaveCount(1);
 
   await mainScreen.selectTable("Orders");
   const relationLabels = await mainScreen.sidePanel.relationLabels();

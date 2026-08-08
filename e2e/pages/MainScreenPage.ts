@@ -71,8 +71,8 @@ export class MainScreenPage {
   }
   /* eslint-enable no-await-in-loop */
 
-  async selectedTableNodeCount(): Promise<number> {
-    return this.page.locator(".react-flow__node.selected").count();
+  selectedTableNodes(): Locator {
+    return this.page.locator(".react-flow__node.selected");
   }
 
   paneBoundingBox(): Promise<BoundingBox | null> {
@@ -124,8 +124,8 @@ export class MainScreenPage {
     await this.page.mouse.up();
   }
 
-  async edgeCount(): Promise<number> {
-    return this.page.locator(".react-flow__edge").count();
+  edges(): Locator {
+    return this.page.locator(".react-flow__edge");
   }
 }
 

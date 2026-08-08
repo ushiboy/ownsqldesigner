@@ -1,21 +1,11 @@
 import { expect, test } from "@playwright/test";
-import { distance } from "../fixtures/geometry.ts";
+import {
+  DRAG_PERSISTED_SANITY_TOLERANCE_PX,
+  MIN_DRAG_DISTANCE_PX,
+  distance,
+} from "../fixtures/geometry.ts";
 import { resetAppState } from "../fixtures/cleanStorage.ts";
 import { MainScreenPage } from "../pages/MainScreenPage.ts";
-
-// Sanity check that the drag actually displaced the node, not that it landed
-// anywhere precise — React Flow's own pointer-event handling makes the exact
-// on-screen delta from a simulated drag unreliable to predict.
-const MIN_DRAG_DISTANCE_PX = 50;
-
-// Loose sanity check that what got persisted is roughly where the drag left
-// it, not the pre-drag position — catches "drag isn't saved at all"
-// regressions. Deliberately generous (not tuned tight): the live post-drag
-// render itself is a noisy reference under load (empirically observed
-// 9-24px off from the committed value across parallel runs, growing with
-// contention), so this check exists only to rule out gross breakage, not to
-// pin down an exact pixel.
-const DRAG_PERSISTED_SANITY_TOLERANCE_PX = 60;
 
 test.beforeEach(async ({ page }) => {
   await resetAppState(page);

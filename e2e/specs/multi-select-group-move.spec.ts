@@ -1,16 +1,12 @@
 import { expect, test } from "@playwright/test";
-import { distance, type Position } from "../fixtures/geometry.ts";
+import {
+  DRAG_PERSISTED_SANITY_TOLERANCE_PX,
+  MIN_DRAG_DISTANCE_PX,
+  distance,
+  type Position,
+} from "../fixtures/geometry.ts";
 import { resetAppState } from "../fixtures/cleanStorage.ts";
 import { MainScreenPage } from "../pages/MainScreenPage.ts";
-
-// Sanity check that the drag actually displaced the selection, not that it
-// landed anywhere precise — see table-creation-and-drag.spec.ts.
-const MIN_DRAG_DISTANCE_PX = 50;
-
-// Loose sanity check that what got persisted is roughly where the drag left
-// it — see table-creation-and-drag.spec.ts for why this is generous rather
-// than tight.
-const DRAG_PERSISTED_SANITY_TOLERANCE_PX = 60;
 
 function vectorBetween(a: Position, b: Position): Position {
   return { x: b.x - a.x, y: b.y - a.y };
@@ -28,7 +24,7 @@ test("shift+click accumulates a multi-selection", async ({ page }) => {
 
   await mainScreen.shiftClickSelect(["Users", "Orders"]);
 
-  expect(await mainScreen.selectedTableNodeCount()).toBe(2);
+  await expect(mainScreen.selectedTableNodes()).toHaveCount(2);
 });
 
 test("rubber-band drag over the pane selects the enclosed tables", async ({ page }) => {
@@ -50,7 +46,7 @@ test("rubber-band drag over the pane selects the enclosed tables", async ({ page
     { x: paneBox!.x + 5, y: paneBox!.y + 5 },
   );
 
-  expect(await mainScreen.selectedTableNodeCount()).toBe(2);
+  await expect(mainScreen.selectedTableNodes()).toHaveCount(2);
 });
 
 test("dragging one selected table moves the whole selection together", async ({ page }) => {
