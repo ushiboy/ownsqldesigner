@@ -1,6 +1,6 @@
 # CI with GitHub Actions
 
-- **Status**: Accepted
+- **Status**: Implemented
 - **Created**: 2026-08-09
 - **Updated**: 2026-08-09
 
