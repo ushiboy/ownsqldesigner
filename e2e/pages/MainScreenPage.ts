@@ -236,6 +236,24 @@ class SidePanel {
     await dialog.waitFor({ state: "hidden" });
   }
 
+  async editColumnType(name: string, type: string): Promise<void> {
+    await this.panel.getByRole("button", { name: `Edit column ${name}` }).click();
+    const dialog = this.page.getByRole("dialog", { name: "Edit Column" });
+    await dialog.getByLabel("Type").selectOption(type);
+    await dialog.getByRole("button", { name: "Save" }).click();
+    await dialog.waitFor({ state: "hidden" });
+  }
+
+  /** Reads a column's current type through the Edit Column dialog, then cancels without saving. */
+  async columnType(name: string): Promise<string> {
+    await this.panel.getByRole("button", { name: `Edit column ${name}` }).click();
+    const dialog = this.page.getByRole("dialog", { name: "Edit Column" });
+    const type = await dialog.getByLabel("Type").inputValue();
+    await dialog.getByRole("button", { name: "Cancel" }).click();
+    await dialog.waitFor({ state: "hidden" });
+    return type;
+  }
+
   async columnNames(): Promise<string[]> {
     const labels = await this.panel
       .getByRole("button", { name: EDIT_COLUMN_LABEL_PATTERN })

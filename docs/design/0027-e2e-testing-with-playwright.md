@@ -2,7 +2,7 @@
 
 - **Status**: Implemented
 - **Created**: 2026-08-04
-- **Updated**: 2026-08-08 (added `snap-to-grid.spec.ts`)
+- **Updated**: 2026-08-09 (added `fk-type-propagation.spec.ts`)
 
 ## Context
 
@@ -87,6 +87,9 @@ findings came out of the process:
   cascade to its children. This is a distinct mutation path from connection
   drawing (see [0013](0013-foreign-key-type-propagation.md)) and is not
   exercised by any spec in this round.
+  (That gap has since been closed by `e2e/specs/fk-type-propagation.spec.ts`;
+  see the "FK type propagation" design subsection below for what that spec
+  covers and what it deliberately leaves out.)
   (The child-column auto-generation FK gesture, REQ-016 — dragging from a
   parent's key/target handle and dropping onto a table's body rather than an
   existing column — was originally listed here as a second uncovered gap.
@@ -364,6 +367,39 @@ PK/UNIQUE via the side panel) rather than seeding the localStorage envelope
 directly — this avoids coupling the E2E suite to the internal
 `{version, schema}` envelope shape, which would silently break if
 `STORAGE_VERSION` changes.
+
+### FK type propagation: `fk-type-propagation.spec.ts`
+
+Added after the initial rounds, to close the REQ-017 gap noted above
+([0013](0013-foreign-key-type-propagation.md)). `updateColumn`'s worklist
+propagation itself (`propagateColumnTypeChange` — transitive chains, cycle
+safety) is a pure function already covered by unit tests in
+`column.test.ts`; the one thing those tests can't reach is the real UI path:
+drawing an FK via canvas drag (already covered by `connectColumns`, see
+above), then editing the parent's type through the actual "Edit Column"
+dialog, and observing the child's row update through real browser rendering.
+
+The spec connects `Orders.user_id` (child) to `Users.id` (parent) with the
+same forward `connectColumns` gesture as `fk-connection-drawing.spec.ts`,
+reads the child's type back through the side panel before the edit (`TEXT`,
+the column-creation default) as a control, edits the parent's type to
+`INTEGER` via two new `MainScreenPage.sidePanel` methods
+(`editColumnType`/`columnType`), then reads the child's type back again and
+asserts it followed. Both new methods drive/read the type field through its
+existing accessible `<select>` (`getByLabel("Type")`, values from
+`SQLITE_COLUMN_TYPES`) inside the "Edit Column" dialog rather than scraping
+the side panel's column-list row directly — that row's type text carries no
+accessible name, only a styling class, and selecting on a Tailwind class
+would break this doc's existing selector-strategy stance. `columnType`
+opens the same dialog read-only and dismisses it via Cancel.
+
+Only the direct parent→child hop is asserted. A transitive (grandchild)
+chain or a self-referencing cycle would only re-exercise
+`propagateColumnTypeChange`'s worklist logic, already proven by its own
+unit tests, without touching any additional pointer-hard surface — so it's
+deliberately left out of this spec, consistent with each E2E scenario in
+this doc covering one real gesture rather than duplicating unit-level logic
+coverage.
 
 ## Alternatives Considered
 
