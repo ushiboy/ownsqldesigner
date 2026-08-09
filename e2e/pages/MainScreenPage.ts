@@ -101,6 +101,22 @@ export class MainScreenPage {
     await this.tableNode(name).click();
   }
 
+  undoButton(): Locator {
+    return this.page.getByRole("button", { name: "Undo" });
+  }
+
+  redoButton(): Locator {
+    return this.page.getByRole("button", { name: "Redo" });
+  }
+
+  async undo(): Promise<void> {
+    await this.undoButton().click();
+  }
+
+  async redo(): Promise<void> {
+    await this.redoButton().click();
+  }
+
   // Each click must complete before the next starts: the first establishes
   // the selection and every later one brackets its own click with Shift
   // down/up, so this loop's awaits cannot be parallelized.

@@ -2,7 +2,7 @@
 
 - **Status**: Implemented
 - **Created**: 2026-08-04
-- **Updated**: 2026-08-09 (added `fk-type-propagation.spec.ts`)
+- **Updated**: 2026-08-09 (added `undo-redo.spec.ts`)
 
 ## Context
 
@@ -82,6 +82,9 @@ findings came out of the process:
   (Snap-to-grid, REQ-006, was originally listed here too. That gap has since
   been closed by `e2e/specs/snap-to-grid.spec.ts`; see the "Snap-to-grid
   persistence" design subsection below for what that spec covers.)
+  (Undo/redo, REQ-005, was originally listed here too. That gap has since
+  been closed by `e2e/specs/undo-redo.spec.ts`; see the "Undo/redo of table
+  creation" design subsection below for what that spec covers.)
 - FK type propagation (REQ-017, [0013](0013-foreign-key-type-propagation.md)):
   editing an already-linked parent column's type afterward and asserting the
   cascade to its children. This is a distinct mutation path from connection
@@ -135,6 +138,8 @@ e2e/
     fk-connection-drawing.spec.ts
     fk-child-column-generation.spec.ts  (added later — see "Reversed FK gesture" below)
     snap-to-grid.spec.ts                (added later — see "Snap-to-grid persistence" below)
+    fk-type-propagation.spec.ts         (added later — see "FK type propagation" below)
+    undo-redo.spec.ts                   (added later — see "Undo/redo of table creation" below)
 ```
 
 Root-level `e2e/`, not colocated under `src/`: `docs/rules/testing.md`'s
@@ -400,6 +405,40 @@ unit tests, without touching any additional pointer-hard surface — so it's
 deliberately left out of this spec, consistent with each E2E scenario in
 this doc covering one real gesture rather than duplicating unit-level logic
 coverage.
+
+### Undo/redo of table creation: `undo-redo.spec.ts`
+
+Added after the initial rounds, to close the undo/redo gap noted above
+(REQ-005, [0016](0016-undo-redo.md)). The history reducer itself
+(`useUndoableSchema`'s cap, no-op guards, stack-clearing rules) and its
+consumer wiring (`useUndoRedo`'s `canUndo`/`canRedo`, selection clearing;
+`useUndoRedoShortcut`'s key matching and dialog/text-field guards) are
+already exhaustively covered by jsdom unit tests
+(`useUndoableSchema.test.tsx`, `useUndoRedo.test.tsx`,
+`useUndoRedoShortcut.test.tsx`, `Toolbar.test.tsx`). The one thing those
+tests can't reach is the real-browser path: a toolbar button click or a real
+`keydown` event actually flipping visible DOM state, and the toolbar
+buttons' `disabled` attribute actually rendering in sync with `canUndo`/
+`canRedo`.
+
+Two scenarios. The first exercises the toolbar buttons directly: starting
+state (both disabled), creating a table (Undo enables, Redo stays
+disabled), undo (table disappears, Undo/Redo states flip), redo (table
+reappears, states flip back). The second exercises the keyboard shortcut
+across two edits (two table creations), pressing `ControlOrMeta+z` twice and
+`ControlOrMeta+Shift+z` once, asserting the expected pair of tables is
+present after each step — covering a real multi-step history walk through
+actual `keydown` events, not just a single edit.
+
+Both scenarios assert table presence/absence
+(`mainScreen.tableNode(name)`), not pixel position: identity appearing and
+disappearing is the real-browser-only gap for undo/redo, and combining it
+with drag-position math would only add the existing drag specs' flakiness
+surface without covering new ground. The keyboard shortcut's dialog-open and
+text-input-focus guards are deliberately left untested here — they're
+already covered by `useUndoRedoShortcut.test.tsx` in jsdom and have no
+real-browser-only wrinkle (unlike, say, the viewport-shift-during-drag
+gotchas found elsewhere in this doc) to justify E2E duplication.
 
 ## Alternatives Considered
 
