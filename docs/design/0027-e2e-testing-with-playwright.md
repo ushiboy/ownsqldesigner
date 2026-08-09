@@ -2,7 +2,7 @@
 
 - **Status**: Implemented
 - **Created**: 2026-08-04
-- **Updated**: 2026-08-09 (added `undo-redo.spec.ts`)
+- **Updated**: 2026-08-09 (added `table-deletion.spec.ts`)
 
 ## Context
 
@@ -85,6 +85,12 @@ findings came out of the process:
   (Undo/redo, REQ-005, was originally listed here too. That gap has since
   been closed by `e2e/specs/undo-redo.spec.ts`; see the "Undo/redo of table
   creation" design subsection below for what that spec covers.)
+  (Table deletion, REQ-001/REQ-021, was originally listed here too. That gap
+  has since been closed by `e2e/specs/table-deletion.spec.ts`; see the
+  "Table deletion" design subsection below for what that spec covers.
+  General keyboard shortcuts (Escape-to-cancel, Enter-to-submit) and zoom
+  remain open — see that same subsection for why they're judged not to need
+  a spec.)
 - FK type propagation (REQ-017, [0013](0013-foreign-key-type-propagation.md)):
   editing an already-linked parent column's type afterward and asserting the
   cascade to its children. This is a distinct mutation path from connection
@@ -140,6 +146,7 @@ e2e/
     snap-to-grid.spec.ts                (added later — see "Snap-to-grid persistence" below)
     fk-type-propagation.spec.ts         (added later — see "FK type propagation" below)
     undo-redo.spec.ts                   (added later — see "Undo/redo of table creation" below)
+    table-deletion.spec.ts              (added later — see "Table deletion" below)
 ```
 
 Root-level `e2e/`, not colocated under `src/`: `docs/rules/testing.md`'s
@@ -439,6 +446,43 @@ text-input-focus guards are deliberately left untested here — they're
 already covered by `useUndoRedoShortcut.test.tsx` in jsdom and have no
 real-browser-only wrinkle (unlike, say, the viewport-shift-during-drag
 gotchas found elsewhere in this doc) to justify E2E duplication.
+
+### Table deletion: `table-deletion.spec.ts`
+
+Added after the initial rounds, to close the table-deletion gap noted above
+(REQ-001/REQ-021, [0008](0008-table-deletion.md)). `removeTable`'s cascade
+(dropping any foreign key that references the deleted table) is a pure
+function already covered by unit tests in `table.test.ts` and
+`foreignKey.test.ts`, and `useDeleteKeyShortcut`'s guards (dialog-open,
+text-field focus, no selection) are covered by
+`useDeleteKeyShortcut.test.tsx`. The real-browser-only gap those tests can't
+reach: a genuine `keydown` event or a side-panel button click actually
+opening the `deleteTable` confirm dialog, confirming it, and the table node
+disappearing from a live React Flow canvas — plus `Canvas.tsx`'s
+`deleteKeyCode: null` override, which exists specifically to stop React
+Flow's own built-in Backspace handling from double-deleting or flickering
+against the app's own listener, a race that only exists in a real browser.
+
+Three scenarios, all asserting node/edge presence rather than position (no
+drag-precision surface here, unlike the drag specs above):
+
+- Delete via the side panel's delete button and its confirm dialog.
+- Delete via the Delete keyboard shortcut and the same confirm dialog —
+  the scenario that actually exercises the `window` `keydown` listener and
+  the `deleteKeyCode: null` override.
+- REQ-021's cascade: connect two tables with a forward FK drag (the same
+  `connectColumns` gesture as `fk-connection-drawing.spec.ts`), delete the
+  parent table, and assert both the edge and the child table's relation-list
+  entry are gone afterward — not just that the parent node disappeared.
+
+General keyboard shortcuts (Escape-to-cancel, Enter-to-submit — see
+[0017](0017-keyboard-shortcuts.md)) and zoom (see
+[0020](0020-canvas-zoom.md)) remain deliberately uncovered: Escape/Enter are
+native browser/form semantics with no app-specific wiring beyond what's
+already unit-tested per-dialog, and zoom is 100% delegated to
+`@xyflow/react`'s built-in controls with no app code to break. Neither has a
+real-browser-only risk surface comparable to the `deleteKeyCode` override
+above, so neither gets a spec in this round.
 
 ## Alternatives Considered
 

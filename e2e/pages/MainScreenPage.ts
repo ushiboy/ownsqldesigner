@@ -101,6 +101,23 @@ export class MainScreenPage {
     await this.tableNode(name).click();
   }
 
+  private async confirmDeleteTableDialog(): Promise<void> {
+    const dialog = this.page.getByRole("dialog", { name: "Delete Table" });
+    await dialog.getByRole("button", { name: "Delete" }).click();
+    await dialog.waitFor({ state: "hidden" });
+  }
+
+  async deleteTableViaSidePanel(name: string): Promise<void> {
+    await this.selectTable(name);
+    await this.sidePanel.panel.getByRole("button", { name: "Delete table" }).click();
+    await this.confirmDeleteTableDialog();
+  }
+
+  async deleteSelectedTableViaKeyboard(): Promise<void> {
+    await this.page.keyboard.press("Delete");
+    await this.confirmDeleteTableDialog();
+  }
+
   undoButton(): Locator {
     return this.page.getByRole("button", { name: "Undo" });
   }
