@@ -60,7 +60,7 @@ Canvas drag, rubber-band multi-select, and foreign-key connection drawing are js
 - **Selectors**: reuse existing accessible attributes (`aria-label`, role) and React Flow's own DOM (`data-id`, `data-handleid`) — no `data-testid` convention, consistent with the role-based-query preference above. Only add a `data-testid` when a scenario genuinely has no accessible or structural hook, and justify it inline where it's added.
 - **State isolation**: each spec clears storage and reloads once via `resetAppState` (`e2e/fixtures/cleanStorage.ts`) before the app's own startup logic runs, then drives table/column setup through the UI rather than seeding the localStorage envelope directly — this avoids coupling specs to `{version, schema}`'s internal shape.
 - **Running locally**: `pnpm test:e2e` (headless) or `pnpm test:e2e:ui` (interactive debugging). This is **not** part of `pnpm test` or the pre-commit gate (see [Pre-Commit Checks](pre-commit-checks.md)) — it spins up a real browser and dev server, too slow and timing-sensitive for a per-commit gate.
-- **Out of scope today** (deliberate, not forgotten): CI wiring, a multi-browser matrix, and broader flow coverage (undo/redo, table deletion, keyboard shortcuts, zoom) — see 0027's Non-Goals.
+- **Out of scope today** (deliberate, not forgotten): a multi-browser matrix, and keyboard-shortcut/zoom coverage (no app-specific real-browser risk) — see 0027's Non-Goals. CI wiring is done — see [0028](../design/0028-ci-github-actions.md).
 
 ## Example
 

@@ -2,7 +2,7 @@
 
 - **Status**: Implemented
 - **Created**: 2026-08-04
-- **Updated**: 2026-08-09 (added `table-deletion.spec.ts`)
+- **Updated**: 2026-08-09 (CI wiring closed by [0028](0028-ci-github-actions.md))
 
 ## Context
 
@@ -77,6 +77,8 @@ findings came out of the process:
 
 - CI wiring (no GitHub Actions workflow this round — the repo has no CI at
   all today; adding one is a separate, later decision).
+  (That gap has since been closed by
+  [0028](0028-ci-github-actions.md).)
 - Broader flow coverage: undo/redo, table deletion, keyboard shortcuts, zoom.
   Explicit follow-ups, not built now.
   (Snap-to-grid, REQ-006, was originally listed here too. That gap has since
@@ -515,8 +517,9 @@ above, so neither gets a spec in this round.
 
 ## Open Questions
 
-- Whether CI (when added) should run against `build`+`preview` instead of
-  `dev`.
+- Whether CI should run against `build`+`preview` instead of `dev` — CI now
+  exists ([0028](0028-ci-github-actions.md)) but this was carried over
+  unresolved, kept on `dev` for now.
 - When to expand the browser matrix beyond Chromium.
 - Whether raw-envelope seeding becomes worth the coupling once spec count
   grows enough that UI-driven setup dominates suite runtime.
