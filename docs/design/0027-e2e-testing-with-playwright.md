@@ -2,7 +2,7 @@
 
 - **Status**: Implemented
 - **Created**: 2026-08-04
-- **Updated**: 2026-08-08
+- **Updated**: 2026-08-08 (added `snap-to-grid.spec.ts`)
 
 ## Context
 
@@ -77,8 +77,11 @@ findings came out of the process:
 
 - CI wiring (no GitHub Actions workflow this round — the repo has no CI at
   all today; adding one is a separate, later decision).
-- Broader flow coverage: undo/redo, table deletion, keyboard shortcuts,
-  snap-to-grid, zoom. Explicit follow-ups, not built now.
+- Broader flow coverage: undo/redo, table deletion, keyboard shortcuts, zoom.
+  Explicit follow-ups, not built now.
+  (Snap-to-grid, REQ-006, was originally listed here too. That gap has since
+  been closed by `e2e/specs/snap-to-grid.spec.ts`; see the "Snap-to-grid
+  persistence" design subsection below for what that spec covers.)
 - FK type propagation (REQ-017, [0013](0013-foreign-key-type-propagation.md)):
   editing an already-linked parent column's type afterward and asserting the
   cascade to its children. This is a distinct mutation path from connection
@@ -128,6 +131,7 @@ e2e/
     multi-select-group-move.spec.ts
     fk-connection-drawing.spec.ts
     fk-child-column-generation.spec.ts  (added later — see "Reversed FK gesture" below)
+    snap-to-grid.spec.ts                (added later — see "Snap-to-grid persistence" below)
 ```
 
 Root-level `e2e/`, not colocated under `src/`: `docs/rules/testing.md`'s
@@ -310,6 +314,26 @@ repeated until two consecutive reads agree or a generous attempt budget is
 spent — deliberately fast per iteration so a correction doesn't itself get
 outrun by an ongoing shift. 200/200 runs passed under full parallel load
 with the loop.
+
+### Snap-to-grid persistence: `snap-to-grid.spec.ts`
+
+Added after the initial rounds, to close the snap-to-grid gap noted above
+(REQ-006, [0022](0022-snap-to-grid.md)). The toggle itself (`useSnapToGrid`)
+and its toolbar button's pressed state are already unit-tested
+(`useSnapToGrid.test.ts`, `Toolbar.test.tsx`); the one path unit tests can't
+reach is the grid math (`nodeChanges.ts`'s `snapPosition`, 20px grid) actually
+being applied to a real pointer drag's committed position.
+
+The spec drags a table by an offset deliberately **not** a multiple of 20px,
+then asserts the persisted delta (post-reload, read twice for the same
+0px-stable-comparison reason as the table-drag spec above) is an exact
+multiple of 20. It doesn't need to know the canvas's constant screen offset:
+that offset cancels out when subtracting two stored positions from each
+other, so the screen-pixel delta between before/after equals the underlying
+flow-coordinate delta at zoom 1. `SNAP_GRID_SIZE` is inlined as a local
+constant in the spec (not imported from `nodeChanges.ts`) to keep the E2E
+suite decoupled from app source, consistent with this doc's existing
+selector-strategy stance.
 
 ### State isolation
 

@@ -135,6 +135,10 @@ export class MainScreenPage {
     await this.page.keyboard.up("Shift");
   }
 
+  async toggleSnapToGrid(): Promise<void> {
+    await this.page.getByRole("button", { name: "Toggle snap to grid" }).click();
+  }
+
   async openSidePanel(): Promise<void> {
     const toggle = this.page.getByRole("button", { name: "Toggle side panel" });
     if ((await toggle.getAttribute("aria-pressed")) !== "true") {
