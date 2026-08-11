@@ -47,6 +47,7 @@ The Phase column gives a rough implementation order: Phase 1 = core MVP, Phase 2
 | REQ-015 | Render relation connectors (curved, auto-routed) with highlight on selection ([0009](design/0009-foreign-key-relations.md))                                                                           | 1     |
 | REQ-016 | Auto-generate a child column when creating a foreign key (configurable naming pattern) ([0012](design/0012-foreign-key-child-column-generation.md), [0025](design/0025-fk-naming-pattern-setting.md)) | 2     |
 | REQ-017 | Propagate parent column type changes to connected child columns ([0013](design/0013-foreign-key-type-propagation.md))                                                                                 | 2     |
+| REQ-038 | Control the column order within a composite key (PRIMARY KEY / UNIQUE / INDEX) ([0031](design/0031-composite-key-column-ordering.md))                                                                 | 2     |
 
 ### Integrity and validation
 

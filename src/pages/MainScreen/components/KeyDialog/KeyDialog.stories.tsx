@@ -15,6 +15,18 @@ const key: Key = {
   columnIds: ["a2b3c4d5-6e7f-4a8b-9c0d-1e2f3a4b5c6d"],
 };
 
+const threeColumns: Pick<Column, "id" | "name">[] = [
+  { id: "c1c2c3c4-5d6e-4f7a-8b9c-0d1e2f3a4b5c", name: "team_id" },
+  { id: "c2c2c3c4-5d6e-4f7a-8b9c-0d1e2f3a4b5c", name: "user_id" },
+  { id: "c3c2c3c4-5d6e-4f7a-8b9c-0d1e2f3a4b5c", name: "role" },
+];
+
+const compositeKey: Key = {
+  id: "d1c2d3e4-5f6a-4b7c-8d9e-0f1a2b3c4d5e",
+  type: "UNIQUE",
+  columnIds: ["c1c2c3c4-5d6e-4f7a-8b9c-0d1e2f3a4b5c", "c2c2c3c4-5d6e-4f7a-8b9c-0d1e2f3a4b5c"],
+};
+
 const meta = {
   title: "pages/MainScreen/KeyDialog",
   component: KeyDialog,
@@ -59,5 +71,15 @@ export const AddPrimaryKeyDisabled: Story = {
     title: "Add Key",
     submitLabel: "Add",
     primaryKeyDisabled: true,
+  },
+};
+
+export const EditWithMultipleColumns: Story = {
+  args: {
+    open: true,
+    title: "Edit Key",
+    submitLabel: "Save",
+    columns: threeColumns,
+    initialKey: compositeKey,
   },
 };

@@ -93,6 +93,8 @@ export default {
     deleteConfirmMessageReferenced:
       "キー「{label}」を削除しますか? 他のテーブルの外部キーがこのキーを参照しているため、そのリレーションも削除されます。この操作は取り消せません。",
     columnsLegend: "カラム",
+    moveColumnUp: "{column}を上に移動",
+    moveColumnDown: "{column}を下に移動",
   },
   relationDialog: {
     deleteTitle: "リレーションを削除",

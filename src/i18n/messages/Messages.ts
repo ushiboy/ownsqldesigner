@@ -94,6 +94,10 @@ export type Messages = {
     /** ICU placeholder: {label} */
     deleteConfirmMessageReferenced: string;
     columnsLegend: string;
+    /** ICU placeholder: {column} */
+    moveColumnUp: string;
+    /** ICU placeholder: {column} */
+    moveColumnDown: string;
   };
   relationDialog: {
     deleteTitle: string;

@@ -4,7 +4,7 @@ import { fn } from "storybook/test";
 import { composeStories } from "@storybook/react-vite";
 import * as stories from "./KeyDialog.stories";
 
-const { Add, Edit, AddPrimaryKeyDisabled } = composeStories(stories);
+const { Add, Edit, AddPrimaryKeyDisabled, EditWithMultipleColumns } = composeStories(stories);
 
 describe("KeyDialog", () => {
   it("shows the dialog with a disabled submit button while no column is checked", () => {
@@ -78,5 +78,42 @@ describe("KeyDialog", () => {
     render(<Add onCancel={onCancel} />);
     await userEvent.keyboard("{Escape}");
     expect(onCancel).toHaveBeenCalledOnce();
+  });
+
+  it("hides the move buttons when fewer than two columns are checked", async () => {
+    render(<Add />);
+    await userEvent.click(screen.getByLabelText("id"));
+    expect(screen.queryByRole("button", { name: "Move id up" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Move id down" })).not.toBeInTheDocument();
+  });
+
+  it("shows a position number and move buttons once two or more columns are checked, but not for unchecked columns", () => {
+    render(<EditWithMultipleColumns />);
+    expect(screen.getByRole("button", { name: "Move team_id up" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Move team_id down" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Move user_id up" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Move user_id down" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Move role up" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Move role down" })).not.toBeInTheDocument();
+  });
+
+  it("disables the move-up button for the first checked column and the move-down button for the last", () => {
+    render(<EditWithMultipleColumns />);
+    expect(screen.getByRole("button", { name: "Move team_id up" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Move team_id down" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Move user_id up" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Move user_id down" })).toBeDisabled();
+  });
+
+  it("reorders checked columns and submits them in the new order", async () => {
+    const onSubmit = fn();
+    render(<EditWithMultipleColumns onSubmit={onSubmit} />);
+    await userEvent.click(screen.getByRole("button", { name: "Move team_id down" }));
+    await userEvent.click(screen.getByRole("button", { name: "Save" }));
+
+    expect(onSubmit).toHaveBeenCalledExactlyOnceWith({
+      type: "UNIQUE",
+      columnIds: ["c2c2c3c4-5d6e-4f7a-8b9c-0d1e2f3a4b5c", "c1c2c3c4-5d6e-4f7a-8b9c-0d1e2f3a4b5c"],
+    });
   });
 });

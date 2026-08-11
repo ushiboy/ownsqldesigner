@@ -1,12 +1,20 @@
 import { useState } from "react";
+import { LuChevronDown, LuChevronUp } from "react-icons/lu";
 import { tv } from "tailwind-variants";
 import { useTranslations } from "use-intl";
 import { Dialog, dialogActionButton } from "../../../../components/parts/Dialog";
 import { type Column, type Key, KEY_TYPES, type KeyType } from "../../../../domain/schema";
 import { KEY_TYPE_LABELS } from "../../keyTypeLabels";
+import { moveColumnIdDown, moveColumnIdUp } from "./moveColumnId";
 
 const fieldInput = tv({
   base: "mt-1 w-full rounded-md border border-edge bg-surface px-2.5 py-1.5 text-[14px] text-heading focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
+});
+
+// Small icon-only button, matching SidePanel.tsx's local `iconButton` — no
+// shared icon-button component exists yet in this codebase.
+const iconButton = tv({
+  base: "inline-flex items-center rounded-md p-1 text-body transition-colors hover:bg-accent-bg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:pointer-events-none disabled:opacity-40",
 });
 
 type KeyFields = Omit<Key, "id">;
@@ -108,18 +116,45 @@ function KeyForm({
       <fieldset className="mt-4 text-[14px]">
         <legend>{t("columnsLegend")}</legend>
         <ul className="mt-1 space-y-1">
-          {columns.map((column) => (
-            <li key={column.id}>
-              <label className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={columnIds.includes(column.id)}
-                  onChange={(event) => toggleColumn(column.id, event.target.checked)}
-                />
-                {column.name}
-              </label>
-            </li>
-          ))}
+          {columns.map((column) => {
+            const position = columnIds.indexOf(column.id);
+            const isChecked = position !== -1;
+            return (
+              <li key={column.id} className="flex items-center justify-between gap-2">
+                <label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={isChecked}
+                    onChange={(event) => toggleColumn(column.id, event.target.checked)}
+                  />
+                  {column.name}
+                </label>
+                {isChecked && columnIds.length > 1 && (
+                  <span className="flex shrink-0 items-center gap-1">
+                    <span className="text-body">{position + 1}</span>
+                    <button
+                      type="button"
+                      aria-label={t("moveColumnUp", { column: column.name })}
+                      disabled={position === 0}
+                      onClick={() => setColumnIds((prev) => moveColumnIdUp(prev, column.id))}
+                      className={iconButton()}
+                    >
+                      <LuChevronUp aria-hidden="true" className="size-4" />
+                    </button>
+                    <button
+                      type="button"
+                      aria-label={t("moveColumnDown", { column: column.name })}
+                      disabled={position === columnIds.length - 1}
+                      onClick={() => setColumnIds((prev) => moveColumnIdDown(prev, column.id))}
+                      className={iconButton()}
+                    >
+                      <LuChevronDown aria-hidden="true" className="size-4" />
+                    </button>
+                  </span>
+                )}
+              </li>
+            );
+          })}
         </ul>
       </fieldset>
       <div className="mt-6 flex justify-end gap-2">

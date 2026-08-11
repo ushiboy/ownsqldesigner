@@ -113,7 +113,14 @@ A "Keys" section is added to `TableProperties`, structurally identical to the ex
 
 ## Open Questions
 
-- Whether composite key column order (e.g. for a multi-column INDEX, where order can matter for query planning) needs to be user-controllable, given the checkbox UI naturally orders by the table's column order — left unresolved; revisit once SQL export (REQ-026) needs a concrete column order for `CREATE INDEX`.
+- ~~Whether composite key column order (e.g. for a multi-column INDEX,
+  where order can matter for query planning) needs to be user-controllable,
+  given the checkbox UI naturally orders by the table's column order — left
+  unresolved; revisit once SQL export (REQ-026) needs a concrete column
+  order for `CREATE INDEX`.~~ Resolved in
+  [0031](0031-composite-key-column-ordering.md): `KeyDialog` now shows each
+  checked column's position and lets the user reorder them with move
+  up/down buttons.
 - Whether `Key` should eventually gain a `name` field once SQL export needs named constraints/indexes — deferred, not a blocker.
 - Whether `addKey`/`updateKey` should defensively filter `columnIds` down to ids that actually exist on the table — not implemented here since `KeyDialog` can only ever offer the table's own columns; revisit if this proves fragile.
 - Whether the "Keys" section's per-row label reads well once a table has many composite keys with long column lists — no truncation is designed here; revisit if it proves visually noisy in practice.

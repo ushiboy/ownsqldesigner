@@ -94,6 +94,8 @@ export default {
     deleteConfirmMessageReferenced:
       'Delete key "{label}"? A foreign key on another table references it — that relation will be removed too. This cannot be undone.',
     columnsLegend: "Columns",
+    moveColumnUp: "Move {column} up",
+    moveColumnDown: "Move {column} down",
   },
   relationDialog: {
     deleteTitle: "Delete Relation",
