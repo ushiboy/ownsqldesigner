@@ -14,6 +14,7 @@ import {
   POSTS_USER_ID_COLUMN_ID,
   POSTS_USER_ID_KEY_ID,
   USERS_ID_COLUMN_ID,
+  USERS_MANAGER_ID_COLUMN_ID,
   USERS_TABLE_ID,
   buildTwoTableSchema,
   columnFields,
@@ -527,6 +528,32 @@ describe("REQ-017: updateColumn propagates type changes to foreign-key children"
     expect(
       getTable(updated, CYCLE_Y_TABLE_ID).columns.find((c) => c.id === CYCLE_COL_B_ID),
     ).toMatchObject({ type: "TEXT" });
+  });
+
+  it("terminates when propagation forms a self-reference on the same table", () => {
+    const withManagerIdColumn = addColumn(
+      buildTwoTableSchema(),
+      USERS_TABLE_ID,
+      { ...columnFields, name: "manager_id", type: "INTEGER" },
+      { id: USERS_MANAGER_ID_COLUMN_ID, now: new Date("2026-07-18T09:00:00.000Z") },
+    );
+    const original = addForeignKey(withManagerIdColumn, USERS_TABLE_ID, {
+      columnId: USERS_MANAGER_ID_COLUMN_ID,
+      referencedTableId: USERS_TABLE_ID,
+      referencedColumnId: USERS_ID_COLUMN_ID,
+    });
+
+    const updated = updateColumn(
+      original,
+      USERS_TABLE_ID,
+      USERS_ID_COLUMN_ID,
+      { ...columnFields, name: "id", type: "REAL" },
+      { now: new Date("2026-07-19T09:00:00.000Z") },
+    );
+
+    expect(
+      getTable(updated, USERS_TABLE_ID).columns.find((c) => c.id === USERS_MANAGER_ID_COLUMN_ID),
+    ).toMatchObject({ type: "REAL" });
   });
 
   it("does not touch other tables when the column's type does not change", () => {

@@ -477,6 +477,29 @@ describe("useUndoableSchema", () => {
     );
   });
 
+  it("removes a key together with the foreign key referencing it, and bumps updatedAt", () => {
+    const blog = addForeignKey(
+      buildBlogWithReferenceableColumn(),
+      "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12",
+      foreignKeyFields,
+      { now: new Date("2026-07-01T09:00:00.000Z") },
+    );
+    const { result } = renderUndoableSchema(blog);
+
+    act(() => {
+      result.current.editing.removeKeyCascadingForeignKeys(
+        "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12",
+        "b1c2d3e4-5f6a-4b7c-8d9e-0f1a2b3c4d5e",
+      );
+    });
+
+    expect(result.current.editing.currentSchema?.tables[0]?.keys).toEqual([]);
+    expect(result.current.editing.currentSchema?.tables[0]?.foreignKeys).toEqual([]);
+    expect(result.current.editing.currentSchema?.updatedAt.getTime()).toBeGreaterThan(
+      blog.updatedAt.getTime(),
+    );
+  });
+
   it("adds a foreign key to a table and bumps updatedAt", () => {
     const blog = buildBlogWithReferenceableColumn();
     const { result } = renderUndoableSchema(blog);
