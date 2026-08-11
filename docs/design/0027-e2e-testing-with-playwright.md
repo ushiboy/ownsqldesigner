@@ -2,7 +2,9 @@
 
 - **Status**: Implemented
 - **Created**: 2026-08-04
-- **Updated**: 2026-08-09 (CI wiring closed by [0028](0028-ci-github-actions.md))
+- **Updated**: 2026-08-11 (CI now runs the E2E suite against a production
+  build instead of the dev server — see the updated `webServer` strategy
+  section and the closed Open Question below)
 
 ## Context
 
@@ -121,14 +123,22 @@ project. This round is about proving the harness and locking in three flows,
 not cross-browser regression coverage — a multi-browser matrix is cheap to
 add later once the pattern is proven.
 
-`playwright.config.ts`'s `webServer` runs `pnpm dev` (the existing Vite dev
-server, no custom port/proxy/base in `vite.config.ts`) rather than
-`vite build` + `vite preview`. The app has no backend and no
-environment-dependent build output, so a production build buys no extra
-correctness here, only slower iteration. `reuseExistingServer:
-!process.env.CI` lets a developer keep `pnpm dev` running across repeated
-`test:e2e` runs locally. Revisiting this for `build`+`preview` is left as an
-Open Question for whenever CI is added.
+`playwright.config.ts`'s `webServer.command` is now conditioned on
+`process.env.CI` (the same variable already driving `retries`, `reporter`,
+and `reuseExistingServer` in this file): locally it still runs `pnpm dev`
+(the existing Vite dev server, no custom port/proxy/base in
+`vite.config.ts`), so `reuseExistingServer: !process.env.CI` continues to
+let a developer keep `pnpm dev` running across repeated `test:e2e` runs. In
+CI, it runs `pnpm build && pnpm exec vite preview --port 5173` instead —
+closing the Open Question originally left here (see below) once CI existed
+to make the tradeoff concrete: a dev server can hide bugs that only exist
+in the built artifact (minification, tree-shaking, env branching), and CI
+is where that extra confidence is worth the slower startup, while local
+iteration still favors `pnpm dev`'s speed. `--port 5173` overrides `vite
+preview`'s default (4173) so `url`/`baseURL` don't need to differ by
+environment. The CI `webServer` timeout is bumped to 60s (from 30s) to
+cover the build step; `reuseExistingServer` is unaffected since it was
+already `false` in CI.
 
 ### Directory layout and Page Object Model
 
@@ -488,10 +498,18 @@ above, so neither gets a spec in this round.
 
 ## Alternatives Considered
 
-- **`vite build` + `vite preview` instead of `vite dev`** — rejected for
-  this round: no behavioral difference to justify the slower iteration loop
-  yet, since the app has no env-dependent build output. Revisit once CI is
-  added (see Open Questions).
+- **`vite build` + `vite preview` instead of `vite dev`, everywhere
+  (including local runs)** — rejected: local iteration favors `pnpm dev`'s
+  near-instant startup, and there's no local-specific reason to pay the
+  build cost on every `test:e2e` run. Adopted for CI only, once CI existed
+  to make the tradeoff concrete — see the "Tooling and `webServer`
+  strategy" section above.
+- **Sharing a single build artifact between the `checks` and `e2e` CI
+  jobs** (e.g. via `actions/upload-artifact`/`download-artifact`) instead
+  of each job running its own `pnpm build` — rejected: keeps the two
+  jobs' existing independence (see [0028](0028-ci-github-actions.md)'s
+  "Two parallel jobs" design) rather than introducing a dependency between
+  them for a build that only takes a few seconds either way.
 - **Multi-browser (Firefox/WebKit) from the start** — rejected: adds
   local/CI runtime cost before the harness and the three scenarios are
   proven; cheap to add once they are.
@@ -517,9 +535,10 @@ above, so neither gets a spec in this round.
 
 ## Open Questions
 
-- Whether CI should run against `build`+`preview` instead of `dev` — CI now
-  exists ([0028](0028-ci-github-actions.md)) but this was carried over
-  unresolved, kept on `dev` for now.
+- ~~Whether CI should run against `build`+`preview` instead of `dev`~~ —
+  Resolved 2026-08-11: CI's `e2e` job now runs `pnpm build` +
+  `vite preview`; local `test:e2e` still uses `pnpm dev`. See the updated
+  "Tooling and `webServer` strategy" section above.
 - When to expand the browser matrix beyond Chromium.
 - Whether raw-envelope seeding becomes worth the coupling once spec count
   grows enough that UI-driven setup dominates suite runtime.

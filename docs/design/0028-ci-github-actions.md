@@ -2,7 +2,11 @@
 
 - **Status**: Implemented
 - **Created**: 2026-08-09
-- **Updated**: 2026-08-09
+- **Updated**: 2026-08-11 (`e2e` job now caches Playwright's Chromium
+  binary and runs against a production build — see the new "Playwright
+  browser caching" section and the closed Open Question below; the
+  production-build switch itself is documented in
+  [0027](0027-e2e-testing-with-playwright.md))
 
 ## Context
 
@@ -35,12 +39,14 @@ workflow ever having existed to set it.
 
 - A multi-browser matrix (Firefox/WebKit) — 0027 already deferred this;
   nothing here changes that.
-- `build` + `preview` instead of `dev` for the E2E job's `webServer` — noted
-  as an open question in 0027, still open. `pnpm dev` is kept for this
-  round; revisit if build-only regressions ever slip through.
-- Caching Playwright's downloaded browser binaries across runs —
-  `--with-deps chromium` installs fresh each run. Simpler to reason about
-  for a first pass; worth adding if install time becomes a real cost.
+- ~~`build` + `preview` instead of `dev` for the E2E job's `webServer`~~ —
+  Resolved 2026-08-11: the `e2e` job now runs against a production build.
+  See [0027](0027-e2e-testing-with-playwright.md)'s "Tooling and
+  `webServer` strategy" section for the design and rationale; this doc's
+  workflow itself didn't need to change for it (`playwright.config.ts`
+  owns the `webServer` command).
+- ~~Caching Playwright's downloaded browser binaries across runs~~ —
+  Resolved 2026-08-11, see "Playwright browser caching" below.
 - Deploy/publish steps, branch protection configuration, status-check
   requirements — this doc only adds the workflow itself.
 
@@ -54,11 +60,13 @@ workflow ever having existed to set it.
 - **`checks`** — `pnpm format:check` (see below), `pnpm lint`,
   `pnpm typecheck`, `pnpm test`, `pnpm build`, in that order, matching
   `pre-commit-checks.md` step-for-step except for the format step's mode.
-- **`e2e`** — installs Playwright's Chromium binary
-  (`pnpm exec playwright install --with-deps chromium`, matching
-  `playwright.config.ts`'s single `chromium` project) and runs
-  `pnpm test:e2e`. `playwright.config.ts`'s own `webServer` block starts
-  `pnpm dev` for the job; no separate server-startup step is needed.
+- **`e2e`** — installs Playwright's Chromium binary (see "Playwright
+  browser caching" below; matches `playwright.config.ts`'s single
+  `chromium` project) and runs `pnpm test:e2e`. `playwright.config.ts`'s
+  own `webServer` block starts the server for the job — a production
+  build in CI (see [0027](0027-e2e-testing-with-playwright.md)) rather
+  than `pnpm dev`; no separate server-startup step is needed here either
+  way.
 
 Split into two jobs (not one sequential job) so the fast jsdom-based checks
 and the slower real-browser suite run concurrently — a `checks` failure is
@@ -67,6 +75,33 @@ rather than gating `e2e` behind `checks` passing first: `pre-commit-checks.md`
 already treats them as independent concerns (E2E is "irrelevant to commits
 that don't touch canvas interactions" but that's a local-workflow
 convenience, not a signal CI should skip it opportunistically).
+
+### Playwright browser caching
+
+Added 2026-08-11. The `e2e` job caches `~/.cache/ms-playwright` (where
+Playwright downloads browser binaries) via `actions/cache`, keyed on
+`playwright-chromium-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}`.
+Keying on the lockfile hash (rather than parsing `@playwright/test`'s
+version out of `package.json`) is simpler and never serves a stale/
+mismatched browser cache — it invalidates on any dependency change, a
+broader net than strictly necessary but no real cost given how cheap a
+cache miss still is (it just falls back to today's full install).
+
+A cache hit still needs `pnpm exec playwright install-deps chromium`
+(apt-only, fast) rather than skipping installation entirely: GitHub's
+runners are fresh VMs each run, so the OS-level packages `--with-deps`
+installs aren't covered by caching a `~/.cache` directory even though the
+downloaded browser binary is. A cache miss runs the original full
+`playwright install --with-deps chromium`.
+
+`actions/cache` is pinned to `v5.0.5`'s commit SHA
+(`27d5ce7f107fe9357f9df03efb73ab90386fccae`), following the same
+provenance-and-age vetting as the three actions below: GitHub's own
+official action (no open security advisories found at pin time), released
+2026-04-13 (~4 months old at pin time) — deliberately not the newer
+`v6.x` line, which only branched a major version ~7 weeks before this
+change and hasn't had comparable time to be scrutinized at that major
+version.
 
 ### `pnpm format:check`, a new script
 
@@ -93,10 +128,11 @@ release tag as a trailing comment for readability), not a floating major
 tag like `@v7` — a compromised or force-moved tag would otherwise change
 what code a workflow runs without any change to this repo. Each pin was
 checked against its upstream repo before adopting, on two axes: provenance
-(`actions/checkout` — official GitHub org, 8.6k+ stars; `pnpm/action-setup`
-and `actions/setup-node` — official `pnpm`/GitHub orgs respectively, no open
+(`actions/checkout` and `actions/cache` — official GitHub org, both widely
+deployed; `pnpm/action-setup` and `actions/setup-node` — official
+`pnpm`/GitHub orgs respectively, no open
 `gh api repos/<owner>/<repo>/security-advisories` entries for any of the
-three) and **age** — how long the specific pinned release has been out,
+four) and **age** — how long the specific pinned release has been out,
 since a brand-new release has had the least time for the community to
 notice something wrong with it:
 
@@ -105,6 +141,7 @@ notice something wrong with it:
 | `actions/checkout`   | v7.0.1         | 2026-07-20 | ~3 weeks        |
 | `pnpm/action-setup`  | v4.4.0         | 2026-03-13 | ~5 months       |
 | `actions/setup-node` | v6.4.0         | 2026-04-20 | ~4 months       |
+| `actions/cache`      | v5.0.5         | 2026-04-13 | ~4 months       |
 
 `pnpm/setup` — the action pnpm's own README now points to as the
 `pnpm/action-setup` successor for pnpm v11+ — was tried first and reverted:
@@ -134,8 +171,9 @@ action, adopted and scrutinized at a scale that compresses how long
 - **Gate `e2e` on `checks` succeeding first** — rejected: both jobs installing
   dependencies independently is cheap, and failing E2E is useful signal even
   if, say, `pnpm lint` also happens to be broken by an unrelated change.
-- **`vite build` + `vite preview` for the E2E job's server** — deferred, per
-  0027's existing Open Question; no new information here to resolve it.
+- **`vite build` + `vite preview` for the E2E job's server** — was
+  deferred here as 0027's Open Question; resolved 2026-08-11, see
+  [0027](0027-e2e-testing-with-playwright.md) for the design.
 - **Folding this workflow's checks into `pre-commit-checks.md`'s required
   local sequence** — not applicable; CI is additive verification on
   push/PR, not a replacement for the local pre-commit gate.
@@ -158,5 +196,7 @@ action, adopted and scrutinized at a scale that compresses how long
 
 - Whether to add branch protection requiring these checks before merge
   (a repo-settings change, not a workflow-file change — out of scope here).
-- Whether/when to cache Playwright's browser binaries once install time is
-  measured against real CI run history.
+- ~~Whether/when to cache Playwright's browser binaries once install time
+  is measured against real CI run history~~ — Resolved 2026-08-11 without
+  waiting for that measurement, since the change is low-risk and cheap
+  either way; see "Playwright browser caching" above.

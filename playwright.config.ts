@@ -26,9 +26,13 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: "pnpm dev",
+    // CI exercises the production build (catches minification/tree-shaking/
+    // env-branching bugs the dev server can't), while local runs keep the
+    // dev server so `pnpm dev` can stay running across repeated local runs.
+    // `--port 5173` overrides vite preview's default (4173) to match `url`.
+    command: process.env.CI ? "pnpm build && pnpm exec vite preview --port 5173" : "pnpm dev",
     url: "http://localhost:5173",
     reuseExistingServer: !process.env.CI,
-    timeout: 30_000,
+    timeout: process.env.CI ? 60_000 : 30_000,
   },
 });
