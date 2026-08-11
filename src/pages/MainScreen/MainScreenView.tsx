@@ -26,6 +26,7 @@ import {
 import { useSelection } from "./SelectionContext";
 import { useDeleteKeyShortcut } from "./hooks/useDeleteKeyShortcut";
 import { useDownloadSchemaFile } from "./hooks/useDownloadSchemaFile";
+import { useEscapeClearSelectionShortcut } from "./hooks/useEscapeClearSelectionShortcut";
 import type { Theme } from "./hooks/useThemePreference";
 import { useUndoRedoShortcut } from "./hooks/useUndoRedoShortcut";
 import { useUnsavedChangesWarning } from "./hooks/useUnsavedChangesWarning";
@@ -81,11 +82,14 @@ export function MainScreenView({
   const {
     selectedTableId,
     selectedTableIds,
+    selectedColumnId,
+    selectedKeyId,
     selectedRelationId,
     setTableSelection,
     selectColumn,
     selectKey,
     selectRelation,
+    clearSelection,
   } = useSelection();
   // Captured once: Canvas only reads this for its very first render (see
   // the comment on its `useNodesState` call), so a stable snapshot avoids
@@ -128,6 +132,13 @@ export function MainScreenView({
 
   useDeleteKeyShortcut({ tableId: selectedTableId, relationId: selectedRelationId });
   useUndoRedoShortcut();
+  useEscapeClearSelectionShortcut({
+    hasTableSelection: selectedTableIds.size > 0,
+    columnId: selectedColumnId,
+    keyId: selectedKeyId,
+    relationId: selectedRelationId,
+    clearSelection,
+  });
   useUnsavedChangesWarning(hasUnsavedChanges);
 
   return (

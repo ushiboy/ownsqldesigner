@@ -2,7 +2,7 @@
 
 - **Status**: Implemented
 - **Created**: 2026-08-01
-- **Updated**: 2026-08-01
+- **Updated**: 2026-08-11
 
 ## Context
 
@@ -35,10 +35,10 @@ and closes out REQ-031, which had no design doc link.
 **Non-Goals**
 
 - Select-all (Ctrl/Cmd+A) on the canvas.
-- Escape to clear the current canvas selection — Escape currently only
-  closes an open dialog; with no dialog open it does nothing.
 - A shortcuts help/cheat-sheet overlay.
-- Any shortcut beyond the four above — REQ-031's "..." is intentionally left
+- Any shortcut beyond the four above (Escape-clears-selection is covered
+  separately in [0032](0032-escape-clears-canvas-selection.md)) — REQ-031's
+  "..." is intentionally left
   open for future additions, not implied to already exist.
 
 ## Design
@@ -124,6 +124,10 @@ Coverage already exists per-piece rather than as one shortcuts test suite:
 
 ## Open Questions
 
-- Should Escape also clear the current canvas selection when no dialog is
+- ~~Should Escape also clear the current canvas selection when no dialog is
   open? Left as a Non-Goal here; would be a small, separate addition if
-  wanted.
+  wanted.~~ Resolved in
+  [0032](0032-escape-clears-canvas-selection.md): a new
+  `useEscapeClearSelectionShortcut` hook clears the canvas selection on
+  Escape, under the same dialog-open/text-field guards as the other
+  shortcuts.

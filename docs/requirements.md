@@ -77,12 +77,12 @@ The Phase column gives a rough implementation order: Phase 1 = core MVP, Phase 2
 
 ### UI / UX
 
-| ID      | Requirement                                                                                                             | Phase |
-| ------- | ----------------------------------------------------------------------------------------------------------------------- | ----- |
-| REQ-029 | Dark mode (theme switching) ([0018](design/0018-dark-mode-toggle.md))                                                   | 2     |
-| REQ-030 | Japanese / English UI switching (i18n) ([0019](design/0019-i18n-locale-switching.md))                                   | 2     |
-| REQ-031 | Keyboard shortcuts (delete, undo/redo, confirm/cancel, ...) ([0017](design/0017-keyboard-shortcuts.md))                 | 2     |
-| REQ-032 | Persist settings (dialect, snap, FK naming pattern, display toggles) ([0025](design/0025-fk-naming-pattern-setting.md)) | 3     |
+| ID      | Requirement                                                                                                                                                    | Phase |
+| ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----- |
+| REQ-029 | Dark mode (theme switching) ([0018](design/0018-dark-mode-toggle.md))                                                                                          | 2     |
+| REQ-030 | Japanese / English UI switching (i18n) ([0019](design/0019-i18n-locale-switching.md))                                                                          | 2     |
+| REQ-031 | Keyboard shortcuts (delete, undo/redo, confirm/cancel, ...) ([0017](design/0017-keyboard-shortcuts.md), [0032](design/0032-escape-clears-canvas-selection.md)) | 2     |
+| REQ-032 | Persist settings (dialect, snap, FK naming pattern, display toggles) ([0025](design/0025-fk-naming-pattern-setting.md))                                        | 3     |
 
 ## Non-Goals
 
