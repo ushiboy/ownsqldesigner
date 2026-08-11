@@ -34,24 +34,26 @@ const foreignKeyFields = {
 
 /** A table with a UNIQUE column another table's foreign key can reference. */
 function buildBlogWithReferenceableColumn() {
+  const now = new Date("2026-07-01T09:00:00.000Z");
   const withUniqueColumn = addKey(
     addColumn(
-      createTable(createSchema("Blog Schema"), "posts", {
+      createTable(createSchema("Blog Schema", { now }), "posts", {
         id: "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12",
+        now,
       }),
       "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12",
       columnFields,
-      { id: "f1a2b3c4-5d6e-4f7a-8b9c-0d1e2f3a4b5c" },
+      { id: "f1a2b3c4-5d6e-4f7a-8b9c-0d1e2f3a4b5c", now },
     ),
     "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12",
     keyFields,
-    { id: "b1c2d3e4-5f6a-4b7c-8d9e-0f1a2b3c4d5e" },
+    { id: "b1c2d3e4-5f6a-4b7c-8d9e-0f1a2b3c4d5e", now },
   );
   return addColumn(
     withUniqueColumn,
     "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12",
     { ...columnFields, name: "author_id" },
-    { id: "a2b3c4d5-6e7f-4a8b-9c0d-1e2f3a4b5c6d" },
+    { id: "a2b3c4d5-6e7f-4a8b-9c0d-1e2f3a4b5c6d", now },
   );
 }
 
