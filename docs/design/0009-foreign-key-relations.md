@@ -86,4 +86,15 @@ The side panel's `TableProperties` gains a read-only "Relations" section — lis
 
 ## Open Questions
 
-- REQ-021 only requires that deleting a table/column never leaves a dangling reference. It does not require the same for un-keying a PRIMARY KEY/UNIQUE column that's still referenced by another table's FK — e.g. removing a column's sole UNIQUE key while a foreign key still points at it. That case is left unresolved here; revisit if it proves confusing in practice.
+- ~~REQ-021 only requires that deleting a table/column never leaves a
+  dangling reference. It does not require the same for un-keying a PRIMARY
+  KEY/UNIQUE column that's still referenced by another table's FK — e.g.
+  removing a column's sole UNIQUE key while a foreign key still points at
+  it. That case is left unresolved here; revisit if it proves confusing in
+  practice.~~ Resolved in
+  [0030](0030-prevent-dangling-foreign-key-on-key-removal.md): the side
+  panel's delete-key flow now cascades (removes the key and its
+  referencing foreign key together, after confirmation); the column
+  dialog's key checkboxes are blocked with an explanatory hint instead.
+  Either way, a domain-level guard makes the invariant impossible to
+  violate.

@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { useFkNamingPattern } from "../../components/hooks/useFkNamingPattern";
 import {
   EMPTY_COLUMN_KEY_MEMBERSHIP,
+  EMPTY_COLUMN_KEY_MEMBERSHIP_DISABLED,
   type FkNamingPattern,
   type ForeignKey,
   getColumnKeyMembership,
@@ -120,8 +121,8 @@ function MainScreenContent({
       : EMPTY_COLUMN_KEY_MEMBERSHIP;
   const columnKeyMembershipDisabled =
     selectedTable !== null
-      ? getColumnKeyMembershipDisabled(selectedTable, columnId)
-      : EMPTY_COLUMN_KEY_MEMBERSHIP;
+      ? getColumnKeyMembershipDisabled(selectedTable, columnId, tables)
+      : EMPTY_COLUMN_KEY_MEMBERSHIP_DISABLED;
   const keyDialogPrimaryKeyDisabled =
     selectedTable !== null &&
     hasConflictingPrimaryKey(selectedTable, "PRIMARY_KEY", selectedKeyId ?? undefined);

@@ -20,6 +20,7 @@ import {
   removeColumn,
   removeForeignKey,
   removeKey,
+  removeKeyCascadingForeignKeys,
   removeTable,
   renameSchema,
   renameTable,
@@ -57,6 +58,7 @@ export type UndoableSchemaActions = {
   addKey: (tableId: string, fields: Omit<Key, "id">) => void;
   updateKey: (tableId: string, keyId: string, fields: Omit<Key, "id">) => void;
   removeKey: (tableId: string, keyId: string) => void;
+  removeKeyCascadingForeignKeys: (tableId: string, keyId: string) => void;
   addForeignKey: (tableId: string, fields: Omit<ForeignKey, "id">) => void;
   addForeignKeyWithNewColumn: (
     childTableId: string,
@@ -216,6 +218,9 @@ export function useUndoableSchema(initialSchema?: Schema): UndoableSchema {
     },
     removeKey: (tableId, keyId) => {
       commitEdit((prev) => removeKey(prev, tableId, keyId));
+    },
+    removeKeyCascadingForeignKeys: (tableId, keyId) => {
+      commitEdit((prev) => removeKeyCascadingForeignKeys(prev, tableId, keyId));
     },
     addForeignKey: (tableId, fields) => {
       commitEdit((prev) => addForeignKey(prev, tableId, fields));

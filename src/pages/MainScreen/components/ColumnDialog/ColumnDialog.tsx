@@ -6,6 +6,7 @@ import type { DialectStrategy } from "../../../../domain/dialect";
 import {
   type Column,
   type ColumnKeyMembership,
+  type ColumnKeyMembershipDisabled,
   describeNameValidity,
   KEY_TYPES,
 } from "../../../../domain/schema";
@@ -32,8 +33,8 @@ type ColumnDialogProps = {
   existingNames: string[];
   /** Whether this column currently solely owns each single-column key type; seeds the checkboxes. */
   keyMembership: ColumnKeyMembership;
-  /** Whether each checkbox is unavailable (a different/composite key of that type already applies). */
-  keyMembershipDisabled: ColumnKeyMembership;
+  /** Why each checkbox is unavailable, or `null` if it isn't. */
+  keyMembershipDisabled: ColumnKeyMembershipDisabled;
   onSubmit: (fields: ColumnFields, keyMembership: ColumnKeyMembership) => void;
   onCancel: () => void;
 };
@@ -72,7 +73,7 @@ type ColumnFormProps = {
   strategy: DialectStrategy;
   existingNames: string[];
   keyMembership: ColumnKeyMembership;
-  keyMembershipDisabled: ColumnKeyMembership;
+  keyMembershipDisabled: ColumnKeyMembershipDisabled;
   onSubmit: (fields: ColumnFields, keyMembership: ColumnKeyMembership) => void;
   onCancel: () => void;
 };
@@ -209,16 +210,16 @@ function ColumnForm({
                 <input
                   type="checkbox"
                   checked={keyMembership[keyType]}
-                  disabled={keyMembershipDisabled[keyType]}
+                  disabled={keyMembershipDisabled[keyType] !== null}
                   onChange={(event) =>
                     setKeyMembership((prev) => ({ ...prev, [keyType]: event.target.checked }))
                   }
                 />
                 {t(`keyMembershipCheckboxLabels.${keyType}`)}
               </label>
-              {keyMembershipDisabled[keyType] && (
+              {keyMembershipDisabled[keyType] !== null && (
                 <p className="mt-1 text-[12px] text-body">
-                  {t(`keyMembershipDisabledHint.${keyType}`)}
+                  {t(`keyMembershipDisabledHint.${keyMembershipDisabled[keyType]}`)}
                 </p>
               )}
             </div>

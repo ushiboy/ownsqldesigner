@@ -73,9 +73,11 @@ export default {
       INDEX: "Index",
     },
     keyMembershipDisabledHint: {
-      PRIMARY_KEY: "Another key already holds this table''s PRIMARY KEY.",
-      UNIQUE: "This column is part of a composite UNIQUE key — manage it from the Keys section.",
-      INDEX: "This column is part of a composite INDEX key — manage it from the Keys section.",
+      CONFLICTING_PRIMARY_KEY: "Another key already holds this table''s PRIMARY KEY.",
+      PART_OF_COMPOSITE_KEY:
+        "This column is part of a composite key — manage it from the Keys section.",
+      REFERENCED_BY_FOREIGN_KEY:
+        "This column is referenced by a foreign key on another table — remove that relation first.",
     },
     sizeLabel: "Size",
     defaultValueLabel: "Default value",
@@ -89,6 +91,8 @@ export default {
     editTitle: "Edit Key",
     deleteTitle: "Delete Key",
     deleteConfirmMessage: 'Delete key "{label}"? This cannot be undone.',
+    deleteConfirmMessageReferenced:
+      'Delete key "{label}"? A foreign key on another table references it — that relation will be removed too. This cannot be undone.',
     columnsLegend: "Columns",
   },
   relationDialog: {

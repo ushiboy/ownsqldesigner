@@ -15,6 +15,7 @@ const {
   AddKeyDialogOpen,
   EditKeyDialogOpen,
   DeleteKeyDialogOpen,
+  DeleteReferencedKeyDialogOpen,
   ExportSqlDialogOpen,
   DeleteRelationDialogOpen,
 } = composeStories(stories);
@@ -94,6 +95,16 @@ describe("DialogHost", () => {
     expect(screen.getByRole("dialog", { name: "Delete Key" })).toBeInTheDocument();
     expect(
       screen.getByText('Delete key "PRIMARY KEY (id)"? This cannot be undone.'),
+    ).toBeInTheDocument();
+  });
+
+  it("warns about the cascading relation removal when the selected key is referenced by a foreign key", () => {
+    render(<DeleteReferencedKeyDialogOpen />);
+    expect(screen.getByRole("dialog", { name: "Delete Key" })).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        'Delete key "PRIMARY KEY (id)"? A foreign key on another table references it — that relation will be removed too. This cannot be undone.',
+      ),
     ).toBeInTheDocument();
   });
 

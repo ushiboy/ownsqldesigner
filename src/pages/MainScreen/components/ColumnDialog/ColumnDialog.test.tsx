@@ -9,6 +9,7 @@ const {
   Edit,
   EditAllowsAutoIncrement,
   AddPrimaryKeyDisabled,
+  EditReferencedByForeignKeyDisabled,
   DuplicateName,
   InvalidName,
   ReservedName,
@@ -67,6 +68,16 @@ describe("ColumnDialog", () => {
   it("disables the Primary Key checkbox when another column already holds it", () => {
     render(<AddPrimaryKeyDisabled />);
     expect(screen.getByLabelText("Primary Key")).toBeDisabled();
+  });
+
+  it("disables the Primary Key checkbox and explains why when it's referenced by a foreign key", () => {
+    render(<EditReferencedByForeignKeyDisabled />);
+    expect(screen.getByLabelText("Primary Key")).toBeDisabled();
+    expect(
+      screen.getByText(
+        "This column is referenced by a foreign key on another table — remove that relation first.",
+      ),
+    ).toBeInTheDocument();
   });
 
   it("leaves Unique and Index enabled and unchecked by default when adding", () => {

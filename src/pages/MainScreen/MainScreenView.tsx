@@ -4,6 +4,7 @@ import { DEFAULT_SQL_DIALECT, getDialectStrategy } from "../../domain/dialect";
 import type {
   Column,
   ColumnKeyMembership,
+  ColumnKeyMembershipDisabled,
   FkNamingPattern,
   ForeignKey,
   Key,
@@ -39,7 +40,7 @@ type MainScreenViewProps = {
   selectedRelationOwnerTable: Table | null;
   relations: RelationSummary[];
   columnKeyMembership: ColumnKeyMembership;
-  columnKeyMembershipDisabled: ColumnKeyMembership;
+  columnKeyMembershipDisabled: ColumnKeyMembershipDisabled;
   primaryKeyDisabled: boolean;
   isSidePanelOpen: boolean;
   onToggleSidePanel: () => void;

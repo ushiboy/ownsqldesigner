@@ -35,6 +35,7 @@ export type SchemaActions = {
   addKey: (tableId: string, fields: Omit<Key, "id">) => void;
   updateKey: (tableId: string, keyId: string, fields: Omit<Key, "id">) => void;
   removeKey: (tableId: string, keyId: string) => void;
+  removeKeyCascadingForeignKeys: (tableId: string, keyId: string) => void;
   addForeignKey: (tableId: string, fields: Omit<ForeignKey, "id">) => void;
   addForeignKeyWithNewColumn: (
     childTableId: string,

@@ -1,7 +1,11 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 import type { DialectStrategy } from "../../../../domain/dialect";
-import { EMPTY_COLUMN_KEY_MEMBERSHIP, type Schema } from "../../../../domain/schema";
+import {
+  EMPTY_COLUMN_KEY_MEMBERSHIP,
+  EMPTY_COLUMN_KEY_MEMBERSHIP_DISABLED,
+  type Schema,
+} from "../../../../domain/schema";
 import { sqliteDialectStrategy } from "../../../../domain/sqlite/sqliteDialectStrategy";
 import { LocaleProvider } from "../../../../i18n/LocaleContext";
 import { createFakeSchemaRepository } from "../../../../test/fakeSchemaRepository";
@@ -99,7 +103,7 @@ type SeededDialogHostProps = {
   selectedForeignKey: (typeof postsTable.foreignKeys)[number] | null;
   selectedRelationOwnerTable: typeof postsTable | null;
   columnKeyMembership: typeof EMPTY_COLUMN_KEY_MEMBERSHIP;
-  columnKeyMembershipDisabled: typeof EMPTY_COLUMN_KEY_MEMBERSHIP;
+  columnKeyMembershipDisabled: typeof EMPTY_COLUMN_KEY_MEMBERSHIP_DISABLED;
   primaryKeyDisabled: boolean;
 };
 
@@ -144,7 +148,7 @@ const meta = {
     selectedForeignKey: null,
     selectedRelationOwnerTable: null,
     columnKeyMembership: EMPTY_COLUMN_KEY_MEMBERSHIP,
-    columnKeyMembershipDisabled: EMPTY_COLUMN_KEY_MEMBERSHIP,
+    columnKeyMembershipDisabled: EMPTY_COLUMN_KEY_MEMBERSHIP_DISABLED,
     primaryKeyDisabled: false,
   },
   render: (args) => <SeededDialogHost {...args} />,
@@ -233,6 +237,15 @@ export const EditKeyDialogOpen: Story = {
 export const DeleteKeyDialogOpen: Story = {
   args: {
     initialSchema: withUsers,
+    initialDialog: "deleteKey",
+    selectedTable: usersTable,
+    selectedKey: usersTable.keys[0],
+  },
+};
+
+export const DeleteReferencedKeyDialogOpen: Story = {
+  args: {
+    initialSchema: withRelation,
     initialDialog: "deleteKey",
     selectedTable: usersTable,
     selectedKey: usersTable.keys[0],

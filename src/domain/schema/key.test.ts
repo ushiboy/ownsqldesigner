@@ -1,20 +1,28 @@
 import { addColumn, updateColumn } from "./column";
+import { addForeignKey, removeForeignKey } from "./foreignKey";
 import {
   addKey,
   getColumnKeyMembership,
   getColumnKeyMembershipDisabled,
   getReferenceableColumns,
   hasPrimaryKey,
+  isColumnReferencedByForeignKey,
+  isKeyReferencedByForeignKey,
   isReferenceableColumn,
   removeKey,
+  removeKeyCascadingForeignKeys,
   setColumnKeyMembership,
   updateKey,
 } from "./key";
 import { createSchema, createTable } from "./table";
 import {
+  POSTS_FOREIGN_KEY_ID,
+  POSTS_NEW_FOREIGN_KEY_ID,
   POSTS_TABLE_ID,
+  POSTS_USER_ID_COLUMN_ID,
   USERS_EMAIL_COLUMN_ID,
   USERS_ID_COLUMN_ID,
+  USERS_ID_KEY_ID,
   USERS_TABLE_ID,
   buildTwoTableSchema,
   columnFields,
@@ -237,6 +245,66 @@ describe("updateKey", () => {
 
     expect(original.tables[0]?.keys[0]?.type).toBe("UNIQUE");
   });
+
+  it("is a no-op when retyping a referenced key away from PRIMARY_KEY/UNIQUE", () => {
+    const withFk = addForeignKey(
+      buildTwoTableSchema(),
+      POSTS_TABLE_ID,
+      {
+        columnId: POSTS_USER_ID_COLUMN_ID,
+        referencedTableId: USERS_TABLE_ID,
+        referencedColumnId: USERS_ID_COLUMN_ID,
+      },
+      { id: POSTS_FOREIGN_KEY_ID, now: new Date("2026-07-18T09:00:00.000Z") },
+    );
+
+    const updated = updateKey(withFk, USERS_TABLE_ID, USERS_ID_KEY_ID, {
+      type: "INDEX",
+      columnIds: [USERS_ID_COLUMN_ID],
+    });
+
+    expect(updated).toBe(withFk);
+  });
+
+  it("is a no-op when adding a second column to a referenced key", () => {
+    const withFk = addForeignKey(
+      buildTwoTableSchema(),
+      POSTS_TABLE_ID,
+      {
+        columnId: POSTS_USER_ID_COLUMN_ID,
+        referencedTableId: USERS_TABLE_ID,
+        referencedColumnId: USERS_ID_COLUMN_ID,
+      },
+      { id: POSTS_FOREIGN_KEY_ID, now: new Date("2026-07-18T09:00:00.000Z") },
+    );
+
+    const updated = updateKey(withFk, USERS_TABLE_ID, USERS_ID_KEY_ID, {
+      type: "UNIQUE",
+      columnIds: [USERS_ID_COLUMN_ID, USERS_EMAIL_COLUMN_ID],
+    });
+
+    expect(updated).toBe(withFk);
+  });
+
+  it("allows toggling a referenced key between PRIMARY_KEY and UNIQUE on the same column", () => {
+    const withFk = addForeignKey(
+      buildTwoTableSchema(),
+      POSTS_TABLE_ID,
+      {
+        columnId: POSTS_USER_ID_COLUMN_ID,
+        referencedTableId: USERS_TABLE_ID,
+        referencedColumnId: USERS_ID_COLUMN_ID,
+      },
+      { id: POSTS_FOREIGN_KEY_ID, now: new Date("2026-07-18T09:00:00.000Z") },
+    );
+
+    const updated = updateKey(withFk, USERS_TABLE_ID, USERS_ID_KEY_ID, {
+      type: "UNIQUE",
+      columnIds: [USERS_ID_COLUMN_ID],
+    });
+
+    expect(getTable(updated, USERS_TABLE_ID).keys[0]?.type).toBe("UNIQUE");
+  });
 });
 
 describe("removeKey", () => {
@@ -296,6 +364,127 @@ describe("removeKey", () => {
     );
 
     expect(original.tables[0]?.keys).toHaveLength(1);
+  });
+
+  it("is a no-op when the key is referenced by another table's foreign key", () => {
+    const withFk = addForeignKey(
+      buildTwoTableSchema(),
+      POSTS_TABLE_ID,
+      {
+        columnId: POSTS_USER_ID_COLUMN_ID,
+        referencedTableId: USERS_TABLE_ID,
+        referencedColumnId: USERS_ID_COLUMN_ID,
+      },
+      { id: POSTS_FOREIGN_KEY_ID, now: new Date("2026-07-18T09:00:00.000Z") },
+    );
+
+    const updated = removeKey(withFk, USERS_TABLE_ID, USERS_ID_KEY_ID, {
+      now: new Date("2026-07-19T09:00:00.000Z"),
+    });
+
+    expect(updated).toBe(withFk);
+  });
+
+  it("removes the key once the referencing foreign key is gone", () => {
+    const withFk = addForeignKey(
+      buildTwoTableSchema(),
+      POSTS_TABLE_ID,
+      {
+        columnId: POSTS_USER_ID_COLUMN_ID,
+        referencedTableId: USERS_TABLE_ID,
+        referencedColumnId: USERS_ID_COLUMN_ID,
+      },
+      { id: POSTS_FOREIGN_KEY_ID, now: new Date("2026-07-18T09:00:00.000Z") },
+    );
+    const withoutFk = removeForeignKey(withFk, POSTS_TABLE_ID, POSTS_FOREIGN_KEY_ID, {
+      now: new Date("2026-07-18T09:30:00.000Z"),
+    });
+
+    const updated = removeKey(withoutFk, USERS_TABLE_ID, USERS_ID_KEY_ID, {
+      now: new Date("2026-07-19T09:00:00.000Z"),
+    });
+
+    expect(getTable(updated, USERS_TABLE_ID).keys).toEqual([]);
+  });
+});
+
+describe("removeKeyCascadingForeignKeys", () => {
+  it("removes the key and the foreign key that referenced it in one step", () => {
+    const withFk = addForeignKey(
+      buildTwoTableSchema(),
+      POSTS_TABLE_ID,
+      {
+        columnId: POSTS_USER_ID_COLUMN_ID,
+        referencedTableId: USERS_TABLE_ID,
+        referencedColumnId: USERS_ID_COLUMN_ID,
+      },
+      { id: POSTS_FOREIGN_KEY_ID, now: new Date("2026-07-18T09:00:00.000Z") },
+    );
+
+    const updated = removeKeyCascadingForeignKeys(withFk, USERS_TABLE_ID, USERS_ID_KEY_ID, {
+      now: new Date("2026-07-19T09:00:00.000Z"),
+    });
+
+    expect(getTable(updated, USERS_TABLE_ID).keys).toEqual([]);
+    expect(getTable(updated, POSTS_TABLE_ID).foreignKeys).toEqual([]);
+    expect(updated.updatedAt).toEqual(new Date("2026-07-19T09:00:00.000Z"));
+  });
+
+  it("leaves an unrelated foreign key on the same referenced table untouched", () => {
+    const withFk = addForeignKey(
+      buildTwoTableSchema(),
+      POSTS_TABLE_ID,
+      {
+        columnId: POSTS_USER_ID_COLUMN_ID,
+        referencedTableId: USERS_TABLE_ID,
+        referencedColumnId: USERS_ID_COLUMN_ID,
+      },
+      { id: POSTS_FOREIGN_KEY_ID, now: new Date("2026-07-18T09:00:00.000Z") },
+    );
+    const withUniqueEmail = addKey(
+      withFk,
+      USERS_TABLE_ID,
+      { type: "UNIQUE", columnIds: [USERS_EMAIL_COLUMN_ID] },
+      { id: "c1d2e3f4-5a6b-4c7d-8e9f-0a1b2c3d4e5f", now: new Date("2026-07-18T09:00:00.000Z") },
+    );
+    const withSecondFk = addForeignKey(
+      withUniqueEmail,
+      POSTS_TABLE_ID,
+      {
+        columnId: POSTS_USER_ID_COLUMN_ID,
+        referencedTableId: USERS_TABLE_ID,
+        referencedColumnId: USERS_EMAIL_COLUMN_ID,
+      },
+      { id: POSTS_NEW_FOREIGN_KEY_ID, now: new Date("2026-07-18T09:00:00.000Z") },
+    );
+
+    const updated = removeKeyCascadingForeignKeys(withSecondFk, USERS_TABLE_ID, USERS_ID_KEY_ID, {
+      now: new Date("2026-07-19T09:00:00.000Z"),
+    });
+
+    expect(getTable(updated, POSTS_TABLE_ID).foreignKeys).toEqual([
+      expect.objectContaining({ id: POSTS_NEW_FOREIGN_KEY_ID }),
+    ]);
+  });
+
+  it("is a no-op when the key id is unknown", () => {
+    const schema = buildTwoTableSchema();
+
+    const updated = removeKeyCascadingForeignKeys(schema, USERS_TABLE_ID, "unknown-id", {
+      now: new Date("2026-07-19T09:00:00.000Z"),
+    });
+
+    expect(updated).toBe(schema);
+  });
+
+  it("removes an unreferenced key exactly like removeKey", () => {
+    const schema = buildTwoTableSchema();
+
+    const updated = removeKeyCascadingForeignKeys(schema, USERS_TABLE_ID, USERS_ID_KEY_ID, {
+      now: new Date("2026-07-19T09:00:00.000Z"),
+    });
+
+    expect(getTable(updated, USERS_TABLE_ID).keys).toEqual([]);
   });
 });
 
@@ -465,13 +654,11 @@ describe("getColumnKeyMembershipDisabled", () => {
     { id: "a2b3c4d5-6e7f-4a8b-9c0d-1e2f3a4b5c6d", now: new Date("2026-07-18T09:00:00.000Z") },
   );
 
-  it("is all false when the table has no keys yet", () => {
+  it("is all null when the table has no keys yet", () => {
+    const table = getTable(withTwoColumns, "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12");
     expect(
-      getColumnKeyMembershipDisabled(
-        getTable(withTwoColumns, "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12"),
-        "a2b3c4d5-6e7f-4a8b-9c0d-1e2f3a4b5c6d",
-      ),
-    ).toEqual({ PRIMARY_KEY: false, UNIQUE: false, INDEX: false });
+      getColumnKeyMembershipDisabled(table, "a2b3c4d5-6e7f-4a8b-9c0d-1e2f3a4b5c6d", [table]),
+    ).toEqual({ PRIMARY_KEY: null, UNIQUE: null, INDEX: null });
   });
 
   it("disables PRIMARY_KEY (including for a not-yet-created column) once another column holds it", () => {
@@ -483,13 +670,17 @@ describe("getColumnKeyMembershipDisabled", () => {
     );
     const table = getTable(withPrimaryKey, "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12");
 
-    expect(getColumnKeyMembershipDisabled(table, null).PRIMARY_KEY).toBe(true);
+    expect(getColumnKeyMembershipDisabled(table, null, [table]).PRIMARY_KEY).toBe(
+      "CONFLICTING_PRIMARY_KEY",
+    );
     expect(
-      getColumnKeyMembershipDisabled(table, "a2b3c4d5-6e7f-4a8b-9c0d-1e2f3a4b5c6d").PRIMARY_KEY,
-    ).toBe(true);
+      getColumnKeyMembershipDisabled(table, "a2b3c4d5-6e7f-4a8b-9c0d-1e2f3a4b5c6d", [table])
+        .PRIMARY_KEY,
+    ).toBe("CONFLICTING_PRIMARY_KEY");
     expect(
-      getColumnKeyMembershipDisabled(table, "f1a2b3c4-5d6e-4f7a-8b9c-0d1e2f3a4b5c").PRIMARY_KEY,
-    ).toBe(false);
+      getColumnKeyMembershipDisabled(table, "f1a2b3c4-5d6e-4f7a-8b9c-0d1e2f3a4b5c", [table])
+        .PRIMARY_KEY,
+    ).toBe(null);
   });
 
   it("disables UNIQUE/INDEX only for a column that is part of a composite key of that type", () => {
@@ -505,11 +696,29 @@ describe("getColumnKeyMembershipDisabled", () => {
     const table = getTable(withCompositeUnique, "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12");
 
     expect(
-      getColumnKeyMembershipDisabled(table, "f1a2b3c4-5d6e-4f7a-8b9c-0d1e2f3a4b5c").UNIQUE,
-    ).toBe(true);
+      getColumnKeyMembershipDisabled(table, "f1a2b3c4-5d6e-4f7a-8b9c-0d1e2f3a4b5c", [table]).UNIQUE,
+    ).toBe("PART_OF_COMPOSITE_KEY");
     expect(
-      getColumnKeyMembershipDisabled(table, "f1a2b3c4-5d6e-4f7a-8b9c-0d1e2f3a4b5c").INDEX,
-    ).toBe(false);
+      getColumnKeyMembershipDisabled(table, "f1a2b3c4-5d6e-4f7a-8b9c-0d1e2f3a4b5c", [table]).INDEX,
+    ).toBe(null);
+  });
+
+  it("disables PRIMARY_KEY/UNIQUE with REFERENCED_BY_FOREIGN_KEY when another table's foreign key targets the column", () => {
+    const withFk = addForeignKey(
+      buildTwoTableSchema(),
+      POSTS_TABLE_ID,
+      {
+        columnId: POSTS_USER_ID_COLUMN_ID,
+        referencedTableId: USERS_TABLE_ID,
+        referencedColumnId: USERS_ID_COLUMN_ID,
+      },
+      { id: POSTS_FOREIGN_KEY_ID, now: new Date("2026-07-18T09:00:00.000Z") },
+    );
+    const users = getTable(withFk, USERS_TABLE_ID);
+
+    expect(
+      getColumnKeyMembershipDisabled(users, USERS_ID_COLUMN_ID, withFk.tables).PRIMARY_KEY,
+    ).toBe("REFERENCED_BY_FOREIGN_KEY");
   });
 });
 
@@ -672,6 +881,59 @@ describe("isReferenceableColumn / getReferenceableColumns", () => {
   it("is false for a column with no PRIMARY KEY or UNIQUE membership", () => {
     const users = getTable(schema, USERS_TABLE_ID);
     expect(isReferenceableColumn(users, USERS_EMAIL_COLUMN_ID)).toBe(false);
+  });
+});
+
+describe("isColumnReferencedByForeignKey / isKeyReferencedByForeignKey", () => {
+  const withFk = addForeignKey(
+    buildTwoTableSchema(),
+    POSTS_TABLE_ID,
+    {
+      columnId: POSTS_USER_ID_COLUMN_ID,
+      referencedTableId: USERS_TABLE_ID,
+      referencedColumnId: USERS_ID_COLUMN_ID,
+    },
+    { id: POSTS_FOREIGN_KEY_ID, now: new Date("2026-07-18T09:00:00.000Z") },
+  );
+
+  it("is true for a column targeted by another table's foreign key", () => {
+    expect(isColumnReferencedByForeignKey(withFk.tables, USERS_TABLE_ID, USERS_ID_COLUMN_ID)).toBe(
+      true,
+    );
+  });
+
+  it("is false for a column no foreign key targets", () => {
+    expect(
+      isColumnReferencedByForeignKey(withFk.tables, USERS_TABLE_ID, USERS_EMAIL_COLUMN_ID),
+    ).toBe(false);
+  });
+
+  it("is true for the referenced sole PRIMARY_KEY/UNIQUE key", () => {
+    const usersKey = getTable(withFk, USERS_TABLE_ID).keys[0];
+    if (usersKey === undefined) {
+      throw new Error("expected users table to have a key");
+    }
+    expect(isKeyReferencedByForeignKey(withFk.tables, USERS_TABLE_ID, usersKey)).toBe(true);
+  });
+
+  it("is false for an INDEX key even on a referenced column", () => {
+    expect(
+      isKeyReferencedByForeignKey(withFk.tables, USERS_TABLE_ID, {
+        id: "index-key-id",
+        type: "INDEX",
+        columnIds: [USERS_ID_COLUMN_ID],
+      }),
+    ).toBe(false);
+  });
+
+  it("is false for a composite key even on a referenced column", () => {
+    expect(
+      isKeyReferencedByForeignKey(withFk.tables, USERS_TABLE_ID, {
+        id: "composite-key-id",
+        type: "UNIQUE",
+        columnIds: [USERS_ID_COLUMN_ID, USERS_EMAIL_COLUMN_ID],
+      }),
+    ).toBe(false);
   });
 });
 

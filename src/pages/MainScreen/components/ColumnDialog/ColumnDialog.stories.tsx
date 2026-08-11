@@ -1,11 +1,20 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { fn } from "storybook/test";
-import type { Column, ColumnKeyMembership } from "../../../../domain/schema";
+import type {
+  Column,
+  ColumnKeyMembership,
+  ColumnKeyMembershipDisabled,
+} from "../../../../domain/schema";
 import { sqliteDialectStrategy } from "../../../../domain/sqlite/sqliteDialectStrategy";
 import { LocaleProvider } from "../../../../i18n/LocaleContext";
 import { ColumnDialog } from "./ColumnDialog";
 
 const NO_KEY_MEMBERSHIP: ColumnKeyMembership = { PRIMARY_KEY: false, UNIQUE: false, INDEX: false };
+const NO_KEY_MEMBERSHIP_DISABLED: ColumnKeyMembershipDisabled = {
+  PRIMARY_KEY: null,
+  UNIQUE: null,
+  INDEX: null,
+};
 
 const column: Column = {
   id: "f1a2b3c4-5d6e-4f7a-8b9c-0d1e2f3a4b5c",
@@ -36,7 +45,7 @@ const meta = {
     strategy: sqliteDialectStrategy,
     existingNames: [],
     keyMembership: NO_KEY_MEMBERSHIP,
-    keyMembershipDisabled: NO_KEY_MEMBERSHIP,
+    keyMembershipDisabled: NO_KEY_MEMBERSHIP_DISABLED,
     onSubmit: fn(),
     onCancel: fn(),
   },
@@ -84,7 +93,22 @@ export const AddPrimaryKeyDisabled: Story = {
     open: true,
     title: "Add Column",
     submitLabel: "Add",
-    keyMembershipDisabled: { PRIMARY_KEY: true, UNIQUE: false, INDEX: false },
+    keyMembershipDisabled: { PRIMARY_KEY: "CONFLICTING_PRIMARY_KEY", UNIQUE: null, INDEX: null },
+  },
+};
+
+export const EditReferencedByForeignKeyDisabled: Story = {
+  args: {
+    open: true,
+    title: "Edit Column",
+    submitLabel: "Save",
+    initialColumn: primaryKeyColumn,
+    keyMembership: { PRIMARY_KEY: true, UNIQUE: false, INDEX: false },
+    keyMembershipDisabled: {
+      PRIMARY_KEY: "REFERENCED_BY_FOREIGN_KEY",
+      UNIQUE: null,
+      INDEX: null,
+    },
   },
 };
 

@@ -74,9 +74,10 @@ export default {
       INDEX: "インデックス",
     },
     keyMembershipDisabledHint: {
-      PRIMARY_KEY: "他のキーが既にこのテーブルの主キーです。",
-      UNIQUE: "このカラムは複合UNIQUEキーの一部です。Keysセクションから管理してください。",
-      INDEX: "このカラムは複合INDEXキーの一部です。Keysセクションから管理してください。",
+      CONFLICTING_PRIMARY_KEY: "他のキーが既にこのテーブルの主キーです。",
+      PART_OF_COMPOSITE_KEY: "このカラムは複合キーの一部です。Keysセクションから管理してください。",
+      REFERENCED_BY_FOREIGN_KEY:
+        "このカラムは他のテーブルの外部キーから参照されています。先にそのリレーションを削除してください。",
     },
     sizeLabel: "サイズ",
     defaultValueLabel: "デフォルト値",
@@ -89,6 +90,8 @@ export default {
     editTitle: "キーを編集",
     deleteTitle: "キーを削除",
     deleteConfirmMessage: "キー「{label}」を削除しますか? この操作は取り消せません。",
+    deleteConfirmMessageReferenced:
+      "キー「{label}」を削除しますか? 他のテーブルの外部キーがこのキーを参照しているため、そのリレーションも削除されます。この操作は取り消せません。",
     columnsLegend: "カラム",
   },
   relationDialog: {

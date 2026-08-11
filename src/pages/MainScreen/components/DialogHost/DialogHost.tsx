@@ -3,8 +3,10 @@ import { useTranslations } from "use-intl";
 import type { DialectStrategy } from "../../../../domain/dialect";
 import {
   hasPrimaryKey,
+  isKeyReferencedByForeignKey,
   type Column,
   type ColumnKeyMembership,
+  type ColumnKeyMembershipDisabled,
   type ForeignKey,
   type Key,
   type Table,
@@ -32,7 +34,7 @@ type DialogHostProps = {
   selectedForeignKey: ForeignKey | null;
   selectedRelationOwnerTable: Table | null;
   columnKeyMembership: ColumnKeyMembership;
-  columnKeyMembershipDisabled: ColumnKeyMembership;
+  columnKeyMembershipDisabled: ColumnKeyMembershipDisabled;
   primaryKeyDisabled: boolean;
 };
 
@@ -70,6 +72,7 @@ export function DialogHost({
     addKey: onAddKey,
     updateKey: onUpdateKey,
     removeKey: onRemoveKey,
+    removeKeyCascadingForeignKeys: onRemoveKeyCascadingForeignKeys,
     removeForeignKey: onRemoveForeignKey,
   } = useSchemaActions();
 
@@ -99,6 +102,10 @@ export function DialogHost({
         .map((column) => column.name) ?? NO_NAMES,
     [selectedTable, selectedColumn],
   );
+  const isSelectedKeyReferenced =
+    selectedTable !== null &&
+    selectedKey !== null &&
+    isKeyReferencedByForeignKey(tables, selectedTable.id, selectedKey);
 
   return (
     <>
@@ -242,16 +249,23 @@ export function DialogHost({
       <ConfirmDialog
         open={activeDialog === "deleteKey"}
         title={tKey("deleteTitle")}
-        message={tKey("deleteConfirmMessage", {
-          label:
-            selectedKey !== null
-              ? describeKey(selectedKey, selectedTable?.columns ?? NO_COLUMNS)
-              : "",
-        })}
+        message={tKey(
+          isSelectedKeyReferenced ? "deleteConfirmMessageReferenced" : "deleteConfirmMessage",
+          {
+            label:
+              selectedKey !== null
+                ? describeKey(selectedKey, selectedTable?.columns ?? NO_COLUMNS)
+                : "",
+          },
+        )}
         confirmLabel={tCommon("delete")}
         onConfirm={() => {
           if (selectedTableId !== null && selectedKey !== null) {
-            onRemoveKey(selectedTableId, selectedKey.id);
+            if (isSelectedKeyReferenced) {
+              onRemoveKeyCascadingForeignKeys(selectedTableId, selectedKey.id);
+            } else {
+              onRemoveKey(selectedTableId, selectedKey.id);
+            }
           }
           closeDialog();
         }}

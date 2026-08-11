@@ -9,17 +9,23 @@ export {
 export { importSchema, isSchemaIntegrityValid, parseSchemaFile } from "./integrity";
 export {
   EMPTY_COLUMN_KEY_MEMBERSHIP,
+  EMPTY_COLUMN_KEY_MEMBERSHIP_DISABLED,
   addKey,
   getColumnKeyMembership,
   getColumnKeyMembershipDisabled,
   getReferenceableColumns,
   hasConflictingPrimaryKey,
   hasPrimaryKey,
+  isColumnReferencedByForeignKey,
+  isKeyReferencedByForeignKey,
   isReferenceableColumn,
   removeKey,
+  removeKeyCascadingForeignKeys,
   setColumnKeyMembership,
   updateKey,
   type ColumnKeyMembership,
+  type ColumnKeyMembershipDisabled,
+  type KeyMembershipDisabledReason,
 } from "./key";
 export {
   createSchema,

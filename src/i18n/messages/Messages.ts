@@ -75,9 +75,9 @@ export type Messages = {
       INDEX: string;
     };
     keyMembershipDisabledHint: {
-      PRIMARY_KEY: string;
-      UNIQUE: string;
-      INDEX: string;
+      CONFLICTING_PRIMARY_KEY: string;
+      PART_OF_COMPOSITE_KEY: string;
+      REFERENCED_BY_FOREIGN_KEY: string;
     };
     sizeLabel: string;
     defaultValueLabel: string;
@@ -91,6 +91,8 @@ export type Messages = {
     deleteTitle: string;
     /** ICU placeholder: {label} */
     deleteConfirmMessage: string;
+    /** ICU placeholder: {label} */
+    deleteConfirmMessageReferenced: string;
     columnsLegend: string;
   };
   relationDialog: {

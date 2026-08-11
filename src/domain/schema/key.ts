@@ -1,5 +1,5 @@
 import { getDialectStrategy } from "../dialect";
-import { hasColumn } from "./shared";
+import { hasColumn, removeForeignKeysReferencingColumn } from "./shared";
 import { KEY_TYPES, type Column, type Key, type KeyType, type Schema, type Table } from "./types";
 
 /** Whether each key type is a single-column key solely owned by `columnId` (`null` for a not-yet-created column). */
@@ -51,7 +51,7 @@ export function updateKey(
   options: UpdateKeyOptions = {},
 ): Schema {
   const targetTable = schema.tables.find((table) => table.id === tableId);
-  if (!canUpdateKey(targetTable, keyId, fields)) {
+  if (!canUpdateKey(schema.tables, targetTable, keyId, fields)) {
     return schema;
   }
   const { now = new Date() } = options;
@@ -81,7 +81,8 @@ export function removeKey(
   options: RemoveKeyOptions = {},
 ): Schema {
   const targetTable = schema.tables.find((table) => table.id === tableId);
-  if (!hasKey(targetTable, keyId)) {
+  const targetKey = targetTable?.keys.find((key) => key.id === keyId);
+  if (targetKey === undefined || isKeyReferencedByForeignKey(schema.tables, tableId, targetKey)) {
     return schema;
   }
   const { now = new Date() } = options;
@@ -98,6 +99,33 @@ export function removeKey(
     ),
     updatedAt: now,
   };
+}
+
+/**
+ * Removes `keyId` together with any other table's foreign key that
+ * references it — the explicit-confirmation counterpart to `removeKey`'s
+ * no-op guard, used by the SidePanel "delete key" flow once the user has
+ * confirmed the cascading relation removal (see 0030).
+ */
+export function removeKeyCascadingForeignKeys(
+  schema: Schema,
+  tableId: string,
+  keyId: string,
+  options: RemoveKeyOptions = {},
+): Schema {
+  const targetTable = schema.tables.find((table) => table.id === tableId);
+  const targetKey = targetTable?.keys.find((key) => key.id === keyId);
+  if (targetKey === undefined) {
+    return schema;
+  }
+  const withoutReferencingForeignKeys: Schema = {
+    ...schema,
+    tables: targetKey.columnIds.reduce(
+      (tables, columnId) => removeForeignKeysReferencingColumn(tables, tableId, columnId),
+      schema.tables,
+    ),
+  };
+  return removeKey(withoutReferencingForeignKeys, tableId, keyId, options);
 }
 
 /** Whether the table already has a PRIMARY KEY key other than `excludeKeyId`. */
@@ -160,16 +188,43 @@ export function getColumnKeyMembership(table: Table, columnId: string | null): C
   };
 }
 
+/** Why a `ColumnDialog` key-membership checkbox is disabled, or `null` if it isn't. */
+export type KeyMembershipDisabledReason =
+  | "CONFLICTING_PRIMARY_KEY"
+  | "PART_OF_COMPOSITE_KEY"
+  | "REFERENCED_BY_FOREIGN_KEY";
+
+export type ColumnKeyMembershipDisabled = Record<KeyType, KeyMembershipDisabledReason | null>;
+
+export const EMPTY_COLUMN_KEY_MEMBERSHIP_DISABLED: ColumnKeyMembershipDisabled = {
+  PRIMARY_KEY: null,
+  UNIQUE: null,
+  INDEX: null,
+};
+
 export function getColumnKeyMembershipDisabled(
   table: Table,
   columnId: string | null,
-): ColumnKeyMembership {
+  tables: Table[],
+): ColumnKeyMembershipDisabled {
   const primaryKeyExcludeId =
     columnId !== null ? soleKeyOfType(table, columnId, "PRIMARY_KEY")?.id : undefined;
   return {
-    PRIMARY_KEY: hasConflictingPrimaryKey(table, "PRIMARY_KEY", primaryKeyExcludeId),
-    UNIQUE: columnId !== null && isMemberOfCompositeKeyOfType(table, columnId, "UNIQUE"),
-    INDEX: columnId !== null && isMemberOfCompositeKeyOfType(table, columnId, "INDEX"),
+    PRIMARY_KEY: hasConflictingPrimaryKey(table, "PRIMARY_KEY", primaryKeyExcludeId)
+      ? "CONFLICTING_PRIMARY_KEY"
+      : isSoleKeyReferenced(table, columnId, tables, "PRIMARY_KEY")
+        ? "REFERENCED_BY_FOREIGN_KEY"
+        : null,
+    UNIQUE:
+      columnId !== null && isMemberOfCompositeKeyOfType(table, columnId, "UNIQUE")
+        ? "PART_OF_COMPOSITE_KEY"
+        : isSoleKeyReferenced(table, columnId, tables, "UNIQUE")
+          ? "REFERENCED_BY_FOREIGN_KEY"
+          : null,
+    INDEX:
+      columnId !== null && isMemberOfCompositeKeyOfType(table, columnId, "INDEX")
+        ? "PART_OF_COMPOSITE_KEY"
+        : null,
   };
 }
 
@@ -185,8 +240,30 @@ export function getReferenceableColumns(table: Table): Column[] {
   return table.columns.filter((column) => isReferenceableColumn(table, column.id));
 }
 
-function hasKey(table: Table | undefined, keyId: string): boolean {
-  return table !== undefined && table.keys.some((key) => key.id === keyId);
+/** Whether some table's foreign key currently targets `columnId` on `tableId`. */
+export function isColumnReferencedByForeignKey(
+  tables: Table[],
+  tableId: string,
+  columnId: string,
+): boolean {
+  return tables.some((table) =>
+    table.foreignKeys.some(
+      (fk) => fk.referencedTableId === tableId && fk.referencedColumnId === columnId,
+    ),
+  );
+}
+
+/**
+ * Whether removing/retyping `key` would break an existing foreign key that
+ * targets it — only single-column PRIMARY_KEY/UNIQUE keys can be FK targets
+ * (see `isReferenceableColumn`), so any other key is never "referenced".
+ */
+export function isKeyReferencedByForeignKey(tables: Table[], tableId: string, key: Key): boolean {
+  return (
+    (key.type === "PRIMARY_KEY" || key.type === "UNIQUE") &&
+    key.columnIds.length === 1 &&
+    isColumnReferencedByForeignKey(tables, tableId, key.columnIds[0])
+  );
 }
 
 function canAddKey(table: Table | undefined, fields: Omit<Key, "id">): boolean {
@@ -196,11 +273,32 @@ function canAddKey(table: Table | undefined, fields: Omit<Key, "id">): boolean {
   return !hasConflictingPrimaryKey(table, fields.type);
 }
 
-function canUpdateKey(table: Table | undefined, keyId: string, fields: Omit<Key, "id">): boolean {
-  if (table === undefined || !hasKey(table, keyId) || fields.columnIds.length === 0) {
+function canUpdateKey(
+  tables: Table[],
+  table: Table | undefined,
+  keyId: string,
+  fields: Omit<Key, "id">,
+): boolean {
+  const existingKey = table?.keys.find((key) => key.id === keyId);
+  if (table === undefined || existingKey === undefined || fields.columnIds.length === 0) {
     return false;
   }
-  return !hasConflictingPrimaryKey(table, fields.type, keyId);
+  if (hasConflictingPrimaryKey(table, fields.type, keyId)) {
+    return false;
+  }
+  return (
+    !isKeyReferencedByForeignKey(tables, table.id, existingKey) ||
+    keepsColumnReferenceable(existingKey, fields)
+  );
+}
+
+/** Whether updating `existingKey` to `fields` keeps it a sole PRIMARY_KEY/UNIQUE key on the same column. */
+function keepsColumnReferenceable(existingKey: Key, fields: Omit<Key, "id">): boolean {
+  return (
+    (fields.type === "PRIMARY_KEY" || fields.type === "UNIQUE") &&
+    fields.columnIds.length === 1 &&
+    fields.columnIds[0] === existingKey.columnIds[0]
+  );
 }
 
 function applyColumnKeyMembership(
@@ -235,4 +333,17 @@ function isMemberOfCompositeKeyOfType(table: Table, columnId: string, type: KeyT
   return table.keys.some(
     (key) => key.type === type && key.columnIds.length > 1 && key.columnIds.includes(columnId),
   );
+}
+
+/** Whether `columnId`'s sole `type` key (if any) is currently targeted by another table's foreign key. */
+function isSoleKeyReferenced(
+  table: Table,
+  columnId: string | null,
+  tables: Table[],
+  type: "PRIMARY_KEY" | "UNIQUE",
+): boolean {
+  if (columnId === null || soleKeyOfType(table, columnId, type) === undefined) {
+    return false;
+  }
+  return isColumnReferencedByForeignKey(tables, table.id, columnId);
 }

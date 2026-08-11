@@ -22,3 +22,17 @@ export function removeForeignKeysInvolvingColumn(tables: Table[], columnId: stri
     ),
   }));
 }
+
+/** Strips only incoming references to `columnId` on `tableId` — unlike `removeForeignKeysInvolvingColumn`, leaves that column's own outgoing foreign key (if any) untouched. */
+export function removeForeignKeysReferencingColumn(
+  tables: Table[],
+  tableId: string,
+  columnId: string,
+): Table[] {
+  return tables.map((table) => ({
+    ...table,
+    foreignKeys: table.foreignKeys.filter(
+      (fk) => !(fk.referencedTableId === tableId && fk.referencedColumnId === columnId),
+    ),
+  }));
+}
