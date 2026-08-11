@@ -1,15 +1,19 @@
-import { getDialectStrategy } from "../dialect";
+import { getDialectStrategy, type DialectStrategy } from "../dialect";
 import { isReferenceableColumn } from "./key";
 import { schemaSchema, type ForeignKey, type Schema, type Table } from "./types";
 import { isValidIdentifierName } from "./validation";
 
 /** Whether `schema` satisfies every incrementally-enforced invariant (REQ-018/019/020/021/022) at once. */
 export function isSchemaIntegrityValid(schema: Schema): boolean {
+  const strategy = getDialectStrategy(schema.dialect);
   const tableNames = schema.tables.map((table) => table.name);
   return (
-    !getDialectStrategy(schema.dialect).hasDuplicateNames(tableNames) &&
+    !strategy.hasDuplicateNames(tableNames) &&
     schema.tables.every(
-      (table) => isValidIdentifierName(table.name) && isTableIntegrityValid(schema, table),
+      (table) =>
+        isValidIdentifierName(table.name) &&
+        !strategy.isReservedKeyword(table.name) &&
+        isTableIntegrityValid(schema, table, strategy),
     )
   );
 }
@@ -40,14 +44,16 @@ export function importSchema(schema: Schema, options: ImportSchemaOptions = {}):
   return { ...schema, id, createdAt: now, updatedAt: now };
 }
 
-function isTableIntegrityValid(schema: Schema, table: Table): boolean {
+function isTableIntegrityValid(schema: Schema, table: Table, strategy: DialectStrategy): boolean {
   const columnIds = new Set(table.columns.map((column) => column.id));
   const columnNames = table.columns.map((column) => column.name);
-  const strategy = getDialectStrategy(schema.dialect);
   return (
     !strategy.hasDuplicateNames(columnNames) &&
     table.columns.every(
-      (column) => isValidIdentifierName(column.name) && strategy.columnTypes.includes(column.type),
+      (column) =>
+        isValidIdentifierName(column.name) &&
+        !strategy.isReservedKeyword(column.name) &&
+        strategy.columnTypes.includes(column.type),
     ) &&
     table.keys.filter((key) => key.type === "PRIMARY_KEY").length <= 1 &&
     table.keys.every((key) => key.columnIds.every((id) => columnIds.has(id))) &&

@@ -10,6 +10,7 @@ export type Messages = {
     commentLabel: string;
     typeLabel: string;
     invalidNameShapeHint: string;
+    reservedNameHint: string;
     duplicateTableName: string;
     duplicateColumnName: string;
   };

@@ -68,7 +68,7 @@ function TableNameForm({
   const t = useTranslations("tableDialog");
   const [name, setName] = useState(initialName);
   const trimmedName = name.trim();
-  const { isEmpty, isInvalidShape, isDuplicate } = describeNameValidity(
+  const { isEmpty, isInvalidShape, isReserved, isDuplicate } = describeNameValidity(
     trimmedName,
     existingNames,
     strategy,
@@ -94,6 +94,7 @@ function TableNameForm({
       {isInvalidShape && (
         <p className="mt-1 text-[12px] text-body">{tCommon("invalidNameShapeHint")}</p>
       )}
+      {isReserved && <p className="mt-1 text-[12px] text-body">{tCommon("reservedNameHint")}</p>}
       {isDuplicate && <p className="mt-1 text-[12px] text-body">{tCommon("duplicateTableName")}</p>}
       <div className="mt-6 flex justify-end gap-2">
         <button
@@ -105,7 +106,7 @@ function TableNameForm({
         </button>
         <button
           type="submit"
-          disabled={isEmpty || isInvalidShape || isDuplicate}
+          disabled={isEmpty || isInvalidShape || isReserved || isDuplicate}
           className={dialogActionButton({ variant: "primary" })}
         >
           {submitLabel}

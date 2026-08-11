@@ -50,16 +50,16 @@ The Phase column gives a rough implementation order: Phase 1 = core MVP, Phase 2
 
 ### Integrity and validation
 
-| ID      | Requirement                                                                                                                                                                                          | Phase |
-| ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----- |
-| REQ-018 | Table names are unique within the schema; column names are unique within their table ([0010](design/0010-name-validation-and-sql-export.md))                                                         | 1     |
-| REQ-019 | Table and column names are non-empty and can be output as valid SQL identifiers (exact naming rules are settled in a design doc) ([0010](design/0010-name-validation-and-sql-export.md))             | 1     |
-| REQ-020 | A foreign key may only reference a PRIMARY KEY or UNIQUE column ([0009](design/0009-foreign-key-relations.md))                                                                                       | 1     |
-| REQ-021 | Deleting a table or column never leaves dangling relations or key members ([0009](design/0009-foreign-key-relations.md))                                                                             | 1     |
-| REQ-022 | A table has at most one PRIMARY KEY; a key has at least one column ([0007](design/0007-table-key-management.md))                                                                                     | 1     |
-| REQ-023 | When an edit violates an integrity rule, the UI shows why it was rejected ([0001](design/0001-main-screen.md), [0010](design/0010-name-validation-and-sql-export.md))                                | 1     |
-| REQ-033 | Auto-increment is allowed only where the dialect permits it (SQLite: a single INTEGER PRIMARY KEY column) ([0007](design/0007-table-key-management.md), [0026](design/0026-sql-dialect-strategy.md)) | 1     |
-| REQ-034 | Validation warnings (e.g. a table without a primary key) are visible before SQL export ([0010](design/0010-name-validation-and-sql-export.md))                                                       | 2     |
+| ID      | Requirement                                                                                                                                                                                                                                     | Phase |
+| ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----- |
+| REQ-018 | Table names are unique within the schema; column names are unique within their table ([0010](design/0010-name-validation-and-sql-export.md))                                                                                                    | 1     |
+| REQ-019 | Table and column names are non-empty and can be output as valid SQL identifiers (exact naming rules are settled in a design doc) ([0010](design/0010-name-validation-and-sql-export.md), [0029](design/0029-sql-reserved-keyword-rejection.md)) | 1     |
+| REQ-020 | A foreign key may only reference a PRIMARY KEY or UNIQUE column ([0009](design/0009-foreign-key-relations.md))                                                                                                                                  | 1     |
+| REQ-021 | Deleting a table or column never leaves dangling relations or key members ([0009](design/0009-foreign-key-relations.md))                                                                                                                        | 1     |
+| REQ-022 | A table has at most one PRIMARY KEY; a key has at least one column ([0007](design/0007-table-key-management.md))                                                                                                                                | 1     |
+| REQ-023 | When an edit violates an integrity rule, the UI shows why it was rejected ([0001](design/0001-main-screen.md), [0010](design/0010-name-validation-and-sql-export.md))                                                                           | 1     |
+| REQ-033 | Auto-increment is allowed only where the dialect permits it (SQLite: a single INTEGER PRIMARY KEY column) ([0007](design/0007-table-key-management.md), [0026](design/0026-sql-dialect-strategy.md))                                            | 1     |
+| REQ-034 | Validation warnings (e.g. a table without a primary key) are visible before SQL export ([0010](design/0010-name-validation-and-sql-export.md))                                                                                                  | 2     |
 
 ### Input / output and persistence (browser-only)
 

@@ -106,6 +106,7 @@ function ColumnForm({
   const {
     isEmpty: isNameEmpty,
     isInvalidShape: isNameInvalidShape,
+    isReserved: isNameReserved,
     isDuplicate: isNameDuplicate,
   } = describeNameValidity(trimmedName, existingNames, strategy);
   const columnTypes = strategy.columnTypes;
@@ -152,6 +153,9 @@ function ColumnForm({
             </label>
             {isNameInvalidShape && (
               <p className="mt-1 text-[12px] text-body">{tCommon("invalidNameShapeHint")}</p>
+            )}
+            {isNameReserved && (
+              <p className="mt-1 text-[12px] text-body">{tCommon("reservedNameHint")}</p>
             )}
             {isNameDuplicate && (
               <p className="mt-1 text-[12px] text-body">{tCommon("duplicateColumnName")}</p>
@@ -254,7 +258,7 @@ function ColumnForm({
         </button>
         <button
           type="submit"
-          disabled={isNameEmpty || isNameInvalidShape || isNameDuplicate}
+          disabled={isNameEmpty || isNameInvalidShape || isNameReserved || isNameDuplicate}
           className={dialogActionButton({ variant: "primary" })}
         >
           {submitLabel}

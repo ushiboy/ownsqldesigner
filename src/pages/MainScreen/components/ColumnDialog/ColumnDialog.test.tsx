@@ -4,8 +4,15 @@ import { fn } from "storybook/test";
 import { composeStories } from "@storybook/react-vite";
 import * as stories from "./ColumnDialog.stories";
 
-const { Add, Edit, EditAllowsAutoIncrement, AddPrimaryKeyDisabled, DuplicateName, InvalidName } =
-  composeStories(stories);
+const {
+  Add,
+  Edit,
+  EditAllowsAutoIncrement,
+  AddPrimaryKeyDisabled,
+  DuplicateName,
+  InvalidName,
+  ReservedName,
+} = composeStories(stories);
 
 describe("ColumnDialog", () => {
   it("shows the dialog with a disabled submit button while the name is empty", () => {
@@ -212,5 +219,19 @@ describe("ColumnDialog", () => {
         "Must start with a letter or underscore and contain only letters, digits, and underscores.",
       ),
     ).toBeInTheDocument();
+  });
+
+  it("disables submit and shows a hint for a SQL reserved keyword", () => {
+    render(<ReservedName />);
+    expect(screen.getByRole("button", { name: "Save" })).toBeDisabled();
+    expect(
+      screen.getByText("This name is a SQL reserved keyword and cannot be used."),
+    ).toBeInTheDocument();
+  });
+
+  it("re-enables submit once a reserved-keyword name is edited to something valid", async () => {
+    render(<ReservedName />);
+    await userEvent.type(screen.getByLabelText("Name"), "ed");
+    expect(screen.getByRole("button", { name: "Save" })).toBeEnabled();
   });
 });

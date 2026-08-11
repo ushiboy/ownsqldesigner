@@ -4,7 +4,7 @@ import { fn } from "storybook/test";
 import { composeStories } from "@storybook/react-vite";
 import * as stories from "./TableNameDialog.stories";
 
-const { Open, DuplicateName, InvalidName } = composeStories(stories);
+const { Open, DuplicateName, InvalidName, ReservedName } = composeStories(stories);
 
 describe("TableNameDialog", () => {
   it("shows the dialog with a disabled Create button while the input is empty", () => {
@@ -67,5 +67,19 @@ describe("TableNameDialog", () => {
         "Must start with a letter or underscore and contain only letters, digits, and underscores.",
       ),
     ).toBeInTheDocument();
+  });
+
+  it("disables Create and shows a hint for a SQL reserved keyword", () => {
+    render(<ReservedName />);
+    expect(screen.getByRole("button", { name: "Create" })).toBeDisabled();
+    expect(
+      screen.getByText("This name is a SQL reserved keyword and cannot be used."),
+    ).toBeInTheDocument();
+  });
+
+  it("re-enables Create once a reserved-keyword name is edited to something valid", async () => {
+    render(<ReservedName />);
+    await userEvent.type(screen.getByLabelText("Table name"), "s");
+    expect(screen.getByRole("button", { name: "Create" })).toBeEnabled();
   });
 });

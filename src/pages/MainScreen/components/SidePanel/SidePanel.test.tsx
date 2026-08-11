@@ -165,6 +165,31 @@ describe("SidePanel", () => {
     expect(input).toHaveValue("users");
   });
 
+  it("does not commit a rename to a SQL reserved keyword, and shows a hint", async () => {
+    const onUpdateTableName = fn();
+    render(<TableSelectedWithSiblings onUpdateTableName={onUpdateTableName} />);
+
+    const input = screen.getByLabelText("Name");
+    await userEvent.clear(input);
+    await userEvent.type(input, "order");
+
+    expect(onUpdateTableName).not.toHaveBeenLastCalledWith(expect.anything(), "order");
+    expect(
+      screen.getByText("This name is a SQL reserved keyword and cannot be used."),
+    ).toBeInTheDocument();
+  });
+
+  it("reverts the name field to the last committed value on blur while reserved", async () => {
+    render(<TableSelectedWithSiblings />);
+
+    const input = screen.getByLabelText("Name");
+    await userEvent.clear(input);
+    await userEvent.type(input, "order");
+    await userEvent.tab();
+
+    expect(input).toHaveValue("users");
+  });
+
   it("calls onDeleteTable when the delete table button is clicked", async () => {
     const onDeleteTable = fn();
     render(<TableSelected onDeleteTable={onDeleteTable} />);

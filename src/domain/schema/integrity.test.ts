@@ -56,6 +56,23 @@ describe("isSchemaIntegrityValid", () => {
     expect(isSchemaIntegrityValid(invalidName)).toBe(false);
   });
 
+  it("is false for a table name that is a SQL reserved keyword", () => {
+    const schema = buildTwoTableSchema();
+    const reservedName = withTable(schema, USERS_TABLE_ID, { name: "order" });
+
+    expect(isSchemaIntegrityValid(reservedName)).toBe(false);
+  });
+
+  it("is false for a column name that is a SQL reserved keyword", () => {
+    const schema = buildTwoTableSchema();
+    const users = getTable(schema, USERS_TABLE_ID);
+    const reservedColumnName = withTable(schema, USERS_TABLE_ID, {
+      columns: [...users.columns, { ...columnFields, id: "new-col-id", name: "select" }],
+    });
+
+    expect(isSchemaIntegrityValid(reservedColumnName)).toBe(false);
+  });
+
   it("is false when a table has two PRIMARY_KEY keys", () => {
     const schema = buildTwoTableSchema();
     const twoPrimaryKeys = withTable(schema, USERS_TABLE_ID, {

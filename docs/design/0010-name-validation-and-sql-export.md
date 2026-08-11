@@ -39,7 +39,8 @@ correctness prerequisite for REQ-026.
 
 **Non-Goals**
 
-- Reserved-keyword rejection (e.g. a table named `order`) — see Open Questions.
+- Reserved-keyword rejection (e.g. a table named `order`) — see Open
+  Questions. (Closed later by [0029](0029-sql-reserved-keyword-rejection.md).)
 - REQ-027 (schema file download/load) — a different requirement (downloading
   and loading the schema _JSON_, not the exported DDL) that 0001 already
   placed as a separate, later toolbar control. Only REQ-026's own DDL output
@@ -247,9 +248,12 @@ prevent or reject — a third, simpler category of "show it, don't act on it."
 
 ## Open Questions
 
-- A name that is a SQL reserved keyword (e.g. `order`) currently passes
+- ~~A name that is a SQL reserved keyword (e.g. `order`) currently passes
   `isValidIdentifierName` but would still need quoting in real SQL — not
-  solved here.
+  solved here.~~ Resolved in
+  [0029](0029-sql-reserved-keyword-rejection.md): rather than quoting,
+  reserved-keyword names are rejected as invalid, the same as an empty or
+  duplicate name.
 - A `DEFAULT` value meant as an expression or keyword (e.g.
   `CURRENT_TIMESTAMP`) is quoted as a string literal by `formatDefaultValue`,
   since `defaultValue` has no literal-vs-expression flag — matches 0006's

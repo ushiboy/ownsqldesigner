@@ -13,6 +13,7 @@ export default {
     typeLabel: "種類",
     invalidNameShapeHint:
       "英字またはアンダースコアで始まり、英数字とアンダースコアのみを使用してください。",
+    reservedNameHint: "この名前はSQLの予約語のため使用できません。",
     duplicateTableName: "同じ名前のテーブルが既に存在します。",
     duplicateColumnName: "同じ名前のカラムが既に存在します。",
   },

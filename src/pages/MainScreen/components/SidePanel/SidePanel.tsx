@@ -182,6 +182,7 @@ function TableProperties({
   const trimmedName = name.trim();
   const {
     isInvalidShape: isNameInvalidShape,
+    isReserved: isNameReserved,
     isDuplicate: isNameDuplicate,
     isInvalid: isNameInvalid,
   } = describeNameValidity(trimmedName, existingTableNames, strategy);
@@ -224,6 +225,7 @@ function TableProperties({
         {isNameInvalidShape && (
           <p className="text-[12px] text-body">{tCommon("invalidNameShapeHint")}</p>
         )}
+        {isNameReserved && <p className="text-[12px] text-body">{tCommon("reservedNameHint")}</p>}
         {isNameDuplicate && (
           <p className="text-[12px] text-body">{tCommon("duplicateTableName")}</p>
         )}

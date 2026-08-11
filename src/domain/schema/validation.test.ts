@@ -35,10 +35,11 @@ describe("isValidIdentifierName", () => {
 });
 
 describe("describeNameValidity", () => {
-  it("flags an empty name as empty, not invalid-shape or duplicate", () => {
+  it("flags an empty name as empty, not invalid-shape, reserved, or duplicate", () => {
     expect(describeNameValidity("", ["posts"], sqliteDialectStrategy)).toEqual({
       isEmpty: true,
       isInvalidShape: false,
+      isReserved: false,
       isDuplicate: false,
       isInvalid: true,
     });
@@ -48,6 +49,17 @@ describe("describeNameValidity", () => {
     expect(describeNameValidity("1posts", ["users"], sqliteDialectStrategy)).toEqual({
       isEmpty: false,
       isInvalidShape: true,
+      isReserved: false,
+      isDuplicate: false,
+      isInvalid: true,
+    });
+  });
+
+  it("flags a SQL reserved keyword, case-insensitively", () => {
+    expect(describeNameValidity("Order", ["posts", "users"], sqliteDialectStrategy)).toEqual({
+      isEmpty: false,
+      isInvalidShape: false,
+      isReserved: true,
       isDuplicate: false,
       isInvalid: true,
     });
@@ -57,6 +69,7 @@ describe("describeNameValidity", () => {
     expect(describeNameValidity("Posts", ["posts", "users"], sqliteDialectStrategy)).toEqual({
       isEmpty: false,
       isInvalidShape: false,
+      isReserved: false,
       isDuplicate: true,
       isInvalid: true,
     });
@@ -66,6 +79,7 @@ describe("describeNameValidity", () => {
     expect(describeNameValidity("comments", ["posts", "users"], sqliteDialectStrategy)).toEqual({
       isEmpty: false,
       isInvalidShape: false,
+      isReserved: false,
       isDuplicate: false,
       isInvalid: false,
     });
@@ -87,6 +101,10 @@ describe("isTableNameAvailable", () => {
     expect(isTableNameAvailable(schema, "1comments")).toBe(false);
   });
 
+  it("is false for a SQL reserved keyword", () => {
+    expect(isTableNameAvailable(schema, "order")).toBe(false);
+  });
+
   it("is true for a table's own current name when excluded", () => {
     expect(isTableNameAvailable(schema, "posts", POSTS_TABLE_ID)).toBe(true);
   });
@@ -106,6 +124,10 @@ describe("isColumnNameAvailable", () => {
 
   it("is false for an invalid identifier shape", () => {
     expect(isColumnNameAvailable(users, "1created_at", sqliteDialectStrategy)).toBe(false);
+  });
+
+  it("is false for a SQL reserved keyword", () => {
+    expect(isColumnNameAvailable(users, "select", sqliteDialectStrategy)).toBe(false);
   });
 
   it("is true for a column's own current name when excluded", () => {

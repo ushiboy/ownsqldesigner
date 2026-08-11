@@ -6,6 +6,7 @@ export type DialectStrategy = {
   isAutoIncrementEligible(column: Column, pkColumnId: string | undefined): boolean;
   normalizeAutoIncrement(table: Table): Table;
   isNameTaken(name: string, existingNames: string[]): boolean;
+  isReservedKeyword(name: string): boolean;
   hasDuplicateNames(names: string[]): boolean;
   generateDdl(tables: Table[]): string;
 };
@@ -15,6 +16,7 @@ export type DialectStrategyConfig = {
   columnTypes: readonly string[];
   isAutoIncrementEligible(column: Column, pkColumnId: string | undefined): boolean;
   isNameTaken(name: string, existingNames: string[]): boolean;
+  isReservedKeyword(name: string): boolean;
   generateDdl(tables: Table[]): string;
 };
 
@@ -30,6 +32,7 @@ export function buildDialectStrategy(config: DialectStrategyConfig): DialectStra
     normalizeAutoIncrement: (table) =>
       normalizeAutoIncrement(table, config.isAutoIncrementEligible),
     isNameTaken: config.isNameTaken,
+    isReservedKeyword: config.isReservedKeyword,
     hasDuplicateNames: (names) => hasDuplicateNames(names, config.isNameTaken),
     generateDdl: config.generateDdl,
   };

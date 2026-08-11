@@ -51,3 +51,12 @@ export const InvalidName: Story = {
     initialName: "1users",
   },
 };
+
+export const ReservedName: Story = {
+  args: {
+    open: true,
+    title: "New Table",
+    submitLabel: "Create",
+    initialName: "order",
+  },
+};

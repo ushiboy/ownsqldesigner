@@ -17,6 +17,7 @@ export function isTableNameAvailable(
   const strategy = getDialectStrategy(schema.dialect);
   return (
     isValidIdentifierName(name) &&
+    !strategy.isReservedKeyword(name) &&
     !strategy.isNameTaken(
       name,
       schema.tables.filter((table) => table.id !== excludeTableId).map((table) => table.name),
@@ -33,6 +34,7 @@ export function isColumnNameAvailable(
 ): boolean {
   return (
     isValidIdentifierName(name) &&
+    !strategy.isReservedKeyword(name) &&
     !strategy.isNameTaken(
       name,
       table.columns.filter((column) => column.id !== excludeColumnId).map((column) => column.name),
@@ -43,6 +45,7 @@ export function isColumnNameAvailable(
 export type NameValidity = {
   isEmpty: boolean;
   isInvalidShape: boolean;
+  isReserved: boolean;
   isDuplicate: boolean;
   isInvalid: boolean;
 };
@@ -55,12 +58,14 @@ export function describeNameValidity(
 ): NameValidity {
   const isEmpty = trimmedName === "";
   const isInvalidShape = !isEmpty && !isValidIdentifierName(trimmedName);
+  const isReserved = !isEmpty && !isInvalidShape && strategy.isReservedKeyword(trimmedName);
   const isDuplicate =
-    !isEmpty && !isInvalidShape && strategy.isNameTaken(trimmedName, existingNames);
+    !isEmpty && !isInvalidShape && !isReserved && strategy.isNameTaken(trimmedName, existingNames);
   return {
     isEmpty,
     isInvalidShape,
+    isReserved,
     isDuplicate,
-    isInvalid: isEmpty || isInvalidShape || isDuplicate,
+    isInvalid: isEmpty || isInvalidShape || isReserved || isDuplicate,
   };
 }

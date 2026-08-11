@@ -13,6 +13,7 @@ export default {
     typeLabel: "Type",
     invalidNameShapeHint:
       "Must start with a letter or underscore and contain only letters, digits, and underscores.",
+    reservedNameHint: "This name is a SQL reserved keyword and cannot be used.",
     duplicateTableName: "A table with this name already exists.",
     duplicateColumnName: "A column with this name already exists.",
   },

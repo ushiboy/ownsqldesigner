@@ -56,6 +56,11 @@ describe("sqliteDialectStrategy", () => {
     expect(sqliteDialectStrategy.hasDuplicateNames(["users", "Users"])).toBe(true);
   });
 
+  it("delegates isReservedKeyword to the SQLite rule", () => {
+    expect(sqliteDialectStrategy.isReservedKeyword("order")).toBe(true);
+    expect(sqliteDialectStrategy.isReservedKeyword("users")).toBe(false);
+  });
+
   it("delegates generateDdl to the SQLite DDL generator", () => {
     expect(sqliteDialectStrategy.generateDdl([])).toBe("");
   });

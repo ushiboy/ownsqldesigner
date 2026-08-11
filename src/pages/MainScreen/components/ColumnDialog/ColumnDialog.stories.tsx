@@ -106,3 +106,12 @@ export const InvalidName: Story = {
     initialColumn: { ...column, name: "1title" },
   },
 };
+
+export const ReservedName: Story = {
+  args: {
+    open: true,
+    title: "Edit Column",
+    submitLabel: "Save",
+    initialColumn: { ...column, name: "select" },
+  },
+};
