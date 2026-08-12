@@ -391,6 +391,111 @@ describe("useUndoableSchema", () => {
     );
   });
 
+  it("moves a column up within a table and bumps updatedAt", () => {
+    const blog = addColumn(
+      addColumn(
+        createTable(
+          createSchema("Blog Schema", { now: new Date("2026-07-01T09:00:00.000Z") }),
+          "posts",
+          { id: "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12", now: new Date("2026-07-01T09:00:00.000Z") },
+        ),
+        "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12",
+        columnFields,
+        { id: "f1a2b3c4-5d6e-4f7a-8b9c-0d1e2f3a4b5c", now: new Date("2026-07-01T09:00:00.000Z") },
+      ),
+      "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12",
+      { ...columnFields, name: "subtitle" },
+      { id: "a2b3c4d5-6e7f-4a8b-9c0d-1e2f3a4b5c6d", now: new Date("2026-07-01T09:00:00.000Z") },
+    );
+    const { result } = renderUndoableSchema(blog);
+
+    act(() => {
+      result.current.editing.moveColumnUp(
+        "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12",
+        "a2b3c4d5-6e7f-4a8b-9c0d-1e2f3a4b5c6d",
+      );
+    });
+
+    expect(
+      result.current.editing.currentSchema?.tables[0]?.columns.map((column) => column.name),
+    ).toEqual(["subtitle", "title"]);
+    expect(result.current.editing.currentSchema?.updatedAt.getTime()).toBeGreaterThan(
+      blog.updatedAt.getTime(),
+    );
+
+    act(() => {
+      result.current.editing.undo();
+    });
+
+    expect(
+      result.current.editing.currentSchema?.tables[0]?.columns.map((column) => column.name),
+    ).toEqual(["title", "subtitle"]);
+
+    act(() => {
+      result.current.editing.redo();
+    });
+
+    expect(
+      result.current.editing.currentSchema?.tables[0]?.columns.map((column) => column.name),
+    ).toEqual(["subtitle", "title"]);
+  });
+
+  it("moves a column down within a table and bumps updatedAt", () => {
+    const blog = addColumn(
+      addColumn(
+        createTable(
+          createSchema("Blog Schema", { now: new Date("2026-07-01T09:00:00.000Z") }),
+          "posts",
+          { id: "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12", now: new Date("2026-07-01T09:00:00.000Z") },
+        ),
+        "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12",
+        columnFields,
+        { id: "f1a2b3c4-5d6e-4f7a-8b9c-0d1e2f3a4b5c", now: new Date("2026-07-01T09:00:00.000Z") },
+      ),
+      "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12",
+      { ...columnFields, name: "subtitle" },
+      { id: "a2b3c4d5-6e7f-4a8b-9c0d-1e2f3a4b5c6d", now: new Date("2026-07-01T09:00:00.000Z") },
+    );
+    const { result } = renderUndoableSchema(blog);
+
+    act(() => {
+      result.current.editing.moveColumnDown(
+        "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12",
+        "f1a2b3c4-5d6e-4f7a-8b9c-0d1e2f3a4b5c",
+      );
+    });
+
+    expect(
+      result.current.editing.currentSchema?.tables[0]?.columns.map((column) => column.name),
+    ).toEqual(["subtitle", "title"]);
+    expect(result.current.editing.currentSchema?.updatedAt.getTime()).toBeGreaterThan(
+      blog.updatedAt.getTime(),
+    );
+  });
+
+  it("does not push a no-op column move onto the undo stack", () => {
+    const blog = addColumn(
+      createTable(
+        createSchema("Blog Schema", { now: new Date("2026-07-01T09:00:00.000Z") }),
+        "posts",
+        { id: "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12", now: new Date("2026-07-01T09:00:00.000Z") },
+      ),
+      "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12",
+      columnFields,
+      { id: "f1a2b3c4-5d6e-4f7a-8b9c-0d1e2f3a4b5c", now: new Date("2026-07-01T09:00:00.000Z") },
+    );
+    const { result } = renderUndoableSchema(blog);
+
+    act(() => {
+      result.current.editing.moveColumnUp(
+        "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12",
+        "f1a2b3c4-5d6e-4f7a-8b9c-0d1e2f3a4b5c",
+      );
+    });
+
+    expect(result.current.editing.canUndo).toBe(false);
+  });
+
   it("adds a key to a table and bumps updatedAt", () => {
     const blog = addColumn(
       createTable(

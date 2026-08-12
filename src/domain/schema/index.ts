@@ -1,4 +1,11 @@
-export { addColumn, formatColumnType, removeColumn, updateColumn } from "./column";
+export {
+  addColumn,
+  formatColumnType,
+  moveColumnDown,
+  moveColumnUp,
+  removeColumn,
+  updateColumn,
+} from "./column";
 export {
   addForeignKey,
   addForeignKeyWithNewColumn,

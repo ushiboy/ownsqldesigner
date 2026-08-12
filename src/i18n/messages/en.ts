@@ -111,6 +111,8 @@ export default {
     addColumn: "Add Column",
     editColumnAriaLabel: "Edit column {name}",
     deleteColumnAriaLabel: "Delete column {name}",
+    moveColumnUpAriaLabel: "Move {name} up",
+    moveColumnDownAriaLabel: "Move {name} down",
     keysHeading: "Keys",
     addKey: "Add Key",
     editKeyAriaLabel: "Edit key {label}",

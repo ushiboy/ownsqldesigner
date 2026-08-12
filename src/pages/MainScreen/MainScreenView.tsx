@@ -99,6 +99,8 @@ export function MainScreenView({
     selectSchema: onSelectSchema,
     renameTable: onUpdateTableName,
     updateTableComment: onUpdateTableComment,
+    moveColumnUp: onMoveColumnUp,
+    moveColumnDown: onMoveColumnDown,
     moveTables: onMoveTables,
     addForeignKey: onAddForeignKey,
     addForeignKeyWithNewColumn: onAddForeignKeyWithNewColumn,
@@ -199,6 +201,8 @@ export function MainScreenView({
             selectColumn(columnId);
             openDialog("deleteColumn");
           }}
+          onMoveColumnUp={onMoveColumnUp}
+          onMoveColumnDown={onMoveColumnDown}
           onAddKey={() => {
             selectKey(null);
             openDialog("addKey");

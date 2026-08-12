@@ -99,6 +99,28 @@ export function removeColumn(
   };
 }
 
+type MoveColumnOptions = {
+  now?: Date;
+};
+
+export function moveColumnUp(
+  schema: Schema,
+  tableId: string,
+  columnId: string,
+  options: MoveColumnOptions = {},
+): Schema {
+  return moveColumn(schema, tableId, columnId, -1, options);
+}
+
+export function moveColumnDown(
+  schema: Schema,
+  tableId: string,
+  columnId: string,
+  options: MoveColumnOptions = {},
+): Schema {
+  return moveColumn(schema, tableId, columnId, 1, options);
+}
+
 export function formatColumnType(column: Pick<Column, "type" | "size">): string {
   return column.size === "" ? column.type : `${column.type}(${column.size})`;
 }
@@ -116,6 +138,32 @@ export function uniqueColumnName(
     suffix += 1;
   }
   return candidate;
+}
+
+function moveColumn(
+  schema: Schema,
+  tableId: string,
+  columnId: string,
+  offset: -1 | 1,
+  options: MoveColumnOptions,
+): Schema {
+  const targetTable = schema.tables.find((table) => table.id === tableId);
+  if (targetTable === undefined) {
+    return schema;
+  }
+  const index = targetTable.columns.findIndex((column) => column.id === columnId);
+  const targetIndex = index + offset;
+  if (index === -1 || targetIndex < 0 || targetIndex >= targetTable.columns.length) {
+    return schema;
+  }
+  const columns = [...targetTable.columns];
+  [columns[index], columns[targetIndex]] = [columns[targetIndex], columns[index]];
+  const { now = new Date() } = options;
+  return {
+    ...schema,
+    tables: schema.tables.map((table) => (table.id === tableId ? { ...table, columns } : table)),
+    updatedAt: now,
+  };
 }
 
 function canAddColumn(

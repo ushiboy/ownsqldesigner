@@ -77,6 +77,8 @@ const meta = {
     onAddColumn: fn(),
     onEditColumn: fn(),
     onDeleteColumn: fn(),
+    onMoveColumnUp: fn(),
+    onMoveColumnDown: fn(),
     onAddKey: fn(),
     onEditKey: fn(),
     onDeleteKey: fn(),

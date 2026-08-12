@@ -110,6 +110,8 @@ export default {
     addColumn: "カラムを追加",
     editColumnAriaLabel: "カラム {name} を編集",
     deleteColumnAriaLabel: "カラム {name} を削除",
+    moveColumnUpAriaLabel: "{name} を上に移動",
+    moveColumnDownAriaLabel: "{name} を下に移動",
     keysHeading: "キー",
     addKey: "キーを追加",
     editKeyAriaLabel: "キー {label} を編集",

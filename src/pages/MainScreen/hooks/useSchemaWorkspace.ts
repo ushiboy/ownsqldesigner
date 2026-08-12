@@ -27,6 +27,8 @@ export type SchemaActions = {
   addColumn: (tableId: string, fields: Omit<Column, "id">, id?: string) => void;
   updateColumn: (tableId: string, columnId: string, fields: Omit<Column, "id">) => void;
   removeColumn: (tableId: string, columnId: string) => void;
+  moveColumnUp: (tableId: string, columnId: string) => void;
+  moveColumnDown: (tableId: string, columnId: string) => void;
   setColumnKeyMembership: (
     tableId: string,
     columnId: string,

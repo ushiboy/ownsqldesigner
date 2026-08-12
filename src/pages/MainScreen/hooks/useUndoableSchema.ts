@@ -15,6 +15,8 @@ import {
   createSchema,
   createTable,
   importSchema,
+  moveColumnDown,
+  moveColumnUp,
   moveTable,
   moveTables,
   removeColumn,
@@ -50,6 +52,8 @@ export type UndoableSchemaActions = {
   addColumn: (tableId: string, fields: Omit<Column, "id">, id?: string) => void;
   updateColumn: (tableId: string, columnId: string, fields: Omit<Column, "id">) => void;
   removeColumn: (tableId: string, columnId: string) => void;
+  moveColumnUp: (tableId: string, columnId: string) => void;
+  moveColumnDown: (tableId: string, columnId: string) => void;
   setColumnKeyMembership: (
     tableId: string,
     columnId: string,
@@ -206,6 +210,12 @@ export function useUndoableSchema(initialSchema?: Schema): UndoableSchema {
     },
     removeColumn: (tableId, columnId) => {
       commitEdit((prev) => removeColumn(prev, tableId, columnId));
+    },
+    moveColumnUp: (tableId, columnId) => {
+      commitEdit((prev) => moveColumnUp(prev, tableId, columnId));
+    },
+    moveColumnDown: (tableId, columnId) => {
+      commitEdit((prev) => moveColumnDown(prev, tableId, columnId));
     },
     setColumnKeyMembership: (tableId, columnId, membership) => {
       commitEdit((prev) => setColumnKeyMembership(prev, tableId, columnId, membership));

@@ -31,6 +31,8 @@ const closedProps = {
   onAddColumn: () => {},
   onEditColumn: () => {},
   onDeleteColumn: () => {},
+  onMoveColumnUp: () => {},
+  onMoveColumnDown: () => {},
   onAddKey: () => {},
   onEditKey: () => {},
   onDeleteKey: () => {},
@@ -230,6 +232,34 @@ describe("SidePanel", () => {
     render(<TableWithColumns onDeleteColumn={onDeleteColumn} />);
     await userEvent.click(screen.getByRole("button", { name: "Delete column email" }));
     expect(onDeleteColumn).toHaveBeenCalledExactlyOnceWith("a2b3c4d5-6e7f-4a8b-9c0d-1e2f3a4b5c6d");
+  });
+
+  it("calls onMoveColumnUp with the table and clicked column's id", async () => {
+    const onMoveColumnUp = fn();
+    render(<TableWithColumns onMoveColumnUp={onMoveColumnUp} />);
+    await userEvent.click(screen.getByRole("button", { name: "Move email up" }));
+    expect(onMoveColumnUp).toHaveBeenCalledExactlyOnceWith(
+      "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12",
+      "a2b3c4d5-6e7f-4a8b-9c0d-1e2f3a4b5c6d",
+    );
+  });
+
+  it("calls onMoveColumnDown with the table and clicked column's id", async () => {
+    const onMoveColumnDown = fn();
+    render(<TableWithColumns onMoveColumnDown={onMoveColumnDown} />);
+    await userEvent.click(screen.getByRole("button", { name: "Move id down" }));
+    expect(onMoveColumnDown).toHaveBeenCalledExactlyOnceWith(
+      "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12",
+      "f1a2b3c4-5d6e-4f7a-8b9c-0d1e2f3a4b5c",
+    );
+  });
+
+  it("disables move-up for the first column and move-down for the last column", () => {
+    render(<TableWithColumns />);
+    expect(screen.getByRole("button", { name: "Move id up" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Move id down" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Move email up" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Move email down" })).toBeDisabled();
   });
 
   it("shows no keys for a table without any", () => {

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { LuPencil, LuPlus, LuTrash2 } from "react-icons/lu";
+import { LuChevronDown, LuChevronUp, LuPencil, LuPlus, LuTrash2 } from "react-icons/lu";
 import { tv } from "tailwind-variants";
 import { useTranslations } from "use-intl";
 import type { DialectStrategy } from "../../../../domain/dialect";
@@ -23,7 +23,7 @@ const fieldInput = tv({
 // Small icon-only button, matching Toolbar.tsx's local `toolButton` — no
 // shared icon-button component exists yet in this codebase.
 const iconButton = tv({
-  base: "inline-flex items-center rounded-md p-1 text-body transition-colors hover:bg-accent-bg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
+  base: "inline-flex items-center rounded-md p-1 text-body transition-colors hover:bg-accent-bg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:pointer-events-none disabled:opacity-40",
 });
 
 /** A pre-computed, cross-table label — SidePanel only ever sees the selected table. */
@@ -50,6 +50,8 @@ type SidePanelProps = {
   onAddColumn: () => void;
   onEditColumn: (columnId: string) => void;
   onDeleteColumn: (columnId: string) => void;
+  onMoveColumnUp: (tableId: string, columnId: string) => void;
+  onMoveColumnDown: (tableId: string, columnId: string) => void;
   onAddKey: () => void;
   onEditKey: (keyId: string) => void;
   onDeleteKey: (keyId: string) => void;
@@ -71,6 +73,8 @@ export function SidePanel({
   onAddColumn,
   onEditColumn,
   onDeleteColumn,
+  onMoveColumnUp,
+  onMoveColumnDown,
   onAddKey,
   onEditKey,
   onDeleteKey,
@@ -104,6 +108,8 @@ export function SidePanel({
             onAddColumn={onAddColumn}
             onEditColumn={onEditColumn}
             onDeleteColumn={onDeleteColumn}
+            onMoveColumnUp={onMoveColumnUp}
+            onMoveColumnDown={onMoveColumnDown}
             onAddKey={onAddKey}
             onEditKey={onEditKey}
             onDeleteKey={onDeleteKey}
@@ -154,6 +160,8 @@ type TablePropertiesProps = {
   onAddColumn: () => void;
   onEditColumn: (columnId: string) => void;
   onDeleteColumn: (columnId: string) => void;
+  onMoveColumnUp: (tableId: string, columnId: string) => void;
+  onMoveColumnDown: (tableId: string, columnId: string) => void;
   onAddKey: () => void;
   onEditKey: (keyId: string) => void;
   onDeleteKey: (keyId: string) => void;
@@ -171,6 +179,8 @@ function TableProperties({
   onAddColumn,
   onEditColumn,
   onDeleteColumn,
+  onMoveColumnUp,
+  onMoveColumnDown,
   onAddKey,
   onEditKey,
   onDeleteKey,
@@ -246,13 +256,31 @@ function TableProperties({
           {t("addColumn")}
         </button>
         <ul className="mt-2 flex flex-col gap-1 text-[13px]">
-          {table.columns.map((column) => (
+          {table.columns.map((column, index) => (
             <li key={column.id} className="flex items-center justify-between gap-2">
               <span className="truncate">
                 <span className="text-heading">{column.name}</span>{" "}
                 <span className="text-body">{column.type}</span>
               </span>
               <span className="flex shrink-0 items-center gap-1">
+                <button
+                  type="button"
+                  aria-label={t("moveColumnUpAriaLabel", { name: column.name })}
+                  disabled={index === 0}
+                  onClick={() => onMoveColumnUp(table.id, column.id)}
+                  className={iconButton()}
+                >
+                  <LuChevronUp aria-hidden="true" className="size-4" />
+                </button>
+                <button
+                  type="button"
+                  aria-label={t("moveColumnDownAriaLabel", { name: column.name })}
+                  disabled={index === table.columns.length - 1}
+                  onClick={() => onMoveColumnDown(table.id, column.id)}
+                  className={iconButton()}
+                >
+                  <LuChevronDown aria-hidden="true" className="size-4" />
+                </button>
                 <button
                   type="button"
                   aria-label={t("editColumnAriaLabel", { name: column.name })}

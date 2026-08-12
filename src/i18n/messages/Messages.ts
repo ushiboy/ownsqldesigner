@@ -116,6 +116,10 @@ export type Messages = {
     editColumnAriaLabel: string;
     /** ICU placeholder: {name} */
     deleteColumnAriaLabel: string;
+    /** ICU placeholder: {name} */
+    moveColumnUpAriaLabel: string;
+    /** ICU placeholder: {name} */
+    moveColumnDownAriaLabel: string;
     keysHeading: string;
     addKey: string;
     /** ICU placeholder: {label} */

@@ -1,4 +1,11 @@
-import { addColumn, formatColumnType, removeColumn, updateColumn } from "./column";
+import {
+  addColumn,
+  formatColumnType,
+  moveColumnDown,
+  moveColumnUp,
+  removeColumn,
+  updateColumn,
+} from "./column";
 import { addForeignKey } from "./foreignKey";
 import { addKey } from "./key";
 import {
@@ -394,6 +401,130 @@ describe("removeColumn", () => {
     );
 
     expect(withBothColumnsRemoved.tables[0]?.keys).toEqual([]);
+  });
+});
+
+describe("moveColumnUp / moveColumnDown", () => {
+  const withThreeColumns = addColumn(
+    addColumn(
+      addColumn(
+        createTable(
+          createSchema("Blog Schema", {
+            id: "c3a1e96a-9a75-4d3c-b0ad-3d6e1b6a5f01",
+            now: new Date("2026-07-18T09:00:00.000Z"),
+          }),
+          "posts",
+          { id: "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12", now: new Date("2026-07-18T09:00:00.000Z") },
+        ),
+        "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12",
+        { ...columnFields, name: "alpha" },
+        { id: "11111111-1111-4111-8111-111111111111", now: new Date("2026-07-18T09:00:00.000Z") },
+      ),
+      "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12",
+      { ...columnFields, name: "second" },
+      { id: "22222222-2222-4222-8222-222222222222", now: new Date("2026-07-18T09:00:00.000Z") },
+    ),
+    "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12",
+    { ...columnFields, name: "third" },
+    { id: "33333333-3333-4333-8333-333333333333", now: new Date("2026-07-18T09:00:00.000Z") },
+  );
+  const TABLE_ID = "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12";
+  const ALPHA_ID = "11111111-1111-4111-8111-111111111111";
+  const SECOND_ID = "22222222-2222-4222-8222-222222222222";
+  const THIRD_ID = "33333333-3333-4333-8333-333333333333";
+
+  describe("moveColumnUp", () => {
+    it("swaps the column with its predecessor and bumps updatedAt", () => {
+      const updated = moveColumnUp(withThreeColumns, TABLE_ID, SECOND_ID, {
+        now: new Date("2026-07-19T09:00:00.000Z"),
+      });
+
+      expect(updated.tables[0]?.columns.map((c) => c.name)).toEqual(["second", "alpha", "third"]);
+      expect(updated.updatedAt).toEqual(new Date("2026-07-19T09:00:00.000Z"));
+    });
+
+    it("is a no-op when the column is already first", () => {
+      const updated = moveColumnUp(withThreeColumns, TABLE_ID, ALPHA_ID, {
+        now: new Date("2026-07-19T09:00:00.000Z"),
+      });
+
+      expect(updated).toBe(withThreeColumns);
+    });
+
+    it("is a no-op when the table id is unknown", () => {
+      const updated = moveColumnUp(withThreeColumns, "unknown-id", SECOND_ID, {
+        now: new Date("2026-07-19T09:00:00.000Z"),
+      });
+
+      expect(updated).toBe(withThreeColumns);
+    });
+
+    it("is a no-op when the column id is unknown", () => {
+      const updated = moveColumnUp(withThreeColumns, TABLE_ID, "unknown-id", {
+        now: new Date("2026-07-19T09:00:00.000Z"),
+      });
+
+      expect(updated).toBe(withThreeColumns);
+    });
+
+    it("does not mutate the input schema", () => {
+      moveColumnUp(withThreeColumns, TABLE_ID, SECOND_ID, {
+        now: new Date("2026-07-19T09:00:00.000Z"),
+      });
+
+      expect(withThreeColumns.tables[0]?.columns.map((c) => c.name)).toEqual([
+        "alpha",
+        "second",
+        "third",
+      ]);
+    });
+  });
+
+  describe("moveColumnDown", () => {
+    it("swaps the column with its successor and bumps updatedAt", () => {
+      const updated = moveColumnDown(withThreeColumns, TABLE_ID, SECOND_ID, {
+        now: new Date("2026-07-19T09:00:00.000Z"),
+      });
+
+      expect(updated.tables[0]?.columns.map((c) => c.name)).toEqual(["alpha", "third", "second"]);
+      expect(updated.updatedAt).toEqual(new Date("2026-07-19T09:00:00.000Z"));
+    });
+
+    it("is a no-op when the column is already last", () => {
+      const updated = moveColumnDown(withThreeColumns, TABLE_ID, THIRD_ID, {
+        now: new Date("2026-07-19T09:00:00.000Z"),
+      });
+
+      expect(updated).toBe(withThreeColumns);
+    });
+
+    it("is a no-op when the table id is unknown", () => {
+      const updated = moveColumnDown(withThreeColumns, "unknown-id", SECOND_ID, {
+        now: new Date("2026-07-19T09:00:00.000Z"),
+      });
+
+      expect(updated).toBe(withThreeColumns);
+    });
+
+    it("is a no-op when the column id is unknown", () => {
+      const updated = moveColumnDown(withThreeColumns, TABLE_ID, "unknown-id", {
+        now: new Date("2026-07-19T09:00:00.000Z"),
+      });
+
+      expect(updated).toBe(withThreeColumns);
+    });
+
+    it("does not mutate the input schema", () => {
+      moveColumnDown(withThreeColumns, TABLE_ID, SECOND_ID, {
+        now: new Date("2026-07-19T09:00:00.000Z"),
+      });
+
+      expect(withThreeColumns.tables[0]?.columns.map((c) => c.name)).toEqual([
+        "alpha",
+        "second",
+        "third",
+      ]);
+    });
   });
 });
 
