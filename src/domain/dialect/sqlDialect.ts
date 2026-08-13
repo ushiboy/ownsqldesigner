@@ -1,4 +1,4 @@
-export const SQL_DIALECTS = ["sqlite"] as const;
+export const SQL_DIALECTS = ["sqlite", "postgresql"] as const;
 
 export type SqlDialect = (typeof SQL_DIALECTS)[number];
 

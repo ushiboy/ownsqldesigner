@@ -1,0 +1,17 @@
+export const POSTGRESQL_COLUMN_TYPES = [
+  "SMALLINT",
+  "INTEGER",
+  "BIGINT",
+  "NUMERIC",
+  "REAL",
+  "DOUBLE PRECISION",
+  "BOOLEAN",
+  "VARCHAR",
+  "CHAR",
+  "TEXT",
+  "DATE",
+  "TIME",
+  "TIMESTAMP",
+  "UUID",
+  "JSONB",
+] as const;
