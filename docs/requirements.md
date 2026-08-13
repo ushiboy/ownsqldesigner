@@ -31,13 +31,13 @@ The Phase column gives a rough implementation order: Phase 1 = core MVP, Phase 2
 
 ### Table / column definition
 
-| ID      | Requirement                                                                                                                                                                                                                                         | Phase |
-| ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----- |
-| REQ-009 | Create, rename, and comment tables ([0004](design/0004-table-creation-and-placement.md))                                                                                                                                                            | 1     |
-| REQ-010 | Add, edit, remove, and reorder columns (name / type / size / default value / nullable / auto-increment / comment) ([0006](design/0006-table-column-management.md), [0033](design/0033-table-column-reordering.md))                                  | 1     |
-| REQ-011 | Column type selection from a per-dialect datatype set (SQLite initially) ([0006](design/0006-table-column-management.md), [0026](design/0026-sql-dialect-strategy.md))                                                                              | 1     |
-| REQ-012 | Toggle display of column type / size on the canvas ([0021](design/0021-column-type-size-toggle.md))                                                                                                                                                 | 3     |
-| REQ-039 | PostgreSQL `DialectStrategy` (datatypes, identity-based auto-increment, reserved-keyword rejection, DDL generation) implemented at the domain layer; not yet exposed via a dialect-selector UI ([0034](design/0034-postgresql-dialect-strategy.md)) | 3     |
+| ID      | Requirement                                                                                                                                                                                                                                             | Phase |
+| ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----- |
+| REQ-009 | Create, rename, and comment tables ([0004](design/0004-table-creation-and-placement.md))                                                                                                                                                                | 1     |
+| REQ-010 | Add, edit, remove, and reorder columns (name / type / size / default value / nullable / auto-increment / comment) ([0006](design/0006-table-column-management.md), [0033](design/0033-table-column-reordering.md))                                      | 1     |
+| REQ-011 | Column type selection from a per-dialect datatype set (SQLite initially) ([0006](design/0006-table-column-management.md), [0026](design/0026-sql-dialect-strategy.md))                                                                                  | 1     |
+| REQ-012 | Toggle display of column type / size on the canvas ([0021](design/0021-column-type-size-toggle.md))                                                                                                                                                     | 3     |
+| REQ-039 | PostgreSQL `DialectStrategy` (datatypes, identity-based auto-increment, reserved-keyword rejection, DDL generation), selectable when creating a schema ([0034](design/0034-postgresql-dialect-strategy.md), [0035](design/0035-dialect-selector-ui.md)) | 3     |
 
 ### Keys and relations
 
@@ -78,12 +78,12 @@ The Phase column gives a rough implementation order: Phase 1 = core MVP, Phase 2
 
 ### UI / UX
 
-| ID      | Requirement                                                                                                                                                    | Phase |
-| ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----- |
-| REQ-029 | Dark mode (theme switching) ([0018](design/0018-dark-mode-toggle.md))                                                                                          | 2     |
-| REQ-030 | Japanese / English UI switching (i18n) ([0019](design/0019-i18n-locale-switching.md))                                                                          | 2     |
-| REQ-031 | Keyboard shortcuts (delete, undo/redo, confirm/cancel, ...) ([0017](design/0017-keyboard-shortcuts.md), [0032](design/0032-escape-clears-canvas-selection.md)) | 2     |
-| REQ-032 | Persist settings (dialect, snap, FK naming pattern, display toggles) ([0025](design/0025-fk-naming-pattern-setting.md))                                        | 3     |
+| ID      | Requirement                                                                                                                                                                                            | Phase |
+| ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----- |
+| REQ-029 | Dark mode (theme switching) ([0018](design/0018-dark-mode-toggle.md))                                                                                                                                  | 2     |
+| REQ-030 | Japanese / English UI switching (i18n) ([0019](design/0019-i18n-locale-switching.md))                                                                                                                  | 2     |
+| REQ-031 | Keyboard shortcuts (delete, undo/redo, confirm/cancel, ...) ([0017](design/0017-keyboard-shortcuts.md), [0032](design/0032-escape-clears-canvas-selection.md))                                         | 2     |
+| REQ-032 | Persist settings (snap, FK naming pattern, display toggles); choose a schema's dialect at creation time ([0025](design/0025-fk-naming-pattern-setting.md), [0035](design/0035-dialect-selector-ui.md)) | 3     |
 
 ## Non-Goals
 

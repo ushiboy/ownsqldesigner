@@ -15,3 +15,6 @@ export const POSTGRESQL_COLUMN_TYPES = [
   "UUID",
   "JSONB",
 ] as const;
+
+/** The subset of `POSTGRESQL_COLUMN_TYPES` that accepts a size/precision modifier. */
+export const POSTGRESQL_SIZABLE_COLUMN_TYPES = ["VARCHAR", "CHAR", "NUMERIC"] as const;

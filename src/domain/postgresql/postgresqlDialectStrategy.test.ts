@@ -43,6 +43,14 @@ describe("postgresqlDialectStrategy", () => {
     ]);
   });
 
+  it("only treats VARCHAR/CHAR/NUMERIC as sizable", () => {
+    expect(postgresqlDialectStrategy.sizableColumnTypes).toEqual(["VARCHAR", "CHAR", "NUMERIC"]);
+  });
+
+  it("disallows a default value alongside auto-increment", () => {
+    expect(postgresqlDialectStrategy.allowsDefaultWithAutoIncrement).toBe(false);
+  });
+
   it("delegates isAutoIncrementEligible to the PostgreSQL rule", () => {
     expect(postgresqlDialectStrategy.isAutoIncrementEligible(TABLE.columns[0], "col-1")).toBe(true);
     expect(postgresqlDialectStrategy.isAutoIncrementEligible(TABLE.columns[0], "other-col")).toBe(

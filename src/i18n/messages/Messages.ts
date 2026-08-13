@@ -55,6 +55,7 @@ export type Messages = {
     /** ICU placeholder: {name} */
     deleteConfirmMessage: string;
     fieldLabel: string;
+    dialectLabel: string;
   };
   tableDialog: {
     newTitle: string;
@@ -80,7 +81,9 @@ export type Messages = {
       REFERENCED_BY_FOREIGN_KEY: string;
     };
     sizeLabel: string;
+    sizeNotApplicableHint: string;
     defaultValueLabel: string;
+    defaultValueNotApplicableHint: string;
     nullableLabel: string;
     autoIncrementLabel: string;
     autoIncrementHint: string;
@@ -106,6 +109,7 @@ export type Messages = {
   };
   sidePanel: {
     schemaHeading: string;
+    dialectLabel: string;
     tablesLabel: string;
     createdLabel: string;
     tableHeading: string;

@@ -2,7 +2,11 @@ import { useState } from "react";
 import { LuChevronDown, LuChevronUp, LuPencil, LuPlus, LuTrash2 } from "react-icons/lu";
 import { tv } from "tailwind-variants";
 import { useTranslations } from "use-intl";
-import type { DialectStrategy } from "../../../../domain/dialect";
+import {
+  SQL_DIALECT_LABELS,
+  type DialectStrategy,
+  type SqlDialect,
+} from "../../../../domain/dialect";
 import { describeNameValidity, type Table } from "../../../../domain/schema";
 import { describeKey } from "./describeKey";
 
@@ -38,6 +42,7 @@ type SidePanelProps = {
   tableCount: number;
   /** Pre-formatted display date (e.g. "2026-07-01"); "—" while nothing is loaded. */
   createdDate: string;
+  dialect: SqlDialect;
   selectedTable: Table | null;
   /** The current schema's dialect strategy; resolves the identifier-comparison rule for a table rename. */
   strategy: DialectStrategy;
@@ -63,6 +68,7 @@ export function SidePanel({
   schemaName,
   tableCount,
   createdDate,
+  dialect,
   selectedTable,
   strategy,
   existingTableNames,
@@ -94,6 +100,7 @@ export function SidePanel({
             schemaName={schemaName}
             tableCount={tableCount}
             createdDate={createdDate}
+            dialect={dialect}
           />
         ) : (
           <TableProperties
@@ -125,9 +132,10 @@ type SchemaSummaryProps = {
   schemaName: string;
   tableCount: number;
   createdDate: string;
+  dialect: SqlDialect;
 };
 
-function SchemaSummary({ schemaName, tableCount, createdDate }: SchemaSummaryProps) {
+function SchemaSummary({ schemaName, tableCount, createdDate, dialect }: SchemaSummaryProps) {
   const tCommon = useTranslations("common");
   const t = useTranslations("sidePanel");
   return (
@@ -136,6 +144,8 @@ function SchemaSummary({ schemaName, tableCount, createdDate }: SchemaSummaryPro
       <dl className="mt-4 grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-[14px]">
         <dt>{tCommon("nameLabel")}</dt>
         <dd className="text-heading">{schemaName}</dd>
+        <dt>{t("dialectLabel")}</dt>
+        <dd className="text-heading">{SQL_DIALECT_LABELS[dialect]}</dd>
         <dt>{t("tablesLabel")}</dt>
         <dd className="text-heading">{tableCount}</dd>
         <dt>{t("createdLabel")}</dt>

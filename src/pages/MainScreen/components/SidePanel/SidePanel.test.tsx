@@ -21,6 +21,7 @@ const closedProps = {
   schemaName: "Blog Schema",
   tableCount: 0,
   createdDate: "2026-07-01",
+  dialect: "sqlite" as const,
   selectedTable: null,
   strategy: sqliteDialectStrategy,
   existingTableNames: [],
@@ -68,10 +69,21 @@ describe("SidePanel", () => {
     expect(screen.getByRole("heading", { name: "Schema" })).toBeInTheDocument();
     expect(screen.getByText("Name")).toBeInTheDocument();
     expect(screen.getByText("Blog Schema")).toBeInTheDocument();
+    expect(screen.getByText("Dialect")).toBeInTheDocument();
+    expect(screen.getByText("SQLite")).toBeInTheDocument();
     expect(screen.getByText("Tables")).toBeInTheDocument();
     expect(screen.getByText("0")).toBeInTheDocument();
     expect(screen.getByText("Created")).toBeInTheDocument();
     expect(screen.getByText("2026-07-01")).toBeInTheDocument();
+  });
+
+  it("shows the PostgreSQL dialect label when the schema is a PostgreSQL schema", () => {
+    render(
+      <LocaleProvider>
+        <SidePanel {...closedProps} isOpen dialect="postgresql" />
+      </LocaleProvider>,
+    );
+    expect(screen.getByText("PostgreSQL")).toBeInTheDocument();
   });
 
   it("shows the selected table's name and comment", () => {

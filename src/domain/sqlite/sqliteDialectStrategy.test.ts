@@ -33,6 +33,14 @@ describe("sqliteDialectStrategy", () => {
     ]);
   });
 
+  it("treats every SQLite column type as sizable", () => {
+    expect(sqliteDialectStrategy.sizableColumnTypes).toEqual(sqliteDialectStrategy.columnTypes);
+  });
+
+  it("allows a default value alongside auto-increment", () => {
+    expect(sqliteDialectStrategy.allowsDefaultWithAutoIncrement).toBe(true);
+  });
+
   it("delegates isAutoIncrementEligible to the SQLite rule", () => {
     expect(sqliteDialectStrategy.isAutoIncrementEligible(TABLE.columns[0], "col-1")).toBe(true);
     expect(sqliteDialectStrategy.isAutoIncrementEligible(TABLE.columns[0], "other-col")).toBe(

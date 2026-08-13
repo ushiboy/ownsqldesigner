@@ -5,6 +5,7 @@ import type {
   ColumnKeyMembership,
   ColumnKeyMembershipDisabled,
 } from "../../../../domain/schema";
+import { postgresqlDialectStrategy } from "../../../../domain/postgresql/postgresqlDialectStrategy";
 import { sqliteDialectStrategy } from "../../../../domain/sqlite/sqliteDialectStrategy";
 import { LocaleProvider } from "../../../../i18n/LocaleContext";
 import { ColumnDialog } from "./ColumnDialog";
@@ -137,5 +138,26 @@ export const ReservedName: Story = {
     title: "Edit Column",
     submitLabel: "Save",
     initialColumn: { ...column, name: "select" },
+  },
+};
+
+export const PostgresqlSizeNotApplicable: Story = {
+  args: {
+    open: true,
+    title: "Edit Column",
+    submitLabel: "Save",
+    strategy: postgresqlDialectStrategy,
+    initialColumn: { ...column, type: "BOOLEAN" },
+  },
+};
+
+export const PostgresqlDefaultNotApplicableWithAutoIncrement: Story = {
+  args: {
+    open: true,
+    title: "Edit Column",
+    submitLabel: "Save",
+    strategy: postgresqlDialectStrategy,
+    initialColumn: { ...primaryKeyColumn, autoIncrement: true, defaultValue: "1" },
+    keyMembership: { PRIMARY_KEY: true, UNIQUE: false, INDEX: false },
   },
 };

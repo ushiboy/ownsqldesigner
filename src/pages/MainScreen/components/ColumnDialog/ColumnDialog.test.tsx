@@ -13,6 +13,8 @@ const {
   DuplicateName,
   InvalidName,
   ReservedName,
+  PostgresqlSizeNotApplicable,
+  PostgresqlDefaultNotApplicableWithAutoIncrement,
 } = composeStories(stories);
 
 describe("ColumnDialog", () => {
@@ -244,5 +246,53 @@ describe("ColumnDialog", () => {
     render(<ReservedName />);
     await userEvent.type(screen.getByLabelText("Name"), "ed");
     expect(screen.getByRole("button", { name: "Save" })).toBeEnabled();
+  });
+
+  it("disables Size and shows a hint for a PostgreSQL type that doesn't accept one", () => {
+    render(<PostgresqlSizeNotApplicable />);
+    expect(screen.getByLabelText("Size")).toBeDisabled();
+    expect(screen.getByText("This column type does not accept a size.")).toBeInTheDocument();
+  });
+
+  it("re-enables Size once the type is switched to one that accepts it", async () => {
+    render(<PostgresqlSizeNotApplicable />);
+    await userEvent.selectOptions(screen.getByLabelText("Type"), "VARCHAR");
+    expect(screen.getByLabelText("Size")).toBeEnabled();
+  });
+
+  it("clears a stale Size value on submit for a type that doesn't accept one", async () => {
+    const onSubmit = fn();
+    render(<PostgresqlSizeNotApplicable onSubmit={onSubmit} />);
+    await userEvent.click(screen.getByRole("button", { name: "Save" }));
+
+    expect(onSubmit).toHaveBeenCalledExactlyOnceWith(
+      expect.objectContaining({ size: "" }),
+      expect.anything(),
+    );
+  });
+
+  it("disables Default value and shows a hint when auto increment is checked and the dialect disallows both", () => {
+    render(<PostgresqlDefaultNotApplicableWithAutoIncrement />);
+    expect(screen.getByLabelText("Default value")).toBeDisabled();
+    expect(
+      screen.getByText("Auto-increment columns can't also have a default value."),
+    ).toBeInTheDocument();
+  });
+
+  it("clears a stale default value on submit when auto increment is checked and the dialect disallows both", async () => {
+    const onSubmit = fn();
+    render(<PostgresqlDefaultNotApplicableWithAutoIncrement onSubmit={onSubmit} />);
+    await userEvent.click(screen.getByRole("button", { name: "Save" }));
+
+    expect(onSubmit).toHaveBeenCalledExactlyOnceWith(
+      expect.objectContaining({ defaultValue: "", autoIncrement: true }),
+      expect.anything(),
+    );
+  });
+
+  it("re-enables Default value once auto increment is unchecked", async () => {
+    render(<PostgresqlDefaultNotApplicableWithAutoIncrement />);
+    await userEvent.click(screen.getByLabelText("Auto increment"));
+    expect(screen.getByLabelText("Default value")).toBeEnabled();
   });
 });

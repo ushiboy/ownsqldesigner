@@ -120,6 +120,9 @@ function ColumnForm({
     { ...fields, id: PK_CANDIDATE_ID },
     keyMembership.PRIMARY_KEY ? PK_CANDIDATE_ID : undefined,
   );
+  const effectiveAutoIncrement = fields.autoIncrement && autoIncrementAllowed;
+  const sizeAllowed = strategy.sizableColumnTypes.includes(fields.type);
+  const defaultValueAllowed = !effectiveAutoIncrement || strategy.allowsDefaultWithAutoIncrement;
 
   const setField = <K extends keyof ColumnFields>(key: K, value: ColumnFields[K]) => {
     setFields((prev) => ({ ...prev, [key]: value }));
@@ -133,7 +136,9 @@ function ColumnForm({
           {
             ...fields,
             name: trimmedName,
-            autoIncrement: fields.autoIncrement && autoIncrementAllowed,
+            autoIncrement: effectiveAutoIncrement,
+            size: sizeAllowed ? fields.size : "",
+            defaultValue: defaultValueAllowed ? fields.defaultValue : "",
           },
           keyMembership,
         );
@@ -176,24 +181,36 @@ function ColumnForm({
               ))}
             </select>
           </label>
-          <label className="block text-[14px]">
-            {t("sizeLabel")}
-            <input
-              type="text"
-              value={fields.size}
-              onChange={(event) => setField("size", event.target.value)}
-              className={fieldInput()}
-            />
-          </label>
-          <label className="block text-[14px]">
-            {t("defaultValueLabel")}
-            <input
-              type="text"
-              value={fields.defaultValue}
-              onChange={(event) => setField("defaultValue", event.target.value)}
-              className={fieldInput()}
-            />
-          </label>
+          <div>
+            <label className="block text-[14px]">
+              {t("sizeLabel")}
+              <input
+                type="text"
+                value={fields.size}
+                disabled={!sizeAllowed}
+                onChange={(event) => setField("size", event.target.value)}
+                className={fieldInput()}
+              />
+            </label>
+            {!sizeAllowed && (
+              <p className="mt-1 text-[12px] text-body">{t("sizeNotApplicableHint")}</p>
+            )}
+          </div>
+          <div>
+            <label className="block text-[14px]">
+              {t("defaultValueLabel")}
+              <input
+                type="text"
+                value={fields.defaultValue}
+                disabled={!defaultValueAllowed}
+                onChange={(event) => setField("defaultValue", event.target.value)}
+                className={fieldInput()}
+              />
+            </label>
+            {!defaultValueAllowed && (
+              <p className="mt-1 text-[12px] text-body">{t("defaultValueNotApplicableHint")}</p>
+            )}
+          </div>
           <label className="flex items-center gap-2 text-[14px]">
             <input
               type="checkbox"

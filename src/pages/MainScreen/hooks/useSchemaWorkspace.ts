@@ -1,3 +1,4 @@
+import type { SqlDialect } from "../../../domain/dialect";
 import type {
   Column,
   ColumnKeyMembership,
@@ -13,7 +14,7 @@ import { useSchemaPersistence } from "./useSchemaPersistence";
 import { useUndoableSchema } from "./useUndoableSchema";
 
 export type SchemaActions = {
-  createSchema: (name: string) => void;
+  createSchema: (name: string, dialect?: SqlDialect) => void;
   selectSchema: (id: string) => void;
   loadSchemaFromFile: (schema: Schema) => void;
   renameSchema: (name: string) => void;

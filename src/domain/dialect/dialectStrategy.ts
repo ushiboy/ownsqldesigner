@@ -3,6 +3,10 @@ import type { Column, Table } from "../schema/types";
 /** Per-dialect behavior for the pieces of the domain that vary by SQL engine. */
 export type DialectStrategy = {
   readonly columnTypes: readonly string[];
+  /** Column types that accept a size/precision modifier (e.g. `VARCHAR(255)`). */
+  readonly sizableColumnTypes: readonly string[];
+  /** Whether an auto-increment column may also declare an explicit default value. */
+  readonly allowsDefaultWithAutoIncrement: boolean;
   isAutoIncrementEligible(column: Column, pkColumnId: string | undefined): boolean;
   normalizeAutoIncrement(table: Table): Table;
   isNameTaken(name: string, existingNames: string[]): boolean;
@@ -14,6 +18,8 @@ export type DialectStrategy = {
 /** The atomic per-dialect rules a concrete dialect module supplies; the rest is generic. */
 export type DialectStrategyConfig = {
   columnTypes: readonly string[];
+  sizableColumnTypes: readonly string[];
+  allowsDefaultWithAutoIncrement: boolean;
   isAutoIncrementEligible(column: Column, pkColumnId: string | undefined): boolean;
   isNameTaken(name: string, existingNames: string[]): boolean;
   isReservedKeyword(name: string): boolean;
@@ -28,6 +34,8 @@ export type DialectStrategyConfig = {
 export function buildDialectStrategy(config: DialectStrategyConfig): DialectStrategy {
   return {
     columnTypes: config.columnTypes,
+    sizableColumnTypes: config.sizableColumnTypes,
+    allowsDefaultWithAutoIncrement: config.allowsDefaultWithAutoIncrement,
     isAutoIncrementEligible: config.isAutoIncrementEligible,
     normalizeAutoIncrement: (table) =>
       normalizeAutoIncrement(table, config.isAutoIncrementEligible),

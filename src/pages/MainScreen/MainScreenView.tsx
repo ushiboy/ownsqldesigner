@@ -182,6 +182,7 @@ export function MainScreenView({
           schemaName={schemaName}
           tableCount={tables.length}
           createdDate={createdDate}
+          dialect={currentSchema?.dialect ?? DEFAULT_SQL_DIALECT}
           selectedTable={selectedTable}
           strategy={strategy}
           existingTableNames={siblingTableNames}

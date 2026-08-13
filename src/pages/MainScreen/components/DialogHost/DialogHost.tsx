@@ -113,8 +113,9 @@ export function DialogHost({
         open={activeDialog === "createSchema"}
         title={tSchema("newTitle")}
         submitLabel={tCommon("create")}
-        onSubmit={(name) => {
-          onCreateSchema(name);
+        showDialect
+        onSubmit={(name, dialect) => {
+          onCreateSchema(name, dialect);
           closeDialog();
         }}
         onCancel={closeDialog}

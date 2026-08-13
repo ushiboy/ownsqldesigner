@@ -55,6 +55,7 @@ export default {
     deleteTitle: "スキーマを削除",
     deleteConfirmMessage: "「{name}」を削除しますか? この操作は取り消せません。",
     fieldLabel: "スキーマ名",
+    dialectLabel: "方言",
   },
   tableDialog: {
     newTitle: "新規テーブル",
@@ -80,7 +81,9 @@ export default {
         "このカラムは他のテーブルの外部キーから参照されています。先にそのリレーションを削除してください。",
     },
     sizeLabel: "サイズ",
+    sizeNotApplicableHint: "このカラム型にはサイズを指定できません。",
     defaultValueLabel: "デフォルト値",
+    defaultValueNotApplicableHint: "自動採番のカラムにはデフォルト値を設定できません。",
     nullableLabel: "NULL許可",
     autoIncrementLabel: "自動採番",
     autoIncrementHint: "このカラムがテーブル唯一のINTEGER型の主キーである場合のみ使用できます。",
@@ -102,6 +105,7 @@ export default {
   },
   sidePanel: {
     schemaHeading: "スキーマ",
+    dialectLabel: "方言",
     tablesLabel: "テーブル数",
     createdLabel: "作成日",
     tableHeading: "テーブル",

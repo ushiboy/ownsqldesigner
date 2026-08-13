@@ -27,6 +27,7 @@ export const Open: Story = {
     open: true,
     title: "New Schema",
     submitLabel: "Create",
+    showDialect: true,
   },
 };
 

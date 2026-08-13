@@ -67,6 +67,7 @@ const meta = {
     schemaName: "Blog Schema",
     tableCount: 0,
     createdDate: "2026-07-01",
+    dialect: "sqlite",
     selectedTable: null,
     strategy: sqliteDialectStrategy,
     existingTableNames: [],

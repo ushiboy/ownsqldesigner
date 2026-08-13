@@ -92,6 +92,20 @@ describe("useUndoableSchema", () => {
     expect(result.current.editing.canRedo).toBe(false);
   });
 
+  it("creates the schema with the given dialect, defaulting to sqlite when omitted", () => {
+    const { result } = renderUndoableSchema(createSchema("Blog Schema"));
+
+    act(() => {
+      result.current.editing.createSchema("Orders", "postgresql");
+    });
+    expect(result.current.editing.currentSchema?.dialect).toBe("postgresql");
+
+    act(() => {
+      result.current.editing.createSchema("Invoices");
+    });
+    expect(result.current.editing.currentSchema?.dialect).toBe("sqlite");
+  });
+
   it("loads a schema from a file, assigning it a fresh id, and clears history", () => {
     const { result } = renderUndoableSchema(createSchema("Blog Schema"));
     act(() => {

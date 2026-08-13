@@ -25,12 +25,26 @@ describe("SchemaNameDialog", () => {
     expect(screen.getByRole("button", { name: "Create" })).toBeEnabled();
   });
 
-  it("submits the trimmed name", async () => {
+  it("submits the trimmed name with the default dialect", async () => {
     const onSubmit = fn();
     render(<Open onSubmit={onSubmit} />);
     await userEvent.type(screen.getByLabelText("Schema name"), "  Blog Schema  ");
     await userEvent.click(screen.getByRole("button", { name: "Create" }));
-    expect(onSubmit).toHaveBeenCalledExactlyOnceWith("Blog Schema");
+    expect(onSubmit).toHaveBeenCalledExactlyOnceWith("Blog Schema", "sqlite");
+  });
+
+  it("submits the selected dialect", async () => {
+    const onSubmit = fn();
+    render(<Open onSubmit={onSubmit} />);
+    await userEvent.type(screen.getByLabelText("Schema name"), "Blog Schema");
+    await userEvent.selectOptions(screen.getByLabelText("Dialect"), "postgresql");
+    await userEvent.click(screen.getByRole("button", { name: "Create" }));
+    expect(onSubmit).toHaveBeenCalledExactlyOnceWith("Blog Schema", "postgresql");
+  });
+
+  it("does not show a dialect field in the rename variant", () => {
+    render(<Rename />);
+    expect(screen.queryByLabelText("Dialect")).not.toBeInTheDocument();
   });
 
   it("calls onCancel when the Cancel button is clicked", async () => {
@@ -67,6 +81,6 @@ describe("SchemaNameDialog", () => {
     await userEvent.clear(input);
     await userEvent.type(input, "Journal Schema");
     await userEvent.click(screen.getByRole("button", { name: "Rename" }));
-    expect(onSubmit).toHaveBeenCalledExactlyOnceWith("Journal Schema");
+    expect(onSubmit).toHaveBeenCalledExactlyOnceWith("Journal Schema", undefined);
   });
 });

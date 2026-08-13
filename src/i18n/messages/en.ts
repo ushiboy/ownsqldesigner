@@ -54,6 +54,7 @@ export default {
     deleteTitle: "Delete Schema",
     deleteConfirmMessage: 'Delete "{name}"? This cannot be undone.',
     fieldLabel: "Schema name",
+    dialectLabel: "Dialect",
   },
   tableDialog: {
     newTitle: "New Table",
@@ -80,7 +81,9 @@ export default {
         "This column is referenced by a foreign key on another table — remove that relation first.",
     },
     sizeLabel: "Size",
+    sizeNotApplicableHint: "This column type does not accept a size.",
     defaultValueLabel: "Default value",
+    defaultValueNotApplicableHint: "Auto-increment columns can''t also have a default value.",
     nullableLabel: "Nullable",
     autoIncrementLabel: "Auto increment",
     autoIncrementHint:
@@ -103,6 +106,7 @@ export default {
   },
   sidePanel: {
     schemaHeading: "Schema",
+    dialectLabel: "Dialect",
     tablesLabel: "Tables",
     createdLabel: "Created",
     tableHeading: "Table",

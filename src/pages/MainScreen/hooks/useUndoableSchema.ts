@@ -1,4 +1,5 @@
 import { useCallback, useReducer, useState } from "react";
+import type { SqlDialect } from "../../../domain/dialect";
 import {
   type Column,
   type ColumnKeyMembership,
@@ -40,7 +41,7 @@ import { useNotification } from "../NotificationContext";
 export const HISTORY_LIMIT = 100;
 
 export type UndoableSchemaActions = {
-  createSchema: (name: string) => void;
+  createSchema: (name: string, dialect?: SqlDialect) => void;
   loadSchemaFromFile: (schema: Schema) => void;
   renameSchema: (name: string) => void;
   createTable: (name: string) => void;
@@ -144,9 +145,9 @@ export function useUndoableSchema(initialSchema?: Schema): UndoableSchema {
     replaceSchema: useCallback((schema: Schema) => {
       dispatch({ type: "replace", schema });
     }, []),
-    createSchema: (name) => {
+    createSchema: (name, dialect) => {
       dismissNotification();
-      dispatch({ type: "replace", schema: createSchema(name) });
+      dispatch({ type: "replace", schema: createSchema(name, { dialect }) });
     },
     loadSchemaFromFile: (schema) => {
       dismissNotification();
