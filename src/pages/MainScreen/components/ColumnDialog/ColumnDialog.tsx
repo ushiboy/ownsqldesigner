@@ -252,7 +252,11 @@ function ColumnForm({
               {t("autoIncrementLabel")}
             </label>
             {!autoIncrementAllowed && (
-              <p className="mt-1 text-[12px] text-body">{t("autoIncrementHint")}</p>
+              <p className="mt-1 text-[12px] text-body">
+                {t("autoIncrementHint", {
+                  types: strategy.autoIncrementEligibleColumnTypes.join(" / "),
+                })}
+              </p>
             )}
           </div>
         </div>

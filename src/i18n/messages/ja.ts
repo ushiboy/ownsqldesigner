@@ -86,7 +86,7 @@ export default {
     defaultValueNotApplicableHint: "自動採番のカラムにはデフォルト値を設定できません。",
     nullableLabel: "NULL許可",
     autoIncrementLabel: "自動採番",
-    autoIncrementHint: "このカラムがテーブル唯一のINTEGER型の主キーである場合のみ使用できます。",
+    autoIncrementHint: "このカラムがテーブル唯一の{types}型の主キーである場合のみ使用できます。",
   },
   keyDialog: {
     addTitle: "キーを追加",

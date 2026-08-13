@@ -87,7 +87,7 @@ export default {
     nullableLabel: "Nullable",
     autoIncrementLabel: "Auto increment",
     autoIncrementHint:
-      "Only available when this is the table''s sole PRIMARY KEY column of type INTEGER.",
+      "Only available when this is the table''s sole PRIMARY KEY column of type {types}.",
   },
   keyDialog: {
     addTitle: "Add Key",

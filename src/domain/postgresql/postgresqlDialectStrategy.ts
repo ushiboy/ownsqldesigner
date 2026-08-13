@@ -8,6 +8,7 @@ import { isPostgresqlReservedKeyword } from "./reservedKeywords";
 export const postgresqlDialectStrategy: DialectStrategy = buildDialectStrategy({
   columnTypes: POSTGRESQL_COLUMN_TYPES,
   sizableColumnTypes: POSTGRESQL_SIZABLE_COLUMN_TYPES,
+  autoIncrementEligibleColumnTypes: ["SMALLINT", "INTEGER", "BIGINT"],
   allowsDefaultWithAutoIncrement: false,
   isAutoIncrementEligible: isPostgresqlAutoIncrementEligible,
   isNameTaken: isPostgresqlNameTaken,

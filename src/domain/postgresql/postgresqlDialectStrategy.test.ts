@@ -47,6 +47,14 @@ describe("postgresqlDialectStrategy", () => {
     expect(postgresqlDialectStrategy.sizableColumnTypes).toEqual(["VARCHAR", "CHAR", "NUMERIC"]);
   });
 
+  it("allows SMALLINT, INTEGER, and BIGINT for auto-increment", () => {
+    expect(postgresqlDialectStrategy.autoIncrementEligibleColumnTypes).toEqual([
+      "SMALLINT",
+      "INTEGER",
+      "BIGINT",
+    ]);
+  });
+
   it("disallows a default value alongside auto-increment", () => {
     expect(postgresqlDialectStrategy.allowsDefaultWithAutoIncrement).toBe(false);
   });

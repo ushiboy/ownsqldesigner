@@ -37,6 +37,10 @@ describe("sqliteDialectStrategy", () => {
     expect(sqliteDialectStrategy.sizableColumnTypes).toEqual(sqliteDialectStrategy.columnTypes);
   });
 
+  it("only allows INTEGER for auto-increment", () => {
+    expect(sqliteDialectStrategy.autoIncrementEligibleColumnTypes).toEqual(["INTEGER"]);
+  });
+
   it("allows a default value alongside auto-increment", () => {
     expect(sqliteDialectStrategy.allowsDefaultWithAutoIncrement).toBe(true);
   });

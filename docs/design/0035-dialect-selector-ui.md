@@ -44,7 +44,8 @@ round of work, both are folded into this doc rather than filed separately.
 
 - MySQL support.
 - Widening `BIGINT` auto-increment eligibility (0034's other open
-  question) — unrelated to the picker itself.
+  question) — unrelated to the picker itself. (Done as a small follow-up
+  after this doc shipped; see Open Questions.)
 - A persisted "preferred default dialect" setting. Each new-schema dialog
   defaults to `DEFAULT_SQL_DIALECT` ("sqlite"), matching prior behavior;
   the choice is not written to `localStorage` the way the FK naming
@@ -147,9 +148,16 @@ leftover value rather than letting it reach the DDL generator.
   programmatically-constructed schema could still carry an invalid
   `size`/`defaultValue` combination that only `ColumnDialog`'s interactive
   path prevents.
-- 0034's remaining open question — widening `isPostgresqlAutoIncrementEligible`
+- ~~0034's remaining open question — widening `isPostgresqlAutoIncrementEligible`
   to also allow `BIGINT` — is still unaddressed; now that PostgreSQL is
-  user-selectable, it's worth revisiting.
+  user-selectable, it's worth revisiting.~~ Resolved 2026-08-13:
+  `isPostgresqlAutoIncrementEligible` now allows
+  `SMALLINT || INTEGER || BIGINT` (see
+  [0034](0034-postgresql-dialect-strategy.md)). `DialectStrategy` gained
+  `autoIncrementEligibleColumnTypes`, and `ColumnDialog`'s auto-increment
+  hint now names the eligible type(s) per dialect instead of a hardcoded
+  "INTEGER", so the hint stays accurate for both SQLite (`INTEGER`) and
+  PostgreSQL (`SMALLINT / INTEGER / BIGINT`).
 - Checking auto-increment currently leaves a stale `defaultValue` visible
   (grayed out) in the input until Save actually clears it — the hint text
   is easy to miss, so a user could lose a typed default without noticing.

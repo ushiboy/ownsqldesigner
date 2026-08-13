@@ -71,8 +71,16 @@ PostgreSQL has no `AUTOINCREMENT` keyword. Modern PostgreSQL uses
 therefore always emits the table-level `PRIMARY KEY (...)` constraint when
 a `PRIMARY_KEY` key exists, regardless of `autoIncrement` — unlike SQLite's
 generator, which skips it when an autoincrement column already declares the
-constraint inline. Eligibility (`isPostgresqlAutoIncrementEligible`) keeps
-the same shape as SQLite's: a sole `INTEGER` primary-key column.
+constraint inline. Eligibility (`isPostgresqlAutoIncrementEligible`)
+allows a sole `SMALLINT`, `INTEGER`, or `BIGINT` primary-key column —
+wider than SQLite's `INTEGER`-only rule, since PostgreSQL has no
+equivalent restriction: `SMALLINT`/`INTEGER`/`BIGINT` are the
+`SMALLSERIAL`/`SERIAL`/`BIGSERIAL`-equivalent types when combined with
+`GENERATED ALWAYS AS IDENTITY`, and all three are legitimate surrogate-key
+choices depending on the expected table size. The eligible type set is
+exposed on `DialectStrategy` as `autoIncrementEligibleColumnTypes`, so UI
+copy (e.g. `ColumnDialog`'s auto-increment hint) can name the correct
+type(s) per dialect instead of hardcoding `INTEGER`.
 
 An identity column also cannot carry an explicit `DEFAULT` clause —
 PostgreSQL rejects `GENERATED ALWAYS AS IDENTITY ... DEFAULT ...` as a
@@ -109,12 +117,16 @@ are only "non-reserved" and remain usable as bare identifiers).
 Flagged during review; deferred until a dialect-selector UI actually makes
 PostgreSQL reachable (at which point they stop being purely theoretical):
 
-- **BIGINT identity eligibility**: `isPostgresqlAutoIncrementEligible` only
+- ~~**BIGINT identity eligibility**: `isPostgresqlAutoIncrementEligible` only
   allows `INTEGER`, mirroring SQLite's own constraint. PostgreSQL has no
   such restriction, and `BIGINT` (the `BIGSERIAL`-equivalent) is the common
   choice for surrogate keys on large tables. Widening the check to
   `INTEGER || BIGINT` is a small change, worth revisiting once PostgreSQL
-  is user-selectable.
+  is user-selectable.~~ Resolved 2026-08-13: `isPostgresqlAutoIncrementEligible`
+  now allows `SMALLINT || INTEGER || BIGINT` — widened to `INTEGER || BIGINT`
+  first, then to also include `SMALLINT` after a same-day review raised it
+  as a gap (PostgreSQL's `SMALLSERIAL` is an equally legitimate identity
+  type); see the updated Auto-increment section above.
 - **Type-conditional `size` validation**: `ColumnDialog`'s `size` field is a
   free-text input regardless of column type. For PostgreSQL, types that
   take no modifier (`BOOLEAN`, `INTEGER`, `UUID`, `JSONB`, `DATE`, `TEXT`,

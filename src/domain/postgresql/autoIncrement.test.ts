@@ -21,7 +21,15 @@ describe("isPostgresqlAutoIncrementEligible", () => {
     expect(isPostgresqlAutoIncrementEligible(column({ type: "INTEGER" }), "col-1")).toBe(true);
   });
 
-  it("is not eligible for a non-INTEGER column", () => {
+  it("is eligible for a BIGINT column that is the sole primary key column", () => {
+    expect(isPostgresqlAutoIncrementEligible(column({ type: "BIGINT" }), "col-1")).toBe(true);
+  });
+
+  it("is eligible for a SMALLINT column that is the sole primary key column", () => {
+    expect(isPostgresqlAutoIncrementEligible(column({ type: "SMALLINT" }), "col-1")).toBe(true);
+  });
+
+  it("is not eligible for a non-SMALLINT/INTEGER/BIGINT column", () => {
     expect(isPostgresqlAutoIncrementEligible(column({ type: "TEXT" }), "col-1")).toBe(false);
   });
 

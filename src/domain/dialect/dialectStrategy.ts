@@ -5,6 +5,8 @@ export type DialectStrategy = {
   readonly columnTypes: readonly string[];
   /** Column types that accept a size/precision modifier (e.g. `VARCHAR(255)`). */
   readonly sizableColumnTypes: readonly string[];
+  /** Column types an auto-increment column may have (e.g. `INTEGER`, `BIGINT`). */
+  readonly autoIncrementEligibleColumnTypes: readonly string[];
   /** Whether an auto-increment column may also declare an explicit default value. */
   readonly allowsDefaultWithAutoIncrement: boolean;
   isAutoIncrementEligible(column: Column, pkColumnId: string | undefined): boolean;
@@ -19,6 +21,7 @@ export type DialectStrategy = {
 export type DialectStrategyConfig = {
   columnTypes: readonly string[];
   sizableColumnTypes: readonly string[];
+  autoIncrementEligibleColumnTypes: readonly string[];
   allowsDefaultWithAutoIncrement: boolean;
   isAutoIncrementEligible(column: Column, pkColumnId: string | undefined): boolean;
   isNameTaken(name: string, existingNames: string[]): boolean;
@@ -35,6 +38,7 @@ export function buildDialectStrategy(config: DialectStrategyConfig): DialectStra
   return {
     columnTypes: config.columnTypes,
     sizableColumnTypes: config.sizableColumnTypes,
+    autoIncrementEligibleColumnTypes: config.autoIncrementEligibleColumnTypes,
     allowsDefaultWithAutoIncrement: config.allowsDefaultWithAutoIncrement,
     isAutoIncrementEligible: config.isAutoIncrementEligible,
     normalizeAutoIncrement: (table) =>

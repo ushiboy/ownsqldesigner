@@ -86,6 +86,7 @@ export type Messages = {
     defaultValueNotApplicableHint: string;
     nullableLabel: string;
     autoIncrementLabel: string;
+    /** ICU placeholder: {types} */
     autoIncrementHint: string;
   };
   keyDialog: {
