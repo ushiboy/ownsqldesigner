@@ -6,6 +6,7 @@ const BASE_COLUMN: Column = {
   name: "",
   type: "TEXT",
   size: "",
+  precision: "",
   defaultValue: "",
   nullable: true,
   autoIncrement: false,

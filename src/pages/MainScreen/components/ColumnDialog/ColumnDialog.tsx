@@ -82,6 +82,7 @@ const BLANK_COLUMN: ColumnFields = {
   name: "",
   type: "TEXT",
   size: "",
+  precision: "",
   defaultValue: "",
   nullable: true,
   autoIncrement: false,
@@ -122,6 +123,7 @@ function ColumnForm({
   );
   const effectiveAutoIncrement = fields.autoIncrement && autoIncrementAllowed;
   const sizeAllowed = strategy.sizableColumnTypes.includes(fields.type);
+  const precisionAllowed = strategy.precisionColumnTypes.includes(fields.type);
   const defaultValueAllowed = !effectiveAutoIncrement || strategy.allowsDefaultWithAutoIncrement;
 
   const setField = <K extends keyof ColumnFields>(key: K, value: ColumnFields[K]) => {
@@ -138,6 +140,7 @@ function ColumnForm({
             name: trimmedName,
             autoIncrement: effectiveAutoIncrement,
             size: sizeAllowed ? fields.size : "",
+            precision: precisionAllowed ? fields.precision : "",
             defaultValue: defaultValueAllowed ? fields.defaultValue : "",
           },
           keyMembership,
@@ -174,10 +177,12 @@ function ColumnForm({
               onChange={(event) => {
                 const type = event.target.value;
                 const nextSizeAllowed = strategy.sizableColumnTypes.includes(type);
+                const nextPrecisionAllowed = strategy.precisionColumnTypes.includes(type);
                 setFields((prev) => ({
                   ...prev,
                   type,
                   size: nextSizeAllowed ? prev.size : "",
+                  precision: nextPrecisionAllowed ? prev.precision : "",
                 }));
               }}
               className={fieldInput()}
@@ -202,6 +207,21 @@ function ColumnForm({
             </label>
             {!sizeAllowed && (
               <p className="mt-1 text-[12px] text-body">{t("sizeNotApplicableHint")}</p>
+            )}
+          </div>
+          <div>
+            <label className="block text-[14px]">
+              {t("precisionLabel")}
+              <input
+                type="text"
+                value={fields.precision}
+                disabled={!precisionAllowed}
+                onChange={(event) => setField("precision", event.target.value)}
+                className={fieldInput()}
+              />
+            </label>
+            {!precisionAllowed && (
+              <p className="mt-1 text-[12px] text-body">{t("precisionNotApplicableHint")}</p>
             )}
           </div>
           <div>

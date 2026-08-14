@@ -6,6 +6,7 @@ const BASE_COLUMN: Column = {
   name: "id",
   type: "INTEGER",
   size: "",
+  precision: "",
   defaultValue: "",
   nullable: false,
   autoIncrement: false,

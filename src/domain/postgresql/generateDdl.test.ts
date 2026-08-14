@@ -6,6 +6,7 @@ const BASE_COLUMN: Column = {
   name: "",
   type: "TEXT",
   size: "",
+  precision: "",
   defaultValue: "",
   nullable: true,
   autoIncrement: false,
@@ -63,6 +64,18 @@ describe("generatePostgresqlDdl", () => {
     });
 
     expect(generatePostgresqlDdl([users])).toBe("CREATE TABLE users (\n  code VARCHAR(8)\n);");
+  });
+
+  it("includes a declared precision in parentheses", () => {
+    const users = table({
+      id: "t1",
+      name: "users",
+      columns: [column({ id: "c1", name: "created_at", type: "TIMESTAMP", precision: "3" })],
+    });
+
+    expect(generatePostgresqlDdl([users])).toBe(
+      "CREATE TABLE users (\n  created_at TIMESTAMP(3)\n);",
+    );
   });
 
   it("renders an identity column and still emits a table-level PRIMARY KEY", () => {

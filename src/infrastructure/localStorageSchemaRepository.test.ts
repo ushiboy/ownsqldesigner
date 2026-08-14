@@ -21,6 +21,7 @@ const POSTS_USER_FK_ID = "99999999-9999-4999-8999-999999999999";
 
 const COLUMN_DEFAULTS = {
   size: "",
+  precision: "",
   defaultValue: "",
   nullable: false,
   autoIncrement: false,
@@ -214,6 +215,23 @@ describe("createLocalStorageSchemaRepository", () => {
     const loaded = await repository.load(schema.id);
 
     expect(loaded?.tables[0]?.columns[0]).toMatchObject({ type: "BOOLEAN", size: "" });
+  });
+
+  it("normalizes an invalid precision for the schema's dialect on load (0037)", async () => {
+    const repository = createLocalStorageSchemaRepository();
+    let schema = createSchema("PG Schema", { id: SCHEMA_ID, now: NOW, dialect: "postgresql" });
+    schema = createTable(schema, "users", { id: USERS_TABLE_ID, now: NOW });
+    schema = addColumn(
+      schema,
+      USERS_TABLE_ID,
+      { name: "active", type: "BOOLEAN", ...COLUMN_DEFAULTS, precision: "3" },
+      { id: USERS_ID_COLUMN_ID, now: NOW },
+    );
+    await repository.save(schema);
+
+    const loaded = await repository.load(schema.id);
+
+    expect(loaded?.tables[0]?.columns[0]).toMatchObject({ type: "BOOLEAN", precision: "" });
   });
 
   it("round-trips the last schema id", async () => {

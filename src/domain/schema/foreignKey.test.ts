@@ -115,6 +115,7 @@ describe("addForeignKeyWithNewColumn", () => {
       name: "users_id",
       type: "INTEGER",
       size: "",
+      precision: "",
       defaultValue: "",
       nullable: true,
       autoIncrement: false,

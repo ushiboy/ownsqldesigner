@@ -15,6 +15,7 @@ const {
   ReservedName,
   PostgresqlSizeNotApplicable,
   PostgresqlSizeApplicable,
+  PostgresqlPrecisionApplicable,
   PostgresqlEditAllowsAutoIncrement,
   PostgresqlDefaultNotApplicableWithAutoIncrement,
 } = composeStories(stories);
@@ -114,6 +115,7 @@ describe("ColumnDialog", () => {
         name: "title",
         type: "INTEGER",
         size: "10",
+        precision: "",
         defaultValue: "0",
         nullable: false,
         autoIncrement: false,
@@ -283,6 +285,41 @@ describe("ColumnDialog", () => {
     render(<PostgresqlSizeApplicable />);
     await userEvent.selectOptions(screen.getByLabelText("Type"), "CHAR");
     expect(screen.getByLabelText("Size")).toHaveValue("50");
+  });
+
+  it("disables Precision and shows a hint for a PostgreSQL type that doesn't accept one", () => {
+    render(<PostgresqlSizeNotApplicable />);
+    expect(screen.getByLabelText("Precision")).toBeDisabled();
+    expect(screen.getByText("This column type does not accept a precision.")).toBeInTheDocument();
+  });
+
+  it("re-enables Precision once the type is switched to one that accepts it", async () => {
+    render(<PostgresqlSizeNotApplicable />);
+    await userEvent.selectOptions(screen.getByLabelText("Type"), "TIMESTAMP");
+    expect(screen.getByLabelText("Precision")).toBeEnabled();
+  });
+
+  it("clears a stale Precision value on submit for a type that doesn't accept one", async () => {
+    const onSubmit = fn();
+    render(<PostgresqlSizeNotApplicable onSubmit={onSubmit} />);
+    await userEvent.click(screen.getByRole("button", { name: "Save" }));
+
+    expect(onSubmit).toHaveBeenCalledExactlyOnceWith(
+      expect.objectContaining({ precision: "" }),
+      expect.anything(),
+    );
+  });
+
+  it("clears a typed Precision value immediately when switching to a type that doesn't accept one", async () => {
+    render(<PostgresqlPrecisionApplicable />);
+    await userEvent.selectOptions(screen.getByLabelText("Type"), "BOOLEAN");
+    expect(screen.getByLabelText("Precision")).toHaveValue("");
+  });
+
+  it("leaves a typed Precision value untouched when switching between two types that both accept one", async () => {
+    render(<PostgresqlPrecisionApplicable />);
+    await userEvent.selectOptions(screen.getByLabelText("Type"), "TIME");
+    expect(screen.getByLabelText("Precision")).toHaveValue("3");
   });
 
   it("disables Default value and shows a hint when auto increment is checked and the dialect disallows both", () => {

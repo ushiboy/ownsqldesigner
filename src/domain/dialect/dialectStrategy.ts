@@ -3,14 +3,16 @@ import type { Column, Table } from "../schema/types";
 /** Per-dialect behavior for the pieces of the domain that vary by SQL engine. */
 export type DialectStrategy = {
   readonly columnTypes: readonly string[];
-  /** Column types that accept a size/precision modifier (e.g. `VARCHAR(255)`). */
+  /** Column types that accept a size/length modifier (e.g. `VARCHAR(255)`). */
   readonly sizableColumnTypes: readonly string[];
+  /** Column types that accept a fractional-seconds precision modifier (e.g. `TIMESTAMP(3)`). */
+  readonly precisionColumnTypes: readonly string[];
   /** Column types an auto-increment column may have (e.g. `INTEGER`, `BIGINT`). */
   readonly autoIncrementEligibleColumnTypes: readonly string[];
   /** Whether an auto-increment column may also declare an explicit default value. */
   readonly allowsDefaultWithAutoIncrement: boolean;
   isAutoIncrementEligible(column: Column, pkColumnId: string | undefined): boolean;
-  /** Re-derives `autoIncrement`, `size`, and `defaultValue` validity for every column in `table`. */
+  /** Re-derives `autoIncrement`, `size`, `precision`, and `defaultValue` validity for every column in `table`. */
   normalizeColumnForDialect(table: Table): Table;
   isNameTaken(name: string, existingNames: string[]): boolean;
   isReservedKeyword(name: string): boolean;
@@ -22,6 +24,7 @@ export type DialectStrategy = {
 export type DialectStrategyConfig = {
   columnTypes: readonly string[];
   sizableColumnTypes: readonly string[];
+  precisionColumnTypes: readonly string[];
   autoIncrementEligibleColumnTypes: readonly string[];
   allowsDefaultWithAutoIncrement: boolean;
   isAutoIncrementEligible(column: Column, pkColumnId: string | undefined): boolean;
@@ -39,6 +42,7 @@ export function buildDialectStrategy(config: DialectStrategyConfig): DialectStra
   return {
     columnTypes: config.columnTypes,
     sizableColumnTypes: config.sizableColumnTypes,
+    precisionColumnTypes: config.precisionColumnTypes,
     autoIncrementEligibleColumnTypes: config.autoIncrementEligibleColumnTypes,
     allowsDefaultWithAutoIncrement: config.allowsDefaultWithAutoIncrement,
     isAutoIncrementEligible: config.isAutoIncrementEligible,
@@ -61,6 +65,7 @@ function normalizeColumnForDialect(table: Table, config: DialectStrategyConfig):
         ...column,
         autoIncrement,
         size: config.sizableColumnTypes.includes(column.type) ? column.size : "",
+        precision: config.precisionColumnTypes.includes(column.type) ? column.precision : "",
         defaultValue:
           autoIncrement && !config.allowsDefaultWithAutoIncrement ? "" : column.defaultValue,
       };

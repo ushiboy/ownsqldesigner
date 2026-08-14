@@ -82,6 +82,8 @@ export default {
     },
     sizeLabel: "Size",
     sizeNotApplicableHint: "This column type does not accept a size.",
+    precisionLabel: "Precision",
+    precisionNotApplicableHint: "This column type does not accept a precision.",
     defaultValueLabel: "Default value",
     defaultValueNotApplicableHint: "Auto-increment columns can''t also have a default value.",
     nullableLabel: "Nullable",

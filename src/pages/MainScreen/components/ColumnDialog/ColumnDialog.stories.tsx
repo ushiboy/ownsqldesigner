@@ -22,6 +22,7 @@ const column: Column = {
   name: "title",
   type: "TEXT",
   size: "",
+  precision: "",
   defaultValue: "",
   nullable: true,
   autoIncrement: false,
@@ -33,6 +34,7 @@ const primaryKeyColumn: Column = {
   name: "id",
   type: "INTEGER",
   size: "",
+  precision: "",
   defaultValue: "",
   nullable: false,
   autoIncrement: false,
@@ -158,6 +160,16 @@ export const PostgresqlSizeApplicable: Story = {
     submitLabel: "Save",
     strategy: postgresqlDialectStrategy,
     initialColumn: { ...column, type: "VARCHAR", size: "50" },
+  },
+};
+
+export const PostgresqlPrecisionApplicable: Story = {
+  args: {
+    open: true,
+    title: "Edit Column",
+    submitLabel: "Save",
+    strategy: postgresqlDialectStrategy,
+    initialColumn: { ...column, type: "TIMESTAMP", precision: "3" },
   },
 };
 

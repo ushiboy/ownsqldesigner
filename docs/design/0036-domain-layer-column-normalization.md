@@ -150,24 +150,27 @@ failure mode alongside `isSchemaIntegrityValid`'s hard `null`.
 
 ## Open Questions
 
-- **`TIME`/`TIMESTAMP` precision support (wanted as a future follow-up)** —
-  raised in a cross-session review of this doc: since `parseSchemaFile`/
-  `parseStoredSchema` now normalize on every load, a hand-authored schema
-  JSON that sets a `size` on a PostgreSQL `TIME`/`TIMESTAMP` column
-  (fractional-seconds precision, e.g. `TIMESTAMP(3)`) has it silently
-  cleared, where before this doc it passed through untouched by accident.
-  0035 deliberately excluded both types from `sizableColumnTypes` — `size`
-  represents "length" for `VARCHAR`/`CHAR`/`NUMERIC`, a different concept
-  from precision, and 0035 chose not to overload one free-text field with
-  both meanings; `ColumnDialog` already disabled/cleared `size` for these
-  types before this doc existed, so this normalization is applying that
-  same, pre-existing rule consistently rather than introducing a new
-  restriction. The user confirmed (2026-08-14): keep this behavior for now,
-  but revisit it — a real fix means adding a precision-modifier concept
-  distinct from `size` (a new field, or widening what `size` means per
-  type), plus a `ColumnDialog` input for it, not just widening
-  `sizableColumnTypes` (which would silently reuse the "length" field for a
-  different meaning). Track as its own future design doc rather than
-  reopening this one.
+- ~~**`TIME`/`TIMESTAMP` precision support (wanted as a future
+  follow-up)** — raised in a cross-session review of this doc: since
+  `parseSchemaFile`/ `parseStoredSchema` now normalize on every load, a
+  hand-authored schema JSON that sets a `size` on a PostgreSQL
+  `TIME`/`TIMESTAMP` column (fractional-seconds precision, e.g.
+  `TIMESTAMP(3)`) has it silently cleared, where before this doc it passed
+  through untouched by accident. 0035 deliberately excluded both types
+  from `sizableColumnTypes` — `size` represents "length" for
+  `VARCHAR`/`CHAR`/`NUMERIC`, a different concept from precision, and 0035
+  chose not to overload one free-text field with both meanings;
+  `ColumnDialog` already disabled/cleared `size` for these types before
+  this doc existed, so this normalization is applying that same,
+  pre-existing rule consistently rather than introducing a new
+  restriction. The user confirmed (2026-08-14): keep this behavior for
+  now, but revisit it — a real fix means adding a precision-modifier
+  concept distinct from `size` (a new field, or widening what `size`
+  means per type), plus a `ColumnDialog` input for it, not just widening
+  `sizableColumnTypes` (which would silently reuse the "length" field for
+  a different meaning). Track as its own future design doc rather than
+  reopening this one.~~ Resolved by
+  [0037](0037-time-timestamp-precision.md): a new `Column.precision`
+  field, kept distinct from `size`.
 - `addForeignKeyWithNewColumn`'s size-fidelity gap (see Non-Goals) could be
   filed as its own follow-up if it turns out to matter in practice.

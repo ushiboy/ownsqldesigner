@@ -12,6 +12,7 @@ const TABLE: Table = {
       name: "id",
       type: "INTEGER",
       size: "",
+      precision: "",
       defaultValue: "",
       nullable: false,
       autoIncrement: true,
@@ -35,6 +36,10 @@ describe("sqliteDialectStrategy", () => {
 
   it("treats every SQLite column type as sizable", () => {
     expect(sqliteDialectStrategy.sizableColumnTypes).toEqual(sqliteDialectStrategy.columnTypes);
+  });
+
+  it("treats no SQLite column type as precision-eligible", () => {
+    expect(sqliteDialectStrategy.precisionColumnTypes).toEqual([]);
   });
 
   it("only allows INTEGER for auto-increment", () => {

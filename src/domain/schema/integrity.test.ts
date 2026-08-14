@@ -172,6 +172,33 @@ describe("parseSchemaFile", () => {
 
     expect(parsed?.tables[0]?.columns[0]).toMatchObject({ type: "BOOLEAN", size: "" });
   });
+
+  it("normalizes an invalid precision for the schema's dialect (0037)", () => {
+    const withUsersTable = createTable(
+      createSchema("PG Schema", {
+        id: "c3a1e96a-9a75-4d3c-b0ad-3d6e1b6a5f01",
+        now: new Date("2026-07-18T09:00:00.000Z"),
+        dialect: "postgresql",
+      }),
+      "users",
+      { id: USERS_TABLE_ID, now: new Date("2026-07-18T09:00:00.000Z") },
+    );
+    const withInvalidPrecision = withTable(withUsersTable, USERS_TABLE_ID, {
+      columns: [
+        {
+          ...columnFields,
+          id: USERS_ID_COLUMN_ID,
+          name: "active",
+          type: "BOOLEAN",
+          precision: "3",
+        },
+      ],
+    });
+
+    const parsed = parseSchemaFile(JSON.stringify(withInvalidPrecision));
+
+    expect(parsed?.tables[0]?.columns[0]).toMatchObject({ type: "BOOLEAN", precision: "" });
+  });
 });
 
 describe("importSchema", () => {

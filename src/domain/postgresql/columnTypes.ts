@@ -16,5 +16,8 @@ export const POSTGRESQL_COLUMN_TYPES = [
   "JSONB",
 ] as const;
 
-/** The subset of `POSTGRESQL_COLUMN_TYPES` that accepts a size/precision modifier. */
+/** The subset of `POSTGRESQL_COLUMN_TYPES` that accepts a size/length modifier. */
 export const POSTGRESQL_SIZABLE_COLUMN_TYPES = ["VARCHAR", "CHAR", "NUMERIC"] as const;
+
+/** The subset of `POSTGRESQL_COLUMN_TYPES` that accepts a fractional-seconds precision modifier. */
+export const POSTGRESQL_PRECISION_COLUMN_TYPES = ["TIME", "TIMESTAMP"] as const;

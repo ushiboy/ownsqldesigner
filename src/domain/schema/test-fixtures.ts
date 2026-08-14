@@ -7,6 +7,7 @@ export const columnFields = {
   name: "title",
   type: "TEXT" as const,
   size: "",
+  precision: "",
   defaultValue: "",
   nullable: true,
   autoIncrement: false,

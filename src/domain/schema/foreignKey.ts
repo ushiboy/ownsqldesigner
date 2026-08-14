@@ -84,6 +84,7 @@ export function addForeignKeyWithNewColumn(
       ),
       type: referencedColumn.type,
       size: "",
+      precision: "",
       defaultValue: "",
       nullable: true,
       autoIncrement: false,

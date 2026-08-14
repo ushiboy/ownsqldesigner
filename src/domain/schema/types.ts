@@ -16,6 +16,10 @@ export const columnSchema = z.object({
   // Free-form; validity against the schema's dialect (sizable types, etc.)
   // is enforced by DialectStrategy.normalizeColumnForDialect, not by this schema.
   size: z.string(),
+  // Fractional-seconds precision modifier (e.g. TIMESTAMP(3)) — distinct from
+  // `size`, which means "length" for VARCHAR/CHAR/NUMERIC. Defaulted for
+  // backward compatibility with schemas saved before this field existed.
+  precision: z.string().default(""),
   defaultValue: z.string(),
   nullable: z.boolean(),
   autoIncrement: z.boolean(),

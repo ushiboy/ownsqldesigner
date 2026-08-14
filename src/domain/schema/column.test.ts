@@ -31,12 +31,20 @@ import { createSchema, createTable } from "./table";
 import { schemaSchema } from "./types";
 
 describe("formatColumnType", () => {
-  it("returns the bare type when size is empty", () => {
-    expect(formatColumnType({ type: "TEXT", size: "" })).toBe("TEXT");
+  it("returns the bare type when size and precision are empty", () => {
+    expect(formatColumnType({ type: "TEXT", size: "", precision: "" })).toBe("TEXT");
   });
 
   it("returns TYPE(size) when size is set", () => {
-    expect(formatColumnType({ type: "TEXT", size: "8" })).toBe("TEXT(8)");
+    expect(formatColumnType({ type: "TEXT", size: "8", precision: "" })).toBe("TEXT(8)");
+  });
+
+  it("returns TYPE(precision) when precision is set and size is empty", () => {
+    expect(formatColumnType({ type: "TIMESTAMP", size: "", precision: "3" })).toBe("TIMESTAMP(3)");
+  });
+
+  it("prefers size over precision when both are somehow set", () => {
+    expect(formatColumnType({ type: "TEXT", size: "8", precision: "3" })).toBe("TEXT(8)");
   });
 });
 

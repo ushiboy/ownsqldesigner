@@ -261,11 +261,11 @@ function tablesToNodes(
     data: {
       name: table.name,
       comment: table.comment,
-      columns: table.columns.map(({ id, name, type, size }) => ({
+      columns: table.columns.map(({ id, name, type, size, precision }) => ({
         id,
         name,
         referenceable: isReferenceableColumn(table, id),
-        typeLabel: showColumnDetails ? formatColumnType({ type, size }) : null,
+        typeLabel: showColumnDetails ? formatColumnType({ type, size, precision }) : null,
       })),
     },
   }));

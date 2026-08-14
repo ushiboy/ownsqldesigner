@@ -31,7 +31,8 @@ function generateCreateIndexStatements(table: Table, usedIndexNames: Set<string>
 // into schema/column.ts (which itself calls getDialectStrategy) would be
 // circular. Only type-only imports from schema/types are safe here.
 function generateColumnDefinition(column: Column): string {
-  const type = column.size === "" ? column.type : `${column.type}(${column.size})`;
+  const modifier = column.size !== "" ? column.size : column.precision;
+  const type = modifier === "" ? column.type : `${column.type}(${modifier})`;
   const parts = [column.name, type];
   if (column.autoIncrement) {
     parts.push("GENERATED ALWAYS AS IDENTITY");

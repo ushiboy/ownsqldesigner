@@ -121,8 +121,9 @@ export function moveColumnDown(
   return moveColumn(schema, tableId, columnId, 1, options);
 }
 
-export function formatColumnType(column: Pick<Column, "type" | "size">): string {
-  return column.size === "" ? column.type : `${column.type}(${column.size})`;
+export function formatColumnType(column: Pick<Column, "type" | "size" | "precision">): string {
+  const modifier = column.size !== "" ? column.size : column.precision;
+  return modifier === "" ? column.type : `${column.type}(${modifier})`;
 }
 
 /** Suffixes `baseName` with `_2`, `_3`, ... until it doesn't collide with an existing column. */

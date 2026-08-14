@@ -12,6 +12,7 @@ const TABLE: Table = {
       name: "id",
       type: "INTEGER",
       size: "",
+      precision: "",
       defaultValue: "",
       nullable: false,
       autoIncrement: true,
@@ -47,6 +48,10 @@ describe("postgresqlDialectStrategy", () => {
     expect(postgresqlDialectStrategy.sizableColumnTypes).toEqual(["VARCHAR", "CHAR", "NUMERIC"]);
   });
 
+  it("only treats TIME/TIMESTAMP as precision-eligible", () => {
+    expect(postgresqlDialectStrategy.precisionColumnTypes).toEqual(["TIME", "TIMESTAMP"]);
+  });
+
   it("allows SMALLINT, INTEGER, and BIGINT for auto-increment", () => {
     expect(postgresqlDialectStrategy.autoIncrementEligibleColumnTypes).toEqual([
       "SMALLINT",
@@ -80,6 +85,22 @@ describe("postgresqlDialectStrategy", () => {
       columns: [{ ...TABLE.columns[0], type: "BOOLEAN", size: "5" }],
     });
     expect(normalized.columns[0].size).toBe("");
+  });
+
+  it("keeps precision for a TIMESTAMP column", () => {
+    const normalized = postgresqlDialectStrategy.normalizeColumnForDialect({
+      ...TABLE,
+      columns: [{ ...TABLE.columns[0], type: "TIMESTAMP", precision: "3" }],
+    });
+    expect(normalized.columns[0].precision).toBe("3");
+  });
+
+  it("clears precision for a non-precision column type", () => {
+    const normalized = postgresqlDialectStrategy.normalizeColumnForDialect({
+      ...TABLE,
+      columns: [{ ...TABLE.columns[0], type: "BOOLEAN", precision: "3" }],
+    });
+    expect(normalized.columns[0].precision).toBe("");
   });
 
   it("clears a default value alongside auto-increment", () => {
