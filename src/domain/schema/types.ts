@@ -13,8 +13,8 @@ export const columnSchema = z.object({
   // The allowed values are owned by the schema's dialect strategy, not a
   // fixed global enum (see src/domain/dialect).
   type: z.string().min(1),
-  // Free-form and dialect-unenforced (SQLite ignores both); kept for
-  // documentation and future dialects.
+  // Free-form; validity against the schema's dialect (sizable types, etc.)
+  // is enforced by DialectStrategy.normalizeColumnForDialect, not by this schema.
   size: z.string(),
   defaultValue: z.string(),
   nullable: z.boolean(),

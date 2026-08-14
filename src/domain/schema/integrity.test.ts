@@ -1,6 +1,6 @@
 import { addForeignKey } from "./foreignKey";
 import { importSchema, isSchemaIntegrityValid, parseSchemaFile } from "./integrity";
-import { createSchema } from "./table";
+import { createSchema, createTable } from "./table";
 import {
   POSTS_TABLE_ID,
   POSTS_USER_ID_COLUMN_ID,
@@ -150,6 +150,27 @@ describe("parseSchemaFile", () => {
     const withDuplicateTableName = withTable(schema, POSTS_TABLE_ID, { name: "users" });
 
     expect(parseSchemaFile(JSON.stringify(withDuplicateTableName))).toBeNull();
+  });
+
+  it("normalizes an invalid size for the schema's dialect (0036)", () => {
+    const withUsersTable = createTable(
+      createSchema("PG Schema", {
+        id: "c3a1e96a-9a75-4d3c-b0ad-3d6e1b6a5f01",
+        now: new Date("2026-07-18T09:00:00.000Z"),
+        dialect: "postgresql",
+      }),
+      "users",
+      { id: USERS_TABLE_ID, now: new Date("2026-07-18T09:00:00.000Z") },
+    );
+    const withInvalidSize = withTable(withUsersTable, USERS_TABLE_ID, {
+      columns: [
+        { ...columnFields, id: USERS_ID_COLUMN_ID, name: "active", type: "BOOLEAN", size: "5" },
+      ],
+    });
+
+    const parsed = parseSchemaFile(JSON.stringify(withInvalidSize));
+
+    expect(parsed?.tables[0]?.columns[0]).toMatchObject({ type: "BOOLEAN", size: "" });
   });
 });
 

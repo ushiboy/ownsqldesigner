@@ -52,12 +52,28 @@ describe("sqliteDialectStrategy", () => {
     );
   });
 
-  it("delegates normalizeAutoIncrement to the SQLite rule", () => {
-    const normalized = sqliteDialectStrategy.normalizeAutoIncrement({
+  it("delegates normalizeColumnForDialect to the SQLite rule", () => {
+    const normalized = sqliteDialectStrategy.normalizeColumnForDialect({
       ...TABLE,
       columns: [{ ...TABLE.columns[0], type: "TEXT" }],
     });
     expect(normalized.columns[0].autoIncrement).toBe(false);
+  });
+
+  it("keeps size for every SQLite column type since all are sizable", () => {
+    const normalized = sqliteDialectStrategy.normalizeColumnForDialect({
+      ...TABLE,
+      columns: [{ ...TABLE.columns[0], type: "TEXT", size: "10" }],
+    });
+    expect(normalized.columns[0].size).toBe("10");
+  });
+
+  it("keeps a default value alongside auto-increment", () => {
+    const normalized = sqliteDialectStrategy.normalizeColumnForDialect({
+      ...TABLE,
+      columns: [{ ...TABLE.columns[0], defaultValue: "0" }],
+    });
+    expect(normalized.columns[0].defaultValue).toBe("0");
   });
 
   it("delegates isNameTaken to the SQLite rule", () => {

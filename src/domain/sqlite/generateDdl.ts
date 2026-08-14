@@ -69,7 +69,7 @@ function formatDefaultValue(raw: string): string {
 
 function generatePrimaryKeyConstraint(table: Table): string[] {
   // AUTOINCREMENT is rendered inline on the column instead (see
-  // generateColumnDefinition); REQ-033's normalizeAutoIncrement invariant
+  // generateColumnDefinition); REQ-033's normalizeColumnForDialect invariant
   // guarantees it only ever applies to a sole INTEGER PK column.
   if (table.columns.some((column) => column.autoIncrement)) {
     return [];

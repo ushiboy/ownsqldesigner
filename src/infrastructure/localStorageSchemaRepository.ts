@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { getDialectStrategy } from "../domain/dialect";
 import { type Schema, type SchemaSummary, schemaSchema } from "../domain/schema";
 import type { SchemaRepository } from "../domain/schemaRepository";
 
@@ -64,5 +65,13 @@ function parseStoredSchema(raw: string | null): Schema | null {
     return null;
   }
   const result = envelopeSchema.safeParse(json);
-  return result.success ? result.data.schema : null;
+  if (!result.success) {
+    return null;
+  }
+  const { schema } = result.data;
+  const strategy = getDialectStrategy(schema.dialect);
+  return {
+    ...schema,
+    tables: schema.tables.map((table) => strategy.normalizeColumnForDialect(table)),
+  };
 }

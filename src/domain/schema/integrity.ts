@@ -30,7 +30,11 @@ export function parseSchemaFile(raw: string): Schema | null {
   if (!result.success || !isSchemaIntegrityValid(result.data)) {
     return null;
   }
-  return result.data;
+  const strategy = getDialectStrategy(result.data.dialect);
+  return {
+    ...result.data,
+    tables: result.data.tables.map((table) => strategy.normalizeColumnForDialect(table)),
+  };
 }
 
 type ImportSchemaOptions = {

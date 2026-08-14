@@ -741,3 +741,58 @@ describe("REQ-017: updateColumn propagates type changes to foreign-key children"
     ).toMatchObject({ type: "TEXT" });
   });
 });
+
+describe("updateColumn normalizes columns to the schema's dialect (0036)", () => {
+  it("clears an FK child's now-invalid size when a propagated type change makes it non-sizable (PostgreSQL)", () => {
+    const withUsersTable = createTable(
+      createSchema("PG Schema", {
+        id: "11111111-1111-4111-8111-111111111111",
+        now: new Date("2026-08-14T09:00:00.000Z"),
+        dialect: "postgresql",
+      }),
+      "users",
+      { id: "22222222-2222-4222-8222-222222222222", now: new Date("2026-08-14T09:00:00.000Z") },
+    );
+    const withUsersId = addColumn(
+      withUsersTable,
+      "22222222-2222-4222-8222-222222222222",
+      { ...columnFields, name: "id", type: "VARCHAR", size: "255" },
+      { id: "33333333-3333-4333-8333-333333333333", now: new Date("2026-08-14T09:00:00.000Z") },
+    );
+    const withUsersKey = addKey(
+      withUsersId,
+      "22222222-2222-4222-8222-222222222222",
+      { type: "PRIMARY_KEY", columnIds: ["33333333-3333-4333-8333-333333333333"] },
+      { id: "44444444-4444-4444-8444-444444444444", now: new Date("2026-08-14T09:00:00.000Z") },
+    );
+    const withPostsTable = createTable(withUsersKey, "posts", {
+      id: "55555555-5555-4555-8555-555555555555",
+      now: new Date("2026-08-14T09:00:00.000Z"),
+    });
+    const withPostsUserId = addColumn(
+      withPostsTable,
+      "55555555-5555-4555-8555-555555555555",
+      { ...columnFields, name: "user_id", type: "VARCHAR", size: "255" },
+      { id: "66666666-6666-4666-8666-666666666666", now: new Date("2026-08-14T09:00:00.000Z") },
+    );
+    const original = addForeignKey(withPostsUserId, "55555555-5555-4555-8555-555555555555", {
+      columnId: "66666666-6666-4666-8666-666666666666",
+      referencedTableId: "22222222-2222-4222-8222-222222222222",
+      referencedColumnId: "33333333-3333-4333-8333-333333333333",
+    });
+
+    const updated = updateColumn(
+      original,
+      "22222222-2222-4222-8222-222222222222",
+      "33333333-3333-4333-8333-333333333333",
+      { ...columnFields, name: "id", type: "BOOLEAN" },
+      { now: new Date("2026-08-14T10:00:00.000Z") },
+    );
+
+    expect(
+      getTable(updated, "55555555-5555-4555-8555-555555555555").columns.find(
+        (c) => c.id === "66666666-6666-4666-8666-666666666666",
+      ),
+    ).toMatchObject({ type: "BOOLEAN", size: "" });
+  });
+});

@@ -32,7 +32,7 @@ export function addKey(
     ...schema,
     tables: schema.tables.map((table) =>
       table.id === tableId
-        ? strategy.normalizeAutoIncrement({ ...table, keys: [...table.keys, { id, ...fields }] })
+        ? strategy.normalizeColumnForDialect({ ...table, keys: [...table.keys, { id, ...fields }] })
         : table,
     ),
     updatedAt: now,
@@ -60,7 +60,7 @@ export function updateKey(
     ...schema,
     tables: schema.tables.map((table) =>
       table.id === tableId
-        ? strategy.normalizeAutoIncrement({
+        ? strategy.normalizeColumnForDialect({
             ...table,
             keys: table.keys.map((key) => (key.id === keyId ? { id: keyId, ...fields } : key)),
           })
@@ -91,7 +91,7 @@ export function removeKey(
     ...schema,
     tables: schema.tables.map((table) =>
       table.id === tableId
-        ? strategy.normalizeAutoIncrement({
+        ? strategy.normalizeColumnForDialect({
             ...table,
             keys: table.keys.filter((key) => key.id !== keyId),
           })

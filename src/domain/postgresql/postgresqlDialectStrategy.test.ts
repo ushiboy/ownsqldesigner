@@ -66,12 +66,28 @@ describe("postgresqlDialectStrategy", () => {
     );
   });
 
-  it("delegates normalizeAutoIncrement to the PostgreSQL rule", () => {
-    const normalized = postgresqlDialectStrategy.normalizeAutoIncrement({
+  it("delegates normalizeColumnForDialect to the PostgreSQL rule", () => {
+    const normalized = postgresqlDialectStrategy.normalizeColumnForDialect({
       ...TABLE,
       columns: [{ ...TABLE.columns[0], type: "TEXT" }],
     });
     expect(normalized.columns[0].autoIncrement).toBe(false);
+  });
+
+  it("clears size for a non-sizable column type", () => {
+    const normalized = postgresqlDialectStrategy.normalizeColumnForDialect({
+      ...TABLE,
+      columns: [{ ...TABLE.columns[0], type: "BOOLEAN", size: "5" }],
+    });
+    expect(normalized.columns[0].size).toBe("");
+  });
+
+  it("clears a default value alongside auto-increment", () => {
+    const normalized = postgresqlDialectStrategy.normalizeColumnForDialect({
+      ...TABLE,
+      columns: [{ ...TABLE.columns[0], defaultValue: "1" }],
+    });
+    expect(normalized.columns[0].defaultValue).toBe("");
   });
 
   it("delegates isNameTaken to the PostgreSQL rule", () => {

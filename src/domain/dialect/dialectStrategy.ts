@@ -10,7 +10,8 @@ export type DialectStrategy = {
   /** Whether an auto-increment column may also declare an explicit default value. */
   readonly allowsDefaultWithAutoIncrement: boolean;
   isAutoIncrementEligible(column: Column, pkColumnId: string | undefined): boolean;
-  normalizeAutoIncrement(table: Table): Table;
+  /** Re-derives `autoIncrement`, `size`, and `defaultValue` validity for every column in `table`. */
+  normalizeColumnForDialect(table: Table): Table;
   isNameTaken(name: string, existingNames: string[]): boolean;
   isReservedKeyword(name: string): boolean;
   hasDuplicateNames(names: string[]): boolean;
@@ -41,8 +42,7 @@ export function buildDialectStrategy(config: DialectStrategyConfig): DialectStra
     autoIncrementEligibleColumnTypes: config.autoIncrementEligibleColumnTypes,
     allowsDefaultWithAutoIncrement: config.allowsDefaultWithAutoIncrement,
     isAutoIncrementEligible: config.isAutoIncrementEligible,
-    normalizeAutoIncrement: (table) =>
-      normalizeAutoIncrement(table, config.isAutoIncrementEligible),
+    normalizeColumnForDialect: (table) => normalizeColumnForDialect(table, config),
     isNameTaken: config.isNameTaken,
     isReservedKeyword: config.isReservedKeyword,
     hasDuplicateNames: (names) => hasDuplicateNames(names, config.isNameTaken),
@@ -50,17 +50,21 @@ export function buildDialectStrategy(config: DialectStrategyConfig): DialectStra
   };
 }
 
-function normalizeAutoIncrement(
-  table: Table,
-  isEligible: (column: Column, pkColumnId: string | undefined) => boolean,
-): Table {
+function normalizeColumnForDialect(table: Table, config: DialectStrategyConfig): Table {
   const pkColumnId = solePrimaryKeyColumnId(table);
   return {
     ...table,
-    columns: table.columns.map((column) => ({
-      ...column,
-      autoIncrement: column.autoIncrement && isEligible(column, pkColumnId),
-    })),
+    columns: table.columns.map((column) => {
+      const autoIncrement =
+        column.autoIncrement && config.isAutoIncrementEligible(column, pkColumnId);
+      return {
+        ...column,
+        autoIncrement,
+        size: config.sizableColumnTypes.includes(column.type) ? column.size : "",
+        defaultValue:
+          autoIncrement && !config.allowsDefaultWithAutoIncrement ? "" : column.defaultValue,
+      };
+    }),
   };
 }
 

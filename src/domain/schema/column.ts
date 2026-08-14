@@ -49,7 +49,7 @@ export function updateColumn(
   const originalType = targetTable?.columns.find((column) => column.id === columnId)?.type;
   const tables = schema.tables.map((table) =>
     table.id === tableId
-      ? strategy.normalizeAutoIncrement({
+      ? strategy.normalizeColumnForDialect({
           ...table,
           columns: table.columns.map((column) =>
             column.id === columnId ? { id: columnId, ...fields } : column,
@@ -85,7 +85,7 @@ export function removeColumn(
   const strategy = getDialectStrategy(schema.dialect);
   const tables = schema.tables.map((table) =>
     table.id === tableId
-      ? strategy.normalizeAutoIncrement({
+      ? strategy.normalizeColumnForDialect({
           ...table,
           columns: table.columns.filter((column) => column.id !== columnId),
           keys: removeColumnFromKeys(table.keys, columnId),
@@ -227,7 +227,7 @@ function propagateColumnTypeChange(
         }
         return column;
       });
-      return changed ? strategy.normalizeAutoIncrement({ ...table, columns }) : table;
+      return changed ? strategy.normalizeColumnForDialect({ ...table, columns }) : table;
     });
     queue.push(...changedChildColumnIds);
   }

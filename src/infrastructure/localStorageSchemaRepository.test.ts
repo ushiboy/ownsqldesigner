@@ -199,6 +199,23 @@ describe("createLocalStorageSchemaRepository", () => {
     ]);
   });
 
+  it("normalizes an invalid size for the schema's dialect on load (0036)", async () => {
+    const repository = createLocalStorageSchemaRepository();
+    let schema = createSchema("PG Schema", { id: SCHEMA_ID, now: NOW, dialect: "postgresql" });
+    schema = createTable(schema, "users", { id: USERS_TABLE_ID, now: NOW });
+    schema = addColumn(
+      schema,
+      USERS_TABLE_ID,
+      { name: "active", type: "BOOLEAN", ...COLUMN_DEFAULTS, size: "5" },
+      { id: USERS_ID_COLUMN_ID, now: NOW },
+    );
+    await repository.save(schema);
+
+    const loaded = await repository.load(schema.id);
+
+    expect(loaded?.tables[0]?.columns[0]).toMatchObject({ type: "BOOLEAN", size: "" });
+  });
+
   it("round-trips the last schema id", async () => {
     const repository = createLocalStorageSchemaRepository();
 
