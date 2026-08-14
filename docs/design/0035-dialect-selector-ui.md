@@ -108,11 +108,15 @@ string[]`:
 `ColumnForm` derives `sizeAllowed` and `defaultValueAllowed` from these
 (the latter also depends on the already-computed effective auto-increment
 state) to disable each input and show a hint, exactly mirroring the
-existing auto-increment-checkbox pattern. On submit, both fields are
-clamped to `""` when disallowed, the same way `autoIncrement` was already
-clamped to the eligible value — so switching a column's type away from a
-sizable one, or checking auto-increment, silently drops a now-invalid
-leftover value rather than letting it reach the DDL generator.
+existing auto-increment-checkbox pattern. Both fields are also clamped to
+`""` on submit, the same way `autoIncrement` was already clamped to the
+eligible value, as a safety net — so switching a column's type away from a
+sizable one, or checking auto-increment, never lets a now-invalid leftover
+value reach the DDL generator. Since 2026-08-14, the `type` select's and
+auto-increment checkbox's `onChange` handlers also clear `size`/
+`defaultValue` immediately (in the same state update) when the change
+makes the field disallowed, rather than only at submit — see Open
+Questions.
 
 ## Alternatives Considered
 
@@ -158,10 +162,19 @@ leftover value rather than letting it reach the DDL generator.
   hint now names the eligible type(s) per dialect instead of a hardcoded
   "INTEGER", so the hint stays accurate for both SQLite (`INTEGER`) and
   PostgreSQL (`SMALLINT / INTEGER / BIGINT`).
-- Checking auto-increment currently leaves a stale `defaultValue` visible
+- ~~Checking auto-increment currently leaves a stale `defaultValue` visible
   (grayed out) in the input until Save actually clears it — the hint text
   is easy to miss, so a user could lose a typed default without noticing.
   Should this clear immediately on check, or show a confirmation instead
   of a silent Save-time drop? Deferred because it mirrors the pre-existing
   `autoIncrement`-eligibility clamp pattern, not a new regression from
-  this doc's work.
+  this doc's work.~~ Resolved 2026-08-14: the auto-increment checkbox's
+  `onChange` now clears `defaultValue` in the same state update when
+  checking it makes the field disallowed, instead of waiting until submit.
+  The submit-time clamp stays as a safety net for type changes.
+- ~~The same stale-value-until-Save gap applies to `size`: switching a
+  column's type away from a sizable one (e.g. to `BOOLEAN` under
+  PostgreSQL) leaves the old size grayed out until submit clears it.~~
+  Resolved 2026-08-14, same round as the `defaultValue` fix above: the
+  `type` select's `onChange` now clears `size` immediately when the newly
+  selected type isn't in `sizableColumnTypes`.

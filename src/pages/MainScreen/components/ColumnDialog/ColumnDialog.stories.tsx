@@ -151,6 +151,27 @@ export const PostgresqlSizeNotApplicable: Story = {
   },
 };
 
+export const PostgresqlSizeApplicable: Story = {
+  args: {
+    open: true,
+    title: "Edit Column",
+    submitLabel: "Save",
+    strategy: postgresqlDialectStrategy,
+    initialColumn: { ...column, type: "VARCHAR", size: "50" },
+  },
+};
+
+export const PostgresqlEditAllowsAutoIncrement: Story = {
+  args: {
+    open: true,
+    title: "Edit Column",
+    submitLabel: "Save",
+    strategy: postgresqlDialectStrategy,
+    initialColumn: primaryKeyColumn,
+    keyMembership: { PRIMARY_KEY: true, UNIQUE: false, INDEX: false },
+  },
+};
+
 export const PostgresqlDefaultNotApplicableWithAutoIncrement: Story = {
   args: {
     open: true,

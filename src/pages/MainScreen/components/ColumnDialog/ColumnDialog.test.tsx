@@ -14,6 +14,8 @@ const {
   InvalidName,
   ReservedName,
   PostgresqlSizeNotApplicable,
+  PostgresqlSizeApplicable,
+  PostgresqlEditAllowsAutoIncrement,
   PostgresqlDefaultNotApplicableWithAutoIncrement,
 } = composeStories(stories);
 
@@ -271,6 +273,18 @@ describe("ColumnDialog", () => {
     );
   });
 
+  it("clears a typed Size value immediately when switching to a type that doesn't accept one", async () => {
+    render(<PostgresqlSizeApplicable />);
+    await userEvent.selectOptions(screen.getByLabelText("Type"), "BOOLEAN");
+    expect(screen.getByLabelText("Size")).toHaveValue("");
+  });
+
+  it("leaves a typed Size value untouched when switching between two types that both accept one", async () => {
+    render(<PostgresqlSizeApplicable />);
+    await userEvent.selectOptions(screen.getByLabelText("Type"), "CHAR");
+    expect(screen.getByLabelText("Size")).toHaveValue("50");
+  });
+
   it("disables Default value and shows a hint when auto increment is checked and the dialect disallows both", () => {
     render(<PostgresqlDefaultNotApplicableWithAutoIncrement />);
     expect(screen.getByLabelText("Default value")).toBeDisabled();
@@ -294,5 +308,19 @@ describe("ColumnDialog", () => {
     render(<PostgresqlDefaultNotApplicableWithAutoIncrement />);
     await userEvent.click(screen.getByLabelText("Auto increment"));
     expect(screen.getByLabelText("Default value")).toBeEnabled();
+  });
+
+  it("clears a typed default value immediately when auto increment is checked and the dialect disallows both", async () => {
+    render(<PostgresqlEditAllowsAutoIncrement />);
+    await userEvent.type(screen.getByLabelText("Default value"), "1");
+    await userEvent.click(screen.getByLabelText("Auto increment"));
+    expect(screen.getByLabelText("Default value")).toHaveValue("");
+  });
+
+  it("leaves a typed default value untouched when checking auto increment under a dialect that allows both", async () => {
+    render(<EditAllowsAutoIncrement />);
+    await userEvent.type(screen.getByLabelText("Default value"), "1");
+    await userEvent.click(screen.getByLabelText("Auto increment"));
+    expect(screen.getByLabelText("Default value")).toHaveValue("1");
   });
 });

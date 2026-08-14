@@ -171,7 +171,15 @@ function ColumnForm({
             {tCommon("typeLabel")}
             <select
               value={fields.type}
-              onChange={(event) => setField("type", event.target.value)}
+              onChange={(event) => {
+                const type = event.target.value;
+                const nextSizeAllowed = strategy.sizableColumnTypes.includes(type);
+                setFields((prev) => ({
+                  ...prev,
+                  type,
+                  size: nextSizeAllowed ? prev.size : "",
+                }));
+              }}
               className={fieldInput()}
             >
               {columnTypes.map((columnType) => (
@@ -247,7 +255,16 @@ function ColumnForm({
                 type="checkbox"
                 checked={fields.autoIncrement}
                 disabled={!autoIncrementAllowed}
-                onChange={(event) => setField("autoIncrement", event.target.checked)}
+                onChange={(event) => {
+                  const checked = event.target.checked;
+                  const nextDefaultValueAllowed =
+                    !checked || strategy.allowsDefaultWithAutoIncrement;
+                  setFields((prev) => ({
+                    ...prev,
+                    autoIncrement: checked,
+                    defaultValue: nextDefaultValueAllowed ? prev.defaultValue : "",
+                  }));
+                }}
               />
               {t("autoIncrementLabel")}
             </label>
