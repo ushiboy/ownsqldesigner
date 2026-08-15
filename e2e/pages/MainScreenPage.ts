@@ -114,6 +114,12 @@ export class MainScreenPage {
   }
 
   async deleteSelectedTableViaKeyboard(): Promise<void> {
+    // A table click marks the React Flow node `.selected` synchronously,
+    // but the app's own selection state (which the Delete/Backspace
+    // shortcut reads) only catches up a render cycle later via
+    // onSelectionChange. Waiting for the side panel's delete button — driven
+    // by that same state — avoids racing the shortcut against it.
+    await this.sidePanel.panel.getByRole("button", { name: "Delete table" }).waitFor();
     await this.page.keyboard.press("Delete");
     await this.confirmDeleteTableDialog();
   }
