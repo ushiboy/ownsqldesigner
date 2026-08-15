@@ -82,8 +82,10 @@ export type Messages = {
     };
     sizeLabel: string;
     sizeNotApplicableHint: string;
+    sizeInvalidFormatHint: string;
     precisionLabel: string;
     precisionNotApplicableHint: string;
+    precisionInvalidFormatHint: string;
     defaultValueLabel: string;
     defaultValueNotApplicableHint: string;
     nullableLabel: string;

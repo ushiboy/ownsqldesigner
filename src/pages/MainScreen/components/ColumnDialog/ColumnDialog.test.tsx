@@ -15,7 +15,9 @@ const {
   ReservedName,
   PostgresqlSizeNotApplicable,
   PostgresqlSizeApplicable,
+  PostgresqlSizeInvalidFormat,
   PostgresqlPrecisionApplicable,
+  PostgresqlPrecisionOutOfRange,
   PostgresqlEditAllowsAutoIncrement,
   PostgresqlDefaultNotApplicableWithAutoIncrement,
 } = composeStories(stories);
@@ -287,6 +289,43 @@ describe("ColumnDialog", () => {
     expect(screen.getByLabelText("Size")).toHaveValue("50");
   });
 
+  it("disables submit and shows a hint for a Size value with an invalid format", () => {
+    render(<PostgresqlSizeInvalidFormat />);
+    expect(screen.getByRole("button", { name: "Save" })).toBeDisabled();
+    expect(
+      screen.getByText(
+        "Size must be a positive whole number (or, for NUMERIC, a precision and scale pair like 10,2).",
+      ),
+    ).toBeInTheDocument();
+  });
+
+  it("re-enables submit once an invalid Size value is corrected", async () => {
+    render(<PostgresqlSizeInvalidFormat />);
+    await userEvent.clear(screen.getByLabelText("Size"));
+    await userEvent.type(screen.getByLabelText("Size"), "255");
+    expect(screen.getByRole("button", { name: "Save" })).toBeEnabled();
+  });
+
+  it("does not show an invalid-format hint for a Size the type doesn't even accept", () => {
+    render(<PostgresqlSizeNotApplicable />);
+    expect(
+      screen.queryByText(
+        "Size must be a positive whole number (or, for NUMERIC, a precision and scale pair like 10,2).",
+      ),
+    ).not.toBeInTheDocument();
+  });
+
+  it("never shows a Size invalid-format hint under SQLite", async () => {
+    render(<Edit />);
+    await userEvent.type(screen.getByLabelText("Size"), "abc");
+    expect(
+      screen.queryByText(
+        "Size must be a positive whole number (or, for NUMERIC, a precision and scale pair like 10,2).",
+      ),
+    ).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Save" })).toBeEnabled();
+  });
+
   it("disables Precision and shows a hint for a PostgreSQL type that doesn't accept one", () => {
     render(<PostgresqlSizeNotApplicable />);
     expect(screen.getByLabelText("Precision")).toBeDisabled();
@@ -320,6 +359,19 @@ describe("ColumnDialog", () => {
     render(<PostgresqlPrecisionApplicable />);
     await userEvent.selectOptions(screen.getByLabelText("Type"), "TIME");
     expect(screen.getByLabelText("Precision")).toHaveValue("3");
+  });
+
+  it("disables submit and shows a hint for a Precision value out of PostgreSQL's 0-6 range", () => {
+    render(<PostgresqlPrecisionOutOfRange />);
+    expect(screen.getByRole("button", { name: "Save" })).toBeDisabled();
+    expect(screen.getByText("Precision must be a whole number from 0 to 6.")).toBeInTheDocument();
+  });
+
+  it("re-enables submit once an out-of-range Precision value is corrected", async () => {
+    render(<PostgresqlPrecisionOutOfRange />);
+    await userEvent.clear(screen.getByLabelText("Precision"));
+    await userEvent.type(screen.getByLabelText("Precision"), "3");
+    expect(screen.getByRole("button", { name: "Save" })).toBeEnabled();
   });
 
   it("disables Default value and shows a hint when auto increment is checked and the dialect disallows both", () => {

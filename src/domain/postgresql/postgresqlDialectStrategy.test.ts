@@ -111,6 +111,16 @@ describe("postgresqlDialectStrategy", () => {
     expect(normalized.columns[0].defaultValue).toBe("");
   });
 
+  it("delegates isSizeValid to the PostgreSQL rule", () => {
+    expect(postgresqlDialectStrategy.isSizeValid("VARCHAR", "255")).toBe(true);
+    expect(postgresqlDialectStrategy.isSizeValid("VARCHAR", "abc")).toBe(false);
+  });
+
+  it("delegates isPrecisionValid to the PostgreSQL rule", () => {
+    expect(postgresqlDialectStrategy.isPrecisionValid("TIMESTAMP", "3")).toBe(true);
+    expect(postgresqlDialectStrategy.isPrecisionValid("TIMESTAMP", "7")).toBe(false);
+  });
+
   it("delegates isNameTaken to the PostgreSQL rule", () => {
     expect(postgresqlDialectStrategy.isNameTaken("Users", ["users"])).toBe(true);
   });

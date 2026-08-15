@@ -124,6 +124,8 @@ function ColumnForm({
   const effectiveAutoIncrement = fields.autoIncrement && autoIncrementAllowed;
   const sizeAllowed = strategy.sizableColumnTypes.includes(fields.type);
   const precisionAllowed = strategy.precisionColumnTypes.includes(fields.type);
+  const isSizeFormatValid = strategy.isSizeValid(fields.type, fields.size);
+  const isPrecisionFormatValid = strategy.isPrecisionValid(fields.type, fields.precision);
   const defaultValueAllowed = !effectiveAutoIncrement || strategy.allowsDefaultWithAutoIncrement;
 
   const setField = <K extends keyof ColumnFields>(key: K, value: ColumnFields[K]) => {
@@ -208,6 +210,9 @@ function ColumnForm({
             {!sizeAllowed && (
               <p className="mt-1 text-[12px] text-body">{t("sizeNotApplicableHint")}</p>
             )}
+            {sizeAllowed && !isSizeFormatValid && (
+              <p className="mt-1 text-[12px] text-body">{t("sizeInvalidFormatHint")}</p>
+            )}
           </div>
           <div>
             <label className="block text-[14px]">
@@ -222,6 +227,9 @@ function ColumnForm({
             </label>
             {!precisionAllowed && (
               <p className="mt-1 text-[12px] text-body">{t("precisionNotApplicableHint")}</p>
+            )}
+            {precisionAllowed && !isPrecisionFormatValid && (
+              <p className="mt-1 text-[12px] text-body">{t("precisionInvalidFormatHint")}</p>
             )}
           </div>
           <div>
@@ -317,7 +325,14 @@ function ColumnForm({
         </button>
         <button
           type="submit"
-          disabled={isNameEmpty || isNameInvalidShape || isNameReserved || isNameDuplicate}
+          disabled={
+            isNameEmpty ||
+            isNameInvalidShape ||
+            isNameReserved ||
+            isNameDuplicate ||
+            (sizeAllowed && !isSizeFormatValid) ||
+            (precisionAllowed && !isPrecisionFormatValid)
+          }
           className={dialogActionButton({ variant: "primary" })}
         >
           {submitLabel}

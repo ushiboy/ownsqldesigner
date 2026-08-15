@@ -81,6 +81,14 @@ describe("sqliteDialectStrategy", () => {
     expect(normalized.columns[0].defaultValue).toBe("0");
   });
 
+  it("always treats size as valid", () => {
+    expect(sqliteDialectStrategy.isSizeValid("TEXT", "abc")).toBe(true);
+  });
+
+  it("always treats precision as valid", () => {
+    expect(sqliteDialectStrategy.isPrecisionValid("TEXT", "abc")).toBe(true);
+  });
+
   it("delegates isNameTaken to the SQLite rule", () => {
     expect(sqliteDialectStrategy.isNameTaken("Users", ["users"])).toBe(true);
   });

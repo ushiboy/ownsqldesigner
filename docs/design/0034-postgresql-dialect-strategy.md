@@ -127,12 +127,16 @@ PostgreSQL reachable (at which point they stop being purely theoretical):
   first, then to also include `SMALLINT` after a same-day review raised it
   as a gap (PostgreSQL's `SMALLSERIAL` is an equally legitimate identity
   type); see the updated Auto-increment section above.
-- **Type-conditional `size` validation**: `ColumnDialog`'s `size` field is a
+- ~~**Type-conditional `size` validation**: `ColumnDialog`'s `size` field is a
   free-text input regardless of column type. For PostgreSQL, types that
   take no modifier (`BOOLEAN`, `INTEGER`, `UUID`, `JSONB`, `DATE`, `TEXT`,
   ...) produce invalid DDL like `BOOLEAN(5)` if a size is entered. Harmless
   under SQLite's looser grammar, but will need type-aware
-  disable/validation in the UI once PostgreSQL is actually selectable.
+  disable/validation in the UI once PostgreSQL is actually selectable.~~
+  The type-aware disable half was resolved by 0035/0036
+  (`sizableColumnTypes` disables the field for non-applicable types); the
+  remaining numeric-format-validation half is resolved by
+  [0039](0039-column-size-precision-format-validation.md).
 - **Silent default-value drop on identity columns**: since this change
   suppresses `DEFAULT` for any `autoIncrement` column (see Auto-increment
   above), a user who fills in both fields today gets no error or warning —

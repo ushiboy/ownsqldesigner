@@ -8,6 +8,7 @@ import {
 import { generatePostgresqlDdl } from "./generateDdl";
 import { isPostgresqlNameTaken } from "./nameComparison";
 import { isPostgresqlReservedKeyword } from "./reservedKeywords";
+import { isPostgresqlPrecisionValid, isPostgresqlSizeValid } from "./sizeAndPrecisionValidation";
 
 export const postgresqlDialectStrategy: DialectStrategy = buildDialectStrategy({
   columnTypes: POSTGRESQL_COLUMN_TYPES,
@@ -16,6 +17,8 @@ export const postgresqlDialectStrategy: DialectStrategy = buildDialectStrategy({
   autoIncrementEligibleColumnTypes: ["SMALLINT", "INTEGER", "BIGINT"],
   allowsDefaultWithAutoIncrement: false,
   isAutoIncrementEligible: isPostgresqlAutoIncrementEligible,
+  isSizeValid: isPostgresqlSizeValid,
+  isPrecisionValid: isPostgresqlPrecisionValid,
   isNameTaken: isPostgresqlNameTaken,
   isReservedKeyword: isPostgresqlReservedKeyword,
   generateDdl: generatePostgresqlDdl,

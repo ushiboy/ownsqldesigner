@@ -143,12 +143,14 @@ same way:
 Raised in a cross-session peer review (2026-08-14) — both non-blocking,
 neither found any correctness gap introduced by this doc:
 
-- **No numeric validation on `precision`** (PostgreSQL's valid range is
+- ~~**No numeric validation on `precision`** (PostgreSQL's valid range is
   0-6). It stays free-form text, same as `size` — a deliberate choice, not
   an oversight (see Non-Goals). An invalid value (e.g. `"abc"`, `"99"`)
   still round-trips into broken DDL like `TIMESTAMP(abc)`. Revisit only if
   this proves to matter in practice; would need a validation-tier decision
-  shared with `size`, not a precision-only fix.
+  shared with `size`, not a precision-only fix.~~ Resolved by
+  [0039](0039-column-size-precision-format-validation.md), which validates
+  both `size` and `precision` together per this note's own recommendation.
 - ~~**`addColumn` still doesn't call `normalizeColumnForDialect`** (pre-existing
   behavior, not introduced here) — unlike `updateColumn`/`removeColumn`, so
   a hypothetical caller that bypasses `ColumnDialog`'s own clamp could add a

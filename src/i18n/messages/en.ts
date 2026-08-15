@@ -82,8 +82,11 @@ export default {
     },
     sizeLabel: "Size",
     sizeNotApplicableHint: "This column type does not accept a size.",
+    sizeInvalidFormatHint:
+      "Size must be a positive whole number (or, for NUMERIC, a precision and scale pair like 10,2).",
     precisionLabel: "Precision",
     precisionNotApplicableHint: "This column type does not accept a precision.",
+    precisionInvalidFormatHint: "Precision must be a whole number from 0 to 6.",
     defaultValueLabel: "Default value",
     defaultValueNotApplicableHint: "Auto-increment columns can''t also have a default value.",
     nullableLabel: "Nullable",

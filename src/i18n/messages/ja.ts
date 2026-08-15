@@ -82,8 +82,11 @@ export default {
     },
     sizeLabel: "サイズ",
     sizeNotApplicableHint: "このカラム型にはサイズを指定できません。",
+    sizeInvalidFormatHint:
+      "サイズは正の整数で指定してください(NUMERICの場合は10,2のような精度とスケールの組み合わせも指定できます)。",
     precisionLabel: "精度",
     precisionNotApplicableHint: "このカラム型には精度を指定できません。",
+    precisionInvalidFormatHint: "精度は0から6までの整数で指定してください。",
     defaultValueLabel: "デフォルト値",
     defaultValueNotApplicableHint: "自動採番のカラムにはデフォルト値を設定できません。",
     nullableLabel: "NULL許可",

@@ -12,6 +12,10 @@ export type DialectStrategy = {
   /** Whether an auto-increment column may also declare an explicit default value. */
   readonly allowsDefaultWithAutoIncrement: boolean;
   isAutoIncrementEligible(column: Column, pkColumnId: string | undefined): boolean;
+  /** Whether `value` is a valid `size` modifier for a column of `type` (0039). */
+  isSizeValid(type: string, value: string): boolean;
+  /** Whether `value` is a valid `precision` modifier for a column of `type` (0039). */
+  isPrecisionValid(type: string, value: string): boolean;
   /** Re-derives `autoIncrement`, `size`, `precision`, and `defaultValue` validity for every column in `table`. */
   normalizeColumnForDialect(table: Table): Table;
   isNameTaken(name: string, existingNames: string[]): boolean;
@@ -28,6 +32,8 @@ export type DialectStrategyConfig = {
   autoIncrementEligibleColumnTypes: readonly string[];
   allowsDefaultWithAutoIncrement: boolean;
   isAutoIncrementEligible(column: Column, pkColumnId: string | undefined): boolean;
+  isSizeValid(type: string, value: string): boolean;
+  isPrecisionValid(type: string, value: string): boolean;
   isNameTaken(name: string, existingNames: string[]): boolean;
   isReservedKeyword(name: string): boolean;
   generateDdl(tables: Table[]): string;
@@ -46,6 +52,8 @@ export function buildDialectStrategy(config: DialectStrategyConfig): DialectStra
     autoIncrementEligibleColumnTypes: config.autoIncrementEligibleColumnTypes,
     allowsDefaultWithAutoIncrement: config.allowsDefaultWithAutoIncrement,
     isAutoIncrementEligible: config.isAutoIncrementEligible,
+    isSizeValid: config.isSizeValid,
+    isPrecisionValid: config.isPrecisionValid,
     normalizeColumnForDialect: (table) => normalizeColumnForDialect(table, config),
     isNameTaken: config.isNameTaken,
     isReservedKeyword: config.isReservedKeyword,

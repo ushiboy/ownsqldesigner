@@ -173,6 +173,26 @@ export const PostgresqlPrecisionApplicable: Story = {
   },
 };
 
+export const PostgresqlSizeInvalidFormat: Story = {
+  args: {
+    open: true,
+    title: "Edit Column",
+    submitLabel: "Save",
+    strategy: postgresqlDialectStrategy,
+    initialColumn: { ...column, type: "VARCHAR", size: "abc" },
+  },
+};
+
+export const PostgresqlPrecisionOutOfRange: Story = {
+  args: {
+    open: true,
+    title: "Edit Column",
+    submitLabel: "Save",
+    strategy: postgresqlDialectStrategy,
+    initialColumn: { ...column, type: "TIMESTAMP", precision: "9" },
+  },
+};
+
 export const PostgresqlEditAllowsAutoIncrement: Story = {
   args: {
     open: true,
