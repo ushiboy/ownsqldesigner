@@ -83,7 +83,7 @@ export default {
     sizeLabel: "サイズ",
     sizeNotApplicableHint: "このカラム型にはサイズを指定できません。",
     sizeInvalidFormatHint:
-      "サイズは正の整数で指定してください(NUMERICの場合は10,2のような精度とスケールの組み合わせも指定できます)。",
+      "サイズは正の整数で指定してください(NUMERICの場合は10,2のような精度とスケールの組み合わせも指定できます。スケールは精度以下である必要があります)。",
     precisionLabel: "精度",
     precisionNotApplicableHint: "このカラム型には精度を指定できません。",
     precisionInvalidFormatHint: "精度は0から6までの整数で指定してください。",

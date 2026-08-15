@@ -25,6 +25,12 @@ describe("isPostgresqlSizeValid", () => {
     expect(isPostgresqlSizeValid("NUMERIC", "10,2,3")).toBe(false);
   });
 
+  it("rejects a NUMERIC scale greater than its precision", () => {
+    expect(isPostgresqlSizeValid("NUMERIC", "5,10")).toBe(false);
+    expect(isPostgresqlSizeValid("NUMERIC", "10,10")).toBe(true);
+    expect(isPostgresqlSizeValid("NUMERIC", "10,5")).toBe(true);
+  });
+
   it("treats any value as valid for a non-sizable type", () => {
     expect(isPostgresqlSizeValid("BOOLEAN", "5")).toBe(true);
     expect(isPostgresqlSizeValid("BOOLEAN", "abc")).toBe(true);

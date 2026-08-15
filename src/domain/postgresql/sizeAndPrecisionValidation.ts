@@ -8,7 +8,11 @@ export function isPostgresqlSizeValid(type: string, value: string): boolean {
     return true;
   }
   if (type === "NUMERIC") {
-    return NUMERIC_SIZE_PATTERN.test(value);
+    if (!NUMERIC_SIZE_PATTERN.test(value)) {
+      return false;
+    }
+    const [precision, scale] = value.split(",").map(Number);
+    return scale === undefined || scale <= precision;
   }
   if (type === "VARCHAR" || type === "CHAR") {
     return POSITIVE_INT_PATTERN.test(value);

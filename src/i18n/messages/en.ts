@@ -83,7 +83,7 @@ export default {
     sizeLabel: "Size",
     sizeNotApplicableHint: "This column type does not accept a size.",
     sizeInvalidFormatHint:
-      "Size must be a positive whole number (or, for NUMERIC, a precision and scale pair like 10,2).",
+      "Size must be a positive whole number (or, for NUMERIC, a precision and scale pair like 10,2, where scale is not greater than precision).",
     precisionLabel: "Precision",
     precisionNotApplicableHint: "This column type does not accept a precision.",
     precisionInvalidFormatHint: "Precision must be a whole number from 0 to 6.",

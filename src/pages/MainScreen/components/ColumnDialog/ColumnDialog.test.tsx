@@ -294,7 +294,7 @@ describe("ColumnDialog", () => {
     expect(screen.getByRole("button", { name: "Save" })).toBeDisabled();
     expect(
       screen.getByText(
-        "Size must be a positive whole number (or, for NUMERIC, a precision and scale pair like 10,2).",
+        "Size must be a positive whole number (or, for NUMERIC, a precision and scale pair like 10,2, where scale is not greater than precision).",
       ),
     ).toBeInTheDocument();
   });
@@ -310,7 +310,7 @@ describe("ColumnDialog", () => {
     render(<PostgresqlSizeNotApplicable />);
     expect(
       screen.queryByText(
-        "Size must be a positive whole number (or, for NUMERIC, a precision and scale pair like 10,2).",
+        "Size must be a positive whole number (or, for NUMERIC, a precision and scale pair like 10,2, where scale is not greater than precision).",
       ),
     ).not.toBeInTheDocument();
   });
@@ -320,7 +320,7 @@ describe("ColumnDialog", () => {
     await userEvent.type(screen.getByLabelText("Size"), "abc");
     expect(
       screen.queryByText(
-        "Size must be a positive whole number (or, for NUMERIC, a precision and scale pair like 10,2).",
+        "Size must be a positive whole number (or, for NUMERIC, a precision and scale pair like 10,2, where scale is not greater than precision).",
       ),
     ).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Save" })).toBeEnabled();
