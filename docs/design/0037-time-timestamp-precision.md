@@ -149,9 +149,39 @@ neither found any correctness gap introduced by this doc:
   still round-trips into broken DDL like `TIMESTAMP(abc)`. Revisit only if
   this proves to matter in practice; would need a validation-tier decision
   shared with `size`, not a precision-only fix.
-- **`addColumn` still doesn't call `normalizeColumnForDialect`** (pre-existing
+- ~~**`addColumn` still doesn't call `normalizeColumnForDialect`** (pre-existing
   behavior, not introduced here) — unlike `updateColumn`/`removeColumn`, so
   a hypothetical caller that bypasses `ColumnDialog`'s own clamp could add a
   column with an invalid `size`/`precision` combination. Same class of gap
   0036's Alternatives Considered already documented and deliberately left
-  open (see 0036's `addColumn` discussion) — not new to this doc.
+  open (see 0036's `addColumn` discussion) — not new to this doc.~~ Resolved
+  2026-08-14: `addColumn` gained a `normalize` option (default `true`) that
+  wraps its table update in `strategy.normalizeColumnForDialect`, matching
+  `updateColumn`/`removeColumn`. This closes the gap for every caller except
+  one: `useUndoableSchema.ts`'s `addColumn` action explicitly passes
+  `normalize: false`, because it creates the column and assigns its
+  PRIMARY KEY in two separate, back-to-back calls (mirroring `ColumnDialog`'s
+  real submit) — normalizing eagerly would clear a same-submit
+  auto-increment flag before the key exists, exactly the regression 0036's
+  Alternatives Considered predicted for this idea. A regression test
+  (`useUndoableSchema.test.tsx`) reproduces and guards this case.
+
+  This initial resolution missed that `updateColumn` has the identical
+  gap: `DialogHost.tsx`'s `editColumn` submit calls `onUpdateColumn` then
+  `onSetColumnKeyMembership` — the same two-step pattern as `addColumn`'s
+  — but `updateColumn` normalized unconditionally with no opt-out. Caught
+  by a cross-session peer review (2026-08-15) and reproduced (an existing
+  INTEGER column, checking Auto Increment + Primary Key together in
+  `ColumnDialog`, lost `autoIncrement` on save). Fixed the same way:
+  `updateColumn` gained a matching `normalize` option (default `true`),
+  and `useUndoableSchema.ts`'s `updateColumn` action — whose sole caller
+  is that same `editColumn` submit, unconditionally followed by
+  `setColumnKeyMembership` — passes `normalize: false`. A one-`commitEdit`
+  consolidation (folding `setColumnKeyMembership` into the `addColumn`/
+  `updateColumn` actions) was considered instead, but rejected: it would
+  collapse the two actions' undo entries into one, changing undo/redo
+  granularity as documented in `useUndoableSchema.ts`'s own reducer-choice
+  comment and pinned by an existing test
+  ("chains two edits dispatched synchronously ... into two undo steps") —
+  out of scope for a normalization-ordering fix. A matching regression
+  test was added to `useUndoableSchema.test.tsx`.

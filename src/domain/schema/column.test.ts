@@ -804,3 +804,129 @@ describe("updateColumn normalizes columns to the schema's dialect (0036)", () =>
     ).toMatchObject({ type: "BOOLEAN", size: "" });
   });
 });
+
+describe("addColumn normalizes columns to the schema's dialect (0037)", () => {
+  const withUsersTable = createTable(
+    createSchema("PG Schema", {
+      id: "11111111-1111-4111-8111-111111111111",
+      now: new Date("2026-08-14T09:00:00.000Z"),
+      dialect: "postgresql",
+    }),
+    "users",
+    { id: "22222222-2222-4222-8222-222222222222", now: new Date("2026-08-14T09:00:00.000Z") },
+  );
+
+  it("clears size when the given type is not sizable (PostgreSQL), by default", () => {
+    const updated = addColumn(
+      withUsersTable,
+      "22222222-2222-4222-8222-222222222222",
+      { ...columnFields, name: "is_active", type: "BOOLEAN", size: "255" },
+      { id: "33333333-3333-4333-8333-333333333333", now: new Date("2026-08-14T10:00:00.000Z") },
+    );
+
+    expect(
+      getTable(updated, "22222222-2222-4222-8222-222222222222").columns.find(
+        (c) => c.id === "33333333-3333-4333-8333-333333333333",
+      ),
+    ).toMatchObject({ type: "BOOLEAN", size: "" });
+  });
+
+  it("clears precision when the given type does not support it (PostgreSQL), by default", () => {
+    const updated = addColumn(
+      withUsersTable,
+      "22222222-2222-4222-8222-222222222222",
+      { ...columnFields, name: "score", type: "INTEGER", precision: "3" },
+      { id: "44444444-4444-4444-8444-444444444444", now: new Date("2026-08-14T10:00:00.000Z") },
+    );
+
+    expect(
+      getTable(updated, "22222222-2222-4222-8222-222222222222").columns.find(
+        (c) => c.id === "44444444-4444-4444-8444-444444444444",
+      ),
+    ).toMatchObject({ type: "INTEGER", precision: "" });
+  });
+
+  it("skips normalization when `normalize: false` is passed", () => {
+    const updated = addColumn(
+      withUsersTable,
+      "22222222-2222-4222-8222-222222222222",
+      { ...columnFields, name: "is_active", type: "BOOLEAN", size: "255" },
+      {
+        id: "55555555-5555-4555-8555-555555555555",
+        now: new Date("2026-08-14T10:00:00.000Z"),
+        normalize: false,
+      },
+    );
+
+    expect(
+      getTable(updated, "22222222-2222-4222-8222-222222222222").columns.find(
+        (c) => c.id === "55555555-5555-4555-8555-555555555555",
+      ),
+    ).toMatchObject({ type: "BOOLEAN", size: "255" });
+  });
+});
+
+describe("updateColumn's `normalize` option", () => {
+  const withUsersId = addColumn(
+    createTable(
+      createSchema("PG Schema", {
+        id: "11111111-1111-4111-8111-111111111111",
+        now: new Date("2026-08-14T09:00:00.000Z"),
+        dialect: "postgresql",
+      }),
+      "users",
+      { id: "22222222-2222-4222-8222-222222222222", now: new Date("2026-08-14T09:00:00.000Z") },
+    ),
+    "22222222-2222-4222-8222-222222222222",
+    { ...columnFields, name: "id", type: "INTEGER" },
+    { id: "33333333-3333-4333-8333-333333333333", now: new Date("2026-08-14T09:00:00.000Z") },
+  );
+
+  it("clears size when the given type is not sizable (PostgreSQL), by default", () => {
+    const updated = updateColumn(
+      withUsersId,
+      "22222222-2222-4222-8222-222222222222",
+      "33333333-3333-4333-8333-333333333333",
+      { ...columnFields, name: "is_active", type: "BOOLEAN", size: "255" },
+      { now: new Date("2026-08-14T10:00:00.000Z") },
+    );
+
+    expect(
+      getTable(updated, "22222222-2222-4222-8222-222222222222").columns.find(
+        (c) => c.id === "33333333-3333-4333-8333-333333333333",
+      ),
+    ).toMatchObject({ type: "BOOLEAN", size: "" });
+  });
+
+  it("clears precision when the given type does not support it (PostgreSQL), by default", () => {
+    const updated = updateColumn(
+      withUsersId,
+      "22222222-2222-4222-8222-222222222222",
+      "33333333-3333-4333-8333-333333333333",
+      { ...columnFields, name: "score", type: "INTEGER", precision: "3" },
+      { now: new Date("2026-08-14T10:00:00.000Z") },
+    );
+
+    expect(
+      getTable(updated, "22222222-2222-4222-8222-222222222222").columns.find(
+        (c) => c.id === "33333333-3333-4333-8333-333333333333",
+      ),
+    ).toMatchObject({ type: "INTEGER", precision: "" });
+  });
+
+  it("skips normalization when `normalize: false` is passed", () => {
+    const updated = updateColumn(
+      withUsersId,
+      "22222222-2222-4222-8222-222222222222",
+      "33333333-3333-4333-8333-333333333333",
+      { ...columnFields, name: "is_active", type: "BOOLEAN", size: "255" },
+      { now: new Date("2026-08-14T10:00:00.000Z"), normalize: false },
+    );
+
+    expect(
+      getTable(updated, "22222222-2222-4222-8222-222222222222").columns.find(
+        (c) => c.id === "33333333-3333-4333-8333-333333333333",
+      ),
+    ).toMatchObject({ type: "BOOLEAN", size: "255" });
+  });
+});

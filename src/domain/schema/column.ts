@@ -6,6 +6,16 @@ import { isColumnNameAvailable } from "./validation";
 type AddColumnOptions = {
   id?: string;
   now?: Date;
+  /**
+   * Whether to re-derive `autoIncrement`/`size`/`precision`/`defaultValue`
+   * validity via `normalizeColumnForDialect` (default `true`). A caller that
+   * creates a column and assigns its PRIMARY KEY in a separate, later call
+   * (so a same-submit auto-increment PK can reference this column's not-yet-
+   * created id) must pass `false` — normalizing here would clear
+   * `autoIncrement` before the key exists, and the later key-assignment
+   * can't restore it (see docs/design/0036's Alternatives Considered).
+   */
+  normalize?: boolean;
 };
 
 export function addColumn(
@@ -19,18 +29,31 @@ export function addColumn(
   if (!canAddColumn(targetTable, fields, strategy)) {
     return schema;
   }
-  const { id = crypto.randomUUID(), now = new Date() } = options;
+  const { id = crypto.randomUUID(), now = new Date(), normalize = true } = options;
   return {
     ...schema,
-    tables: schema.tables.map((table) =>
-      table.id === tableId ? { ...table, columns: [...table.columns, { id, ...fields }] } : table,
-    ),
+    tables: schema.tables.map((table) => {
+      if (table.id !== tableId) {
+        return table;
+      }
+      const withNewColumn = { ...table, columns: [...table.columns, { id, ...fields }] };
+      return normalize ? strategy.normalizeColumnForDialect(withNewColumn) : withNewColumn;
+    }),
     updatedAt: now,
   };
 }
 
 type UpdateColumnOptions = {
   now?: Date;
+  /**
+   * Whether to re-derive `autoIncrement`/`size`/`precision`/`defaultValue`
+   * validity via `normalizeColumnForDialect` (default `true`). A caller that
+   * updates a column and assigns its PRIMARY KEY in a separate, later call
+   * must pass `false` — normalizing here would clear a same-submit
+   * `autoIncrement` flag before the key exists, and the later key-assignment
+   * can't restore it. Same rationale as `AddColumnOptions.normalize`.
+   */
+  normalize?: boolean;
 };
 
 export function updateColumn(
@@ -45,18 +68,20 @@ export function updateColumn(
   if (!canUpdateColumn(targetTable, columnId, fields, strategy)) {
     return schema;
   }
-  const { now = new Date() } = options;
+  const { now = new Date(), normalize = true } = options;
   const originalType = targetTable?.columns.find((column) => column.id === columnId)?.type;
-  const tables = schema.tables.map((table) =>
-    table.id === tableId
-      ? strategy.normalizeColumnForDialect({
-          ...table,
-          columns: table.columns.map((column) =>
-            column.id === columnId ? { id: columnId, ...fields } : column,
-          ),
-        })
-      : table,
-  );
+  const tables = schema.tables.map((table) => {
+    if (table.id !== tableId) {
+      return table;
+    }
+    const withUpdatedColumn = {
+      ...table,
+      columns: table.columns.map((column) =>
+        column.id === columnId ? { id: columnId, ...fields } : column,
+      ),
+    };
+    return normalize ? strategy.normalizeColumnForDialect(withUpdatedColumn) : withUpdatedColumn;
+  });
   return {
     ...schema,
     tables:

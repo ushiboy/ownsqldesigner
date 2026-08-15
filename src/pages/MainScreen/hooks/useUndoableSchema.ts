@@ -203,11 +203,18 @@ export function useUndoableSchema(initialSchema?: Schema): UndoableSchema {
     },
     // `id` lets the caller know the new column's id up front, so it can also
     // create the column's PRIMARY KEY key in the same submit (see MainScreenView).
+    // `normalize: false` because that follow-up key-assignment call hasn't
+    // run yet here; normalizing now would clear a same-submit auto-increment
+    // flag before its PRIMARY KEY exists (see addColumn's `normalize` option).
     addColumn: (tableId, fields, id) => {
-      commitEdit((prev) => addColumn(prev, tableId, fields, { id }));
+      commitEdit((prev) => addColumn(prev, tableId, fields, { id, normalize: false }));
     },
+    // `normalize: false` for the same reason as `addColumn` above: this
+    // action's sole caller (DialogHost's editColumn submit) always follows
+    // it with a setColumnKeyMembership call, so normalizing here could clear
+    // a same-submit auto-increment flag before its PRIMARY KEY exists.
     updateColumn: (tableId, columnId, fields) => {
-      commitEdit((prev) => updateColumn(prev, tableId, columnId, fields));
+      commitEdit((prev) => updateColumn(prev, tableId, columnId, fields, { normalize: false }));
     },
     removeColumn: (tableId, columnId) => {
       commitEdit((prev) => removeColumn(prev, tableId, columnId));

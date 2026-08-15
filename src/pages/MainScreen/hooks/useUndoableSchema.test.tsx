@@ -352,6 +352,33 @@ describe("useUndoableSchema", () => {
     );
   });
 
+  it("keeps a same-submit auto-increment flag when the column becomes the PRIMARY KEY right after (0037)", () => {
+    // addColumn must not eagerly normalize away `autoIncrement` here: at this
+    // point the column has no PRIMARY KEY yet, so normalizing would clear it
+    // before setColumnKeyMembership (called right after, mirroring
+    // ColumnDialog's real submit) can make it eligible. See docs/design/0036's
+    // Alternatives Considered and addColumn's `normalize` option.
+    const blog = createTable(createSchema("Blog Schema"), "posts", {
+      id: "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12",
+    });
+    const { result } = renderUndoableSchema(blog);
+
+    act(() => {
+      result.current.editing.addColumn(
+        "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12",
+        { ...columnFields, type: "INTEGER", autoIncrement: true },
+        "f1a2b3c4-5d6e-4f7a-8b9c-0d1e2f3a4b5c",
+      );
+      result.current.editing.setColumnKeyMembership(
+        "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12",
+        "f1a2b3c4-5d6e-4f7a-8b9c-0d1e2f3a4b5c",
+        { PRIMARY_KEY: true, UNIQUE: false, INDEX: false },
+      );
+    });
+
+    expect(result.current.editing.currentSchema?.tables[0]?.columns[0]?.autoIncrement).toBe(true);
+  });
+
   it("updates a column's fields and bumps updatedAt", () => {
     const blog = addColumn(
       createTable(
@@ -378,6 +405,37 @@ describe("useUndoableSchema", () => {
     expect(result.current.editing.currentSchema?.updatedAt.getTime()).toBeGreaterThan(
       blog.updatedAt.getTime(),
     );
+  });
+
+  it("keeps a same-submit auto-increment flag when an existing column becomes the PRIMARY KEY right after (0037)", () => {
+    // Mirrors the addColumn regression test above, but for ColumnDialog's
+    // editColumn submit (onUpdateColumn -> onSetColumnKeyMembership, see
+    // DialogHost): updateColumn must not eagerly normalize away
+    // `autoIncrement` before the follow-up call adds its PRIMARY KEY.
+    const blog = addColumn(
+      createTable(createSchema("Blog Schema"), "posts", {
+        id: "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12",
+      }),
+      "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12",
+      { ...columnFields, type: "INTEGER" },
+      { id: "f1a2b3c4-5d6e-4f7a-8b9c-0d1e2f3a4b5c" },
+    );
+    const { result } = renderUndoableSchema(blog);
+
+    act(() => {
+      result.current.editing.updateColumn(
+        "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12",
+        "f1a2b3c4-5d6e-4f7a-8b9c-0d1e2f3a4b5c",
+        { ...columnFields, type: "INTEGER", autoIncrement: true },
+      );
+      result.current.editing.setColumnKeyMembership(
+        "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12",
+        "f1a2b3c4-5d6e-4f7a-8b9c-0d1e2f3a4b5c",
+        { PRIMARY_KEY: true, UNIQUE: false, INDEX: false },
+      );
+    });
+
+    expect(result.current.editing.currentSchema?.tables[0]?.columns[0]?.autoIncrement).toBe(true);
   });
 
   it("removes a column from a table and bumps updatedAt", () => {
