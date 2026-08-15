@@ -90,7 +90,7 @@ The Phase column gives a rough implementation order: Phase 1 = core MVP, Phase 2
 - Server-side backend (persistence API, authentication)
 - Importing schemas from an existing live database (reverse engineering)
 - External storage integrations (Dropbox, etc.)
-- Dialects other than SQLite (may be supported in the future, but out of scope for now)
+- Dialects other than SQLite and PostgreSQL (e.g. MySQL; may be supported in the future, but out of scope for now)
 - Touch / mobile support (may be considered in the future, but out of scope for now)
 - Real-time collaboration
 - Print-specific styling
