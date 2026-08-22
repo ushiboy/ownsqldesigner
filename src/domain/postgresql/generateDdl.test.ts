@@ -216,6 +216,20 @@ describe("generatePostgresqlDdl", () => {
     );
   });
 
+  it("emits a recognized SQL keyword DEFAULT value unquoted (0043)", () => {
+    const users = table({
+      id: "t1",
+      name: "users",
+      columns: [
+        column({ id: "c1", name: "created_at", type: "TEXT", defaultValue: "CURRENT_TIMESTAMP" }),
+      ],
+    });
+
+    expect(generatePostgresqlDdl([users])).toBe(
+      "CREATE TABLE users (\n  created_at TEXT DEFAULT CURRENT_TIMESTAMP\n);",
+    );
+  });
+
   it("generates one CREATE INDEX statement per INDEX key, after all CREATE TABLE statements", () => {
     const users = table({
       id: "t1",

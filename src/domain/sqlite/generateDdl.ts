@@ -1,6 +1,5 @@
+import { formatDefaultValue } from "../dialect/defaultValueFormatting";
 import type { Column, ForeignKey, Key, Table } from "../schema/types";
-
-const DEFAULT_VALUE_NUMERIC_PATTERN = /^-?\d+(\.\d+)?$/;
 
 export function generateSqliteDdl(tables: Table[]): string {
   const tablesById = new Map(tables.map((table) => [table.id, table]));
@@ -62,10 +61,6 @@ function generateCreateIndexStatement(table: Table, key: Key, usedIndexNames: Se
   const columnNames = columnNamesFor(table, key.columnIds);
   const name = uniqueIndexName(`idx_${table.name}_${columnNames.join("_")}`, usedIndexNames);
   return `CREATE INDEX ${name} ON ${table.name} (${columnNames.join(", ")});`;
-}
-
-function formatDefaultValue(raw: string): string {
-  return DEFAULT_VALUE_NUMERIC_PATTERN.test(raw) ? raw : `'${raw.replace(/'/g, "''")}'`;
 }
 
 function generatePrimaryKeyConstraint(table: Table): string[] {

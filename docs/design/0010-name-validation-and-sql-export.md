@@ -254,10 +254,13 @@ prevent or reject — a third, simpler category of "show it, don't act on it."
   [0029](0029-sql-reserved-keyword-rejection.md): rather than quoting,
   reserved-keyword names are rejected as invalid, the same as an empty or
   duplicate name.
-- A `DEFAULT` value meant as an expression or keyword (e.g.
+- ~~A `DEFAULT` value meant as an expression or keyword (e.g.
   `CURRENT_TIMESTAMP`) is quoted as a string literal by `formatDefaultValue`,
   since `defaultValue` has no literal-vs-expression flag — matches 0006's
   existing "free-form, dialect-unenforced" treatment of the field, but may
-  need revisiting once a real use case appears.
+  need revisiting once a real use case appears.~~ Resolved in
+  [0043](0043-default-value-keyword-literal.md): a fixed, SQL-standard
+  keyword set (`CURRENT_TIMESTAMP`, `NULL`, `TRUE`, ...) is now emitted
+  unquoted; anything else is still a free-form quoted literal.
 - Two `INDEX` keys sharing the same column set produce a suffixed index name
   (`_2`, `_3`, ...) rather than being prevented at the UI level.
