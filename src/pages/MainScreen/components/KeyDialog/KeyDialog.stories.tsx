@@ -33,6 +33,7 @@ const meta = {
   args: {
     columns,
     primaryKeyDisabled: false,
+    isReferencedByForeignKey: false,
     onSubmit: fn(),
     onCancel: fn(),
   },
@@ -81,5 +82,15 @@ export const EditWithMultipleColumns: Story = {
     submitLabel: "Save",
     columns: threeColumns,
     initialKey: compositeKey,
+  },
+};
+
+export const EditReferencedKey: Story = {
+  args: {
+    open: true,
+    title: "Edit Key",
+    submitLabel: "Save",
+    initialKey: key,
+    isReferencedByForeignKey: true,
   },
 };

@@ -3,7 +3,13 @@ import { LuChevronDown, LuChevronUp } from "react-icons/lu";
 import { tv } from "tailwind-variants";
 import { useTranslations } from "use-intl";
 import { Dialog, dialogActionButton } from "../../../../components/parts/Dialog";
-import { type Column, type Key, KEY_TYPES, type KeyType } from "../../../../domain/schema";
+import {
+  type Column,
+  type Key,
+  keepsColumnReferenceable,
+  KEY_TYPES,
+  type KeyType,
+} from "../../../../domain/schema";
 import { KEY_TYPE_LABELS } from "../../keyTypeLabels";
 import { moveColumnIdDown, moveColumnIdUp } from "./moveColumnId";
 
@@ -28,6 +34,7 @@ type KeyDialogProps = {
   columns: KeyColumn[];
   initialKey?: Key | null;
   primaryKeyDisabled: boolean;
+  isReferencedByForeignKey: boolean;
   onSubmit: (fields: KeyFields) => void;
   onCancel: () => void;
 };
@@ -39,6 +46,7 @@ export function KeyDialog({
   columns,
   initialKey,
   primaryKeyDisabled,
+  isReferencedByForeignKey,
   onSubmit,
   onCancel,
 }: KeyDialogProps) {
@@ -49,6 +57,7 @@ export function KeyDialog({
         columns={columns}
         initialKey={initialKey ?? null}
         primaryKeyDisabled={primaryKeyDisabled}
+        isReferencedByForeignKey={isReferencedByForeignKey}
         onSubmit={onSubmit}
         onCancel={onCancel}
       />
@@ -61,6 +70,7 @@ type KeyFormProps = {
   columns: KeyColumn[];
   initialKey: Key | null;
   primaryKeyDisabled: boolean;
+  isReferencedByForeignKey: boolean;
   onSubmit: (fields: KeyFields) => void;
   onCancel: () => void;
 };
@@ -76,6 +86,7 @@ function KeyForm({
   columns,
   initialKey,
   primaryKeyDisabled,
+  isReferencedByForeignKey,
   onSubmit,
   onCancel,
 }: KeyFormProps) {
@@ -83,6 +94,12 @@ function KeyForm({
   const t = useTranslations("keyDialog");
   const [type, setType] = useState(initialKey?.type ?? BLANK_KEY.type);
   const [columnIds, setColumnIds] = useState(initialKey?.columnIds ?? BLANK_KEY.columnIds);
+
+  const wouldBreakReference =
+    isReferencedByForeignKey &&
+    initialKey !== null &&
+    columnIds.length > 0 &&
+    !keepsColumnReferenceable(initialKey, { type, columnIds });
 
   const toggleColumn = (columnId: string, checked: boolean) => {
     setColumnIds((prev) => (checked ? [...prev, columnId] : prev.filter((id) => id !== columnId)));
@@ -157,6 +174,9 @@ function KeyForm({
           })}
         </ul>
       </fieldset>
+      {wouldBreakReference && (
+        <p className="mt-1 text-[12px] text-body">{t("referencedKeyEditBlockedHint")}</p>
+      )}
       <div className="mt-6 flex justify-end gap-2">
         <button
           type="button"
@@ -167,7 +187,7 @@ function KeyForm({
         </button>
         <button
           type="submit"
-          disabled={columnIds.length === 0}
+          disabled={columnIds.length === 0 || wouldBreakReference}
           className={dialogActionButton({ variant: "primary" })}
         >
           {submitLabel}

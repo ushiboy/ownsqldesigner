@@ -4,7 +4,8 @@ import { fn } from "storybook/test";
 import { composeStories } from "@storybook/react-vite";
 import * as stories from "./KeyDialog.stories";
 
-const { Add, Edit, AddPrimaryKeyDisabled, EditWithMultipleColumns } = composeStories(stories);
+const { Add, Edit, AddPrimaryKeyDisabled, EditWithMultipleColumns, EditReferencedKey } =
+  composeStories(stories);
 
 describe("KeyDialog", () => {
   it("shows the dialog with a disabled submit button while no column is checked", () => {
@@ -115,5 +116,59 @@ describe("KeyDialog", () => {
       type: "UNIQUE",
       columnIds: ["c2c2c3c4-5d6e-4f7a-8b9c-0d1e2f3a4b5c", "c1c2c3c4-5d6e-4f7a-8b9c-0d1e2f3a4b5c"],
     });
+  });
+
+  it("does not show the referenced-key hint when the key isn't referenced by a foreign key", () => {
+    render(<Edit />);
+    expect(
+      screen.queryByText(
+        "A foreign key on another table references this key. It must stay a single-column PRIMARY KEY or UNIQUE key on the same column.",
+      ),
+    ).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Save" })).toBeEnabled();
+  });
+
+  it("shows a hint and disables Save when retyping a referenced key away from PRIMARY KEY/UNIQUE", async () => {
+    render(<EditReferencedKey />);
+    await userEvent.selectOptions(screen.getByLabelText("Type"), "INDEX");
+    expect(
+      screen.getByText(
+        "A foreign key on another table references this key. It must stay a single-column PRIMARY KEY or UNIQUE key on the same column.",
+      ),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Save" })).toBeDisabled();
+  });
+
+  it("shows a hint and disables Save when adding a second column to a referenced key", async () => {
+    render(<EditReferencedKey />);
+    await userEvent.click(screen.getByLabelText("id"));
+    expect(
+      screen.getByText(
+        "A foreign key on another table references this key. It must stay a single-column PRIMARY KEY or UNIQUE key on the same column.",
+      ),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Save" })).toBeDisabled();
+  });
+
+  it("disables Save without the referenced-key hint when unchecking a referenced key's only column", async () => {
+    render(<EditReferencedKey />);
+    await userEvent.click(screen.getByLabelText("email"));
+    expect(
+      screen.queryByText(
+        "A foreign key on another table references this key. It must stay a single-column PRIMARY KEY or UNIQUE key on the same column.",
+      ),
+    ).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Save" })).toBeDisabled();
+  });
+
+  it("keeps Save enabled when toggling a referenced key between PRIMARY KEY and UNIQUE on the same column", async () => {
+    render(<EditReferencedKey />);
+    await userEvent.selectOptions(screen.getByLabelText("Type"), "PRIMARY_KEY");
+    expect(
+      screen.queryByText(
+        "A foreign key on another table references this key. It must stay a single-column PRIMARY KEY or UNIQUE key on the same column.",
+      ),
+    ).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Save" })).toBeEnabled();
   });
 });

@@ -103,6 +103,8 @@ export default {
     columnsLegend: "カラム",
     moveColumnUp: "{column}を上に移動",
     moveColumnDown: "{column}を下に移動",
+    referencedKeyEditBlockedHint:
+      "他のテーブルの外部キーがこのキーを参照しています。同じカラムの単一カラムのPRIMARY KEYまたはUNIQUEキーのままにする必要があります。",
   },
   relationDialog: {
     deleteTitle: "リレーションを削除",

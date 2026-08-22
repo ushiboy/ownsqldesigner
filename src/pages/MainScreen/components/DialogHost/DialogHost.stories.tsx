@@ -237,6 +237,15 @@ export const EditKeyDialogOpen: Story = {
   },
 };
 
+export const EditReferencedKeyDialogOpen: Story = {
+  args: {
+    initialSchema: withRelation,
+    initialDialog: "editKey",
+    selectedTable: usersTable,
+    selectedKey: usersTable.keys[0],
+  },
+};
+
 export const DeleteKeyDialogOpen: Story = {
   args: {
     initialSchema: withUsers,

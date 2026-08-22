@@ -224,6 +224,7 @@ export function DialogHost({
         submitLabel={tCommon("add")}
         columns={selectedTable?.columns ?? NO_COLUMNS}
         primaryKeyDisabled={primaryKeyDisabled}
+        isReferencedByForeignKey={false}
         onSubmit={(fields) => {
           if (selectedTableId !== null) {
             onAddKey(selectedTableId, fields);
@@ -239,6 +240,7 @@ export function DialogHost({
         columns={selectedTable?.columns ?? NO_COLUMNS}
         initialKey={selectedKey}
         primaryKeyDisabled={primaryKeyDisabled}
+        isReferencedByForeignKey={isSelectedKeyReferenced}
         onSubmit={(fields) => {
           if (selectedTableId !== null && selectedKey !== null) {
             onUpdateKey(selectedTableId, selectedKey.id, fields);

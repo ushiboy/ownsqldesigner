@@ -26,6 +26,7 @@ export {
   isColumnReferencedByForeignKey,
   isKeyReferencedByForeignKey,
   isReferenceableColumn,
+  keepsColumnReferenceable,
   removeKey,
   removeKeyCascadingForeignKeys,
   setColumnKeyMembership,

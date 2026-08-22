@@ -1,4 +1,5 @@
 import { render, screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { composeStories } from "@storybook/react-vite";
 import * as stories from "./DialogHost.stories";
 
@@ -14,6 +15,7 @@ const {
   DeleteColumnDialogOpen,
   AddKeyDialogOpen,
   EditKeyDialogOpen,
+  EditReferencedKeyDialogOpen,
   DeleteKeyDialogOpen,
   DeleteReferencedKeyDialogOpen,
   ExportSqlDialogOpen,
@@ -88,6 +90,18 @@ describe("DialogHost", () => {
     const dialog = screen.getByRole("dialog", { name: "Edit Key" });
     expect(within(dialog).getByLabelText("Type")).toHaveValue("PRIMARY_KEY");
     expect(within(dialog).getByLabelText("id")).toBeChecked();
+  });
+
+  it("blocks Save with a hint when retyping a referenced key away from PRIMARY KEY/UNIQUE in the edit key dialog", async () => {
+    render(<EditReferencedKeyDialogOpen />);
+    const dialog = screen.getByRole("dialog", { name: "Edit Key" });
+    await userEvent.selectOptions(within(dialog).getByLabelText("Type"), "INDEX");
+    expect(
+      within(dialog).getByText(
+        "A foreign key on another table references this key. It must stay a single-column PRIMARY KEY or UNIQUE key on the same column.",
+      ),
+    ).toBeInTheDocument();
+    expect(within(dialog).getByRole("button", { name: "Save" })).toBeDisabled();
   });
 
   it("shows the delete key confirmation naming the selected key", () => {

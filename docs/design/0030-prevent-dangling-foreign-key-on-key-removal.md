@@ -49,14 +49,16 @@ that gap.
 
 **Non-Goals**
 
-- `KeyDialog`'s edit form does not get prospective UI prevention for "this
+- ~~`KeyDialog`'s edit form does not get prospective UI prevention for "this
   edit would make the key stop covering its currently-referenced column"
   (e.g. changing a referenced UNIQUE key's type to INDEX, or adding a
   second column to it). The domain-level guard silently keeps the key
   unchanged in that case, consistent with 0007/0009's precedent that not
   every edge case gets a dedicated UI affordance — only a domain no-op as a
   safety net. Left as a candidate follow-up if it proves confusing in
-  practice, mirroring the tone of the open question this doc resolves.
+  practice, mirroring the tone of the open question this doc resolves.~~
+  Resolved by [0042](0042-key-dialog-referenced-edit-prevention.md):
+  `KeyDialog` now shows a hint and disables Save for exactly this case.
 - Cascading from `ColumnDialog`'s checkbox path — see Goals above and
   Alternatives Considered below for why this stays block-only.
 - Composite PRIMARY_KEY/UNIQUE keys need no new handling: they were already

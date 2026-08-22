@@ -104,6 +104,8 @@ export default {
     columnsLegend: "Columns",
     moveColumnUp: "Move {column} up",
     moveColumnDown: "Move {column} down",
+    referencedKeyEditBlockedHint:
+      "A foreign key on another table references this key. It must stay a single-column PRIMARY KEY or UNIQUE key on the same column.",
   },
   relationDialog: {
     deleteTitle: "Delete Relation",

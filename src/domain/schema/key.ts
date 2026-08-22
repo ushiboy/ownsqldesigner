@@ -266,6 +266,15 @@ export function isKeyReferencedByForeignKey(tables: Table[], tableId: string, ke
   );
 }
 
+/** Whether updating `existingKey` to `fields` keeps it a sole PRIMARY_KEY/UNIQUE key on the same column. */
+export function keepsColumnReferenceable(existingKey: Key, fields: Omit<Key, "id">): boolean {
+  return (
+    (fields.type === "PRIMARY_KEY" || fields.type === "UNIQUE") &&
+    fields.columnIds.length === 1 &&
+    fields.columnIds[0] === existingKey.columnIds[0]
+  );
+}
+
 function canAddKey(table: Table | undefined, fields: Omit<Key, "id">): boolean {
   if (table === undefined || fields.columnIds.length === 0) {
     return false;
@@ -289,15 +298,6 @@ function canUpdateKey(
   return (
     !isKeyReferencedByForeignKey(tables, table.id, existingKey) ||
     keepsColumnReferenceable(existingKey, fields)
-  );
-}
-
-/** Whether updating `existingKey` to `fields` keeps it a sole PRIMARY_KEY/UNIQUE key on the same column. */
-function keepsColumnReferenceable(existingKey: Key, fields: Omit<Key, "id">): boolean {
-  return (
-    (fields.type === "PRIMARY_KEY" || fields.type === "UNIQUE") &&
-    fields.columnIds.length === 1 &&
-    fields.columnIds[0] === existingKey.columnIds[0]
   );
 }
 
