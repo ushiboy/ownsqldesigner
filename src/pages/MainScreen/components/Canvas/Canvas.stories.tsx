@@ -96,6 +96,7 @@ const meta = {
     selectedRelationId: null,
     showColumnDetails: true,
     snapToGrid: false,
+    colorMode: "light",
     onTableSelectionChange: fn(),
     onSelectRelation: fn(),
     onMoveTables: fn(),
@@ -163,6 +164,10 @@ export const ColumnDetailsHidden: Story = {
 
 export const SnapToGridEnabled: Story = {
   args: { tables, snapToGrid: true },
+};
+
+export const DarkMode: Story = {
+  args: { tables, colorMode: "dark" },
 };
 
 export const RelationSelected: Story = {

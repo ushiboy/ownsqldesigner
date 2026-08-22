@@ -47,6 +47,8 @@ type CanvasProps = {
   showColumnDetails: boolean;
   /** Whether a table's committed drag-end position snaps to the grid (REQ-006). */
   snapToGrid: boolean;
+  /** The app's resolved (system preference already applied) theme, so React Flow's own chrome follows it. */
+  colorMode: "light" | "dark";
   /** Fires with every selection-changing gesture: click, shift-click, rubber-band, pane click ([]). */
   onTableSelectionChange: (ids: string[]) => void;
   /** null deselects (pane click). */
@@ -66,6 +68,7 @@ export function Canvas({
   initialSelectedTableIds,
   showColumnDetails,
   snapToGrid,
+  colorMode,
   onTableSelectionChange,
   onSelectRelation,
   onMoveTables,
@@ -125,6 +128,7 @@ export function Canvas({
         nodes={nodes}
         edges={edges}
         nodeTypes={nodeTypes}
+        colorMode={colorMode}
         // Table deletion goes through the page's own useDeleteKeyShortcut
         // and a confirm dialog; React Flow's built-in Backspace handling is
         // disabled so it doesn't also act on this locally-synced `nodes`

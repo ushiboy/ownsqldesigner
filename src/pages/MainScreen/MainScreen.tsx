@@ -102,7 +102,7 @@ function MainScreenContent({
   initialFkNamingPattern,
 }: MainScreenContentProps) {
   const [isSidePanelOpen, setIsSidePanelOpen] = useState(initialSidePanelOpen ?? true);
-  const { theme, cycleTheme } = useThemePreference(initialTheme);
+  const { theme, resolvedTheme, cycleTheme } = useThemePreference(initialTheme);
   const { showColumnDetails, toggleShowColumnDetails } =
     useColumnDetailsVisibility(initialShowColumnDetails);
   const { snapToGrid, toggleSnapToGrid } = useSnapToGrid(initialSnapToGrid);
@@ -157,6 +157,7 @@ function MainScreenContent({
       onToggleSidePanel={() => setIsSidePanelOpen((prev) => !prev)}
       theme={theme}
       onCycleTheme={cycleTheme}
+      colorMode={resolvedTheme}
       showColumnDetails={showColumnDetails}
       onToggleColumnDetails={toggleShowColumnDetails}
       snapToGrid={snapToGrid}

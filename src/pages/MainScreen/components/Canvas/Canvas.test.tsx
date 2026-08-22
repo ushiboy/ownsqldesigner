@@ -16,6 +16,7 @@ const {
   RelationSelected,
   ColumnDetailsHidden,
   SnapToGridEnabled,
+  DarkMode,
 } = composeStories(stories);
 
 // Story.run() mounts into its own React root via ReactDOM.createRoot,
@@ -152,6 +153,16 @@ describe("Canvas", () => {
     expect(
       screen.getByTestId("rf__background").querySelector(".react-flow__background-pattern.lines"),
     ).toBeInTheDocument();
+  });
+
+  it("uses the light color mode by default", () => {
+    render(<Default />);
+    expect(screen.getByTestId("rf__wrapper")).toHaveClass("light");
+  });
+
+  it("switches React Flow's own chrome to the dark color mode when colorMode is dark", () => {
+    render(<DarkMode />);
+    expect(screen.getByTestId("rf__wrapper")).toHaveClass("dark");
   });
 
   it("calls onSelectRelation with null on a pane click", async () => {

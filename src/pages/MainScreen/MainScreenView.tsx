@@ -52,6 +52,7 @@ type MainScreenViewProps = {
   snapToGrid: boolean;
   onToggleSnapToGrid: () => void;
   fkNamingPattern: FkNamingPattern;
+  colorMode: "light" | "dark";
 };
 
 export function MainScreenView({
@@ -73,6 +74,7 @@ export function MainScreenView({
   snapToGrid,
   onToggleSnapToGrid,
   fkNamingPattern,
+  colorMode,
 }: MainScreenViewProps) {
   const { openDialog } = useActiveDialog();
   const currentSchema = useCurrentSchema();
@@ -170,6 +172,7 @@ export function MainScreenView({
             initialSelectedTableIds={initialSelectedTableIds}
             showColumnDetails={showColumnDetails}
             snapToGrid={snapToGrid}
+            colorMode={colorMode}
             onTableSelectionChange={setTableSelection}
             onSelectRelation={selectRelation}
             onMoveTables={onMoveTables}

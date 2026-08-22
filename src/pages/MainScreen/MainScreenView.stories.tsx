@@ -148,6 +148,12 @@ export const SidePanelClosed: Story = {
   },
 };
 
+export const DarkTheme: Story = {
+  args: {
+    initialTheme: "dark",
+  },
+};
+
 export const WithNotification: Story = {
   args: {
     initialNotification: "Cannot delete column: referenced by a foreign key",

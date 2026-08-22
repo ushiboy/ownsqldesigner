@@ -6,6 +6,7 @@ import * as stories from "./MainScreenView.stories";
 const {
   Default,
   SidePanelClosed,
+  DarkTheme,
   WithNotification,
   TableSelected,
   AddColumnDialogOpenPrimaryKeyAvailable,
@@ -35,6 +36,11 @@ describe("MainScreenView", () => {
     await userEvent.click(screen.getByRole("button", { name: "Toggle side panel" }));
 
     expect(screen.getByRole("complementary", { name: "Side panel" })).toBeInTheDocument();
+  });
+
+  it("threads the resolved theme into the canvas so React Flow's own chrome follows dark mode", () => {
+    render(<DarkTheme />);
+    expect(screen.getByTestId("rf__wrapper")).toHaveClass("dark");
   });
 
   it("does not show a notification bar without a notification message", () => {
