@@ -95,6 +95,38 @@ describe("postgresqlDialectStrategy", () => {
     expect(normalized.columns[0].precision).toBe("3");
   });
 
+  it("clears a malformed size on an eligible column type", () => {
+    const normalized = postgresqlDialectStrategy.normalizeColumnForDialect({
+      ...TABLE,
+      columns: [{ ...TABLE.columns[0], type: "VARCHAR", size: "abc" }],
+    });
+    expect(normalized.columns[0].size).toBe("");
+  });
+
+  it("keeps a valid NUMERIC size pair", () => {
+    const normalized = postgresqlDialectStrategy.normalizeColumnForDialect({
+      ...TABLE,
+      columns: [{ ...TABLE.columns[0], type: "NUMERIC", size: "10,2" }],
+    });
+    expect(normalized.columns[0].size).toBe("10,2");
+  });
+
+  it("clears a NUMERIC size pair whose scale exceeds its precision (0040)", () => {
+    const normalized = postgresqlDialectStrategy.normalizeColumnForDialect({
+      ...TABLE,
+      columns: [{ ...TABLE.columns[0], type: "NUMERIC", size: "5,10" }],
+    });
+    expect(normalized.columns[0].size).toBe("");
+  });
+
+  it("clears an out-of-range precision on an eligible column type", () => {
+    const normalized = postgresqlDialectStrategy.normalizeColumnForDialect({
+      ...TABLE,
+      columns: [{ ...TABLE.columns[0], type: "TIMESTAMP", precision: "99" }],
+    });
+    expect(normalized.columns[0].precision).toBe("");
+  });
+
   it("clears precision for a non-precision column type", () => {
     const normalized = postgresqlDialectStrategy.normalizeColumnForDialect({
       ...TABLE,

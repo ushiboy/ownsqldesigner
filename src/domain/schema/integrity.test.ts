@@ -199,6 +199,27 @@ describe("parseSchemaFile", () => {
 
     expect(parsed?.tables[0]?.columns[0]).toMatchObject({ type: "BOOLEAN", precision: "" });
   });
+
+  it("normalizes a malformed but type-eligible size for the schema's dialect (0041)", () => {
+    const withUsersTable = createTable(
+      createSchema("PG Schema", {
+        id: "c3a1e96a-9a75-4d3c-b0ad-3d6e1b6a5f01",
+        now: new Date("2026-07-18T09:00:00.000Z"),
+        dialect: "postgresql",
+      }),
+      "users",
+      { id: USERS_TABLE_ID, now: new Date("2026-07-18T09:00:00.000Z") },
+    );
+    const withMalformedSize = withTable(withUsersTable, USERS_TABLE_ID, {
+      columns: [
+        { ...columnFields, id: USERS_ID_COLUMN_ID, name: "label", type: "VARCHAR", size: "abc" },
+      ],
+    });
+
+    const parsed = parseSchemaFile(JSON.stringify(withMalformedSize));
+
+    expect(parsed?.tables[0]?.columns[0]).toMatchObject({ type: "VARCHAR", size: "" });
+  });
 });
 
 describe("importSchema", () => {

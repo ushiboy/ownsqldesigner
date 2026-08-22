@@ -72,8 +72,16 @@ function normalizeColumnForDialect(table: Table, config: DialectStrategyConfig):
       return {
         ...column,
         autoIncrement,
-        size: config.sizableColumnTypes.includes(column.type) ? column.size : "",
-        precision: config.precisionColumnTypes.includes(column.type) ? column.precision : "",
+        size:
+          config.sizableColumnTypes.includes(column.type) &&
+          config.isSizeValid(column.type, column.size)
+            ? column.size
+            : "",
+        precision:
+          config.precisionColumnTypes.includes(column.type) &&
+          config.isPrecisionValid(column.type, column.precision)
+            ? column.precision
+            : "",
         defaultValue:
           autoIncrement && !config.allowsDefaultWithAutoIncrement ? "" : column.defaultValue,
       };

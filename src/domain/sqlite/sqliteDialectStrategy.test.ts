@@ -73,6 +73,14 @@ describe("sqliteDialectStrategy", () => {
     expect(normalized.columns[0].size).toBe("10");
   });
 
+  it("keeps a malformed-looking size unchanged, since SQLite opts out of format validation", () => {
+    const normalized = sqliteDialectStrategy.normalizeColumnForDialect({
+      ...TABLE,
+      columns: [{ ...TABLE.columns[0], type: "TEXT", size: "abc" }],
+    });
+    expect(normalized.columns[0].size).toBe("abc");
+  });
+
   it("keeps a default value alongside auto-increment", () => {
     const normalized = sqliteDialectStrategy.normalizeColumnForDialect({
       ...TABLE,
