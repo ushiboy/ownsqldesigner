@@ -2,7 +2,7 @@
 
 - **Status**: Implemented
 - **Created**: 2026-07-30
-- **Updated**: 2026-07-30
+- **Updated**: 2026-08-22
 
 ## Context
 
@@ -169,5 +169,7 @@ correctness fix.
   dialogs (bulk rename, bulk delete). Currently, 2+ selected tables behave
   identically to "nothing selected" in the side panel and in keyboard
   Delete.
-- Whether a "N tables selected" side-panel affordance (distinguishing
-  multi-selected from empty) is worth adding as a small follow-up polish.
+- ~~Whether a "N tables selected" side-panel affordance (distinguishing
+  multi-selected from empty) is worth adding as a small follow-up
+  polish.~~ Resolved by
+  [0044](0044-side-panel-multiple-selection-count.md).
