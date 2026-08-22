@@ -118,6 +118,8 @@ export type Messages = {
     dialectLabel: string;
     tablesLabel: string;
     createdLabel: string;
+    /** ICU placeholder: {count} */
+    multipleTablesSelectedHeading: string;
     tableHeading: string;
     deleteTableAriaLabel: string;
     columnsHeading: string;

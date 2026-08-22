@@ -71,6 +71,7 @@ const meta = {
     createdDate: "2026-07-01",
     dialect: "sqlite",
     selectedTable: null,
+    selectedTableCount: 0,
     strategy: sqliteDialectStrategy,
     existingTableNames: [],
     relations: [],
@@ -106,6 +107,7 @@ export const Default: Story = {};
 export const TableSelected: Story = {
   args: {
     tableCount: 1,
+    selectedTableCount: 1,
     selectedTable: table,
   },
 };
@@ -113,6 +115,7 @@ export const TableSelected: Story = {
 export const TableWithColumns: Story = {
   args: {
     tableCount: 1,
+    selectedTableCount: 1,
     selectedTable: tableWithColumns,
   },
 };
@@ -120,6 +123,7 @@ export const TableWithColumns: Story = {
 export const TableWithKeys: Story = {
   args: {
     tableCount: 1,
+    selectedTableCount: 1,
     selectedTable: tableWithKeys,
   },
 };
@@ -127,6 +131,7 @@ export const TableWithKeys: Story = {
 export const TableWithRelations: Story = {
   args: {
     tableCount: 1,
+    selectedTableCount: 1,
     selectedTable: tableWithKeys,
     relations,
   },
@@ -135,7 +140,15 @@ export const TableWithRelations: Story = {
 export const TableSelectedWithSiblings: Story = {
   args: {
     tableCount: 2,
+    selectedTableCount: 1,
     selectedTable: table,
     existingTableNames: ["posts"],
+  },
+};
+
+export const MultipleTablesSelected: Story = {
+  args: {
+    tableCount: 3,
+    selectedTableCount: 2,
   },
 };

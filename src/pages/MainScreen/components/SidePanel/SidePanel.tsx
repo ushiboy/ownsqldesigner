@@ -44,6 +44,8 @@ type SidePanelProps = {
   createdDate: string;
   dialect: SqlDialect;
   selectedTable: Table | null;
+  /** Count of selected tables; used to distinguish "2+ selected" from "nothing selected" when selectedTable is null. */
+  selectedTableCount: number;
   /** The current schema's dialect strategy; resolves the identifier-comparison rule for a table rename. */
   strategy: DialectStrategy;
   /** Sibling table names to validate a rename against (REQ-018); excludes the selected table. */
@@ -70,6 +72,7 @@ export function SidePanel({
   createdDate,
   dialect,
   selectedTable,
+  selectedTableCount,
   strategy,
   existingTableNames,
   relations,
@@ -96,12 +99,16 @@ export function SidePanel({
       {/* Fixed inner width so the content does not reflow while the outer width animates. */}
       <div className="h-full w-80 overflow-y-auto border-l border-edge p-4">
         {selectedTable === null ? (
-          <SchemaSummary
-            schemaName={schemaName}
-            tableCount={tableCount}
-            createdDate={createdDate}
-            dialect={dialect}
-          />
+          selectedTableCount >= 2 ? (
+            <MultipleTablesSelected count={selectedTableCount} />
+          ) : (
+            <SchemaSummary
+              schemaName={schemaName}
+              tableCount={tableCount}
+              createdDate={createdDate}
+              dialect={dialect}
+            />
+          )
         ) : (
           <TableProperties
             key={selectedTable.id}
@@ -153,6 +160,15 @@ function SchemaSummary({ schemaName, tableCount, createdDate, dialect }: SchemaS
       </dl>
     </>
   );
+}
+
+type MultipleTablesSelectedProps = {
+  count: number;
+};
+
+function MultipleTablesSelected({ count }: MultipleTablesSelectedProps) {
+  const t = useTranslations("sidePanel");
+  return <h2 className="text-[16px]">{t("multipleTablesSelectedHeading", { count })}</h2>;
 }
 
 const sectionActionButton = tv({

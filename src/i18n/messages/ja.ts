@@ -115,6 +115,7 @@ export default {
     dialectLabel: "方言",
     tablesLabel: "テーブル数",
     createdLabel: "作成日",
+    multipleTablesSelectedHeading: "{count} 件のテーブルを選択中",
     tableHeading: "テーブル",
     deleteTableAriaLabel: "テーブルを削除",
     columnsHeading: "カラム",

@@ -187,6 +187,7 @@ export function MainScreenView({
           createdDate={createdDate}
           dialect={currentSchema?.dialect ?? DEFAULT_SQL_DIALECT}
           selectedTable={selectedTable}
+          selectedTableCount={selectedTableIds.size}
           strategy={strategy}
           existingTableNames={siblingTableNames}
           relations={relations}

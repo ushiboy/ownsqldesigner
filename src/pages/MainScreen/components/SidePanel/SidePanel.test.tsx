@@ -14,6 +14,7 @@ const {
   TableWithKeys,
   TableWithRelations,
   TableSelectedWithSiblings,
+  MultipleTablesSelected,
 } = composeStories(stories);
 
 const closedProps = {
@@ -23,6 +24,7 @@ const closedProps = {
   createdDate: "2026-07-01",
   dialect: "sqlite" as const,
   selectedTable: null,
+  selectedTableCount: 0,
   strategy: sqliteDialectStrategy,
   existingTableNames: [],
   relations: [],
@@ -75,6 +77,12 @@ describe("SidePanel", () => {
     expect(screen.getByText("0")).toBeInTheDocument();
     expect(screen.getByText("Created")).toBeInTheDocument();
     expect(screen.getByText("2026-07-01")).toBeInTheDocument();
+  });
+
+  it("shows a selection count instead of the schema metadata when 2+ tables are selected", () => {
+    render(<MultipleTablesSelected />);
+    expect(screen.getByRole("heading", { name: "2 tables selected" })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Schema" })).not.toBeInTheDocument();
   });
 
   it("shows the PostgreSQL dialect label when the schema is a PostgreSQL schema", () => {

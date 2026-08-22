@@ -116,6 +116,7 @@ export default {
     dialectLabel: "Dialect",
     tablesLabel: "Tables",
     createdLabel: "Created",
+    multipleTablesSelectedHeading: "{count} tables selected",
     tableHeading: "Table",
     deleteTableAriaLabel: "Delete table",
     columnsHeading: "Columns",
