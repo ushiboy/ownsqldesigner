@@ -37,7 +37,7 @@ from 0006, and APG dropdown keyboard navigation from 0002/0003).
 - `PRIMARY_KEY`/`UNIQUE` keys sharing a column set — these are emitted as
   anonymous inline constraints (no generated name), so they have no
   collision to prevent.
-- Two `INDEX` keys covering the same *set* of columns in a *different*
+- Two `INDEX` keys covering the same _set_ of columns in a _different_
   order (e.g. `(a, b)` vs `(b, a)`) — `uniqueIndexName`'s base name embeds
   column order, so these do not collide, and the two indexes are not
   redundant in general (composite-index leading-column semantics differ).
@@ -51,7 +51,7 @@ from 0006, and APG dropdown keyboard navigation from 0002/0003).
 `hasDuplicateIndexColumnSet(keys: Key[], fields: Omit<Key, "id">): boolean`
 (`src/domain/schema/key.ts`) returns true when `fields.type === "INDEX"` and
 some key in `keys` is also `INDEX` with the identical `columnIds` sequence.
-Callers pass the table's *other* keys (self already excluded), matching how
+Callers pass the table's _other_ keys (self already excluded), matching how
 `keepsColumnReferenceable` is used alongside `isKeyReferencedByForeignKey`.
 
 `canAddKey` and `canUpdateKey` both call it as an additional guard next to
