@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { parseBoolean, usePersistedState } from "../../../components/hooks/usePersistedState";
 
 const STORAGE_KEY = "ownsqldesigner:snapToGrid";
 
@@ -6,21 +6,12 @@ export function useSnapToGrid(initialSnapToGrid?: boolean): {
   snapToGrid: boolean;
   toggleSnapToGrid: () => void;
 } {
-  const [snapToGrid, setSnapToGrid] = useState(
-    () => initialSnapToGrid ?? readStoredSnapToGrid() ?? false,
-  );
-
-  useEffect(() => {
-    window.localStorage.setItem(STORAGE_KEY, String(snapToGrid));
-  }, [snapToGrid]);
+  const [snapToGrid, setSnapToGrid] = usePersistedState(STORAGE_KEY, false, initialSnapToGrid, {
+    parse: parseBoolean,
+  });
 
   return {
     snapToGrid,
     toggleSnapToGrid: () => setSnapToGrid((prev) => !prev),
   };
-}
-
-function readStoredSnapToGrid(): boolean | null {
-  const stored = window.localStorage.getItem(STORAGE_KEY);
-  return stored === "true" ? true : stored === "false" ? false : null;
 }

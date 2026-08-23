@@ -1,12 +1,12 @@
+import { composeStories } from "@storybook/react-vite";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { createSchema, type Schema } from "../../../../domain/schema";
-import { LocaleProvider } from "../../../../i18n/LocaleContext";
-import { createFakeSchemaRepository } from "../../../../test/fakeSchemaRepository";
-import { NotificationProvider } from "../../NotificationContext";
-import { SchemaWorkspaceProvider, useCurrentSchema } from "../../SchemaWorkspaceContext";
+import { useCurrentSchema } from "../../SchemaWorkspaceContext";
 import { NotificationBar } from "../NotificationBar";
-import { LoadSchemaButton } from "./LoadSchemaButton";
+import * as stories from "./LoadSchemaButton.stories";
+
+const { Default } = composeStories(stories);
 
 const DUPLICATE_TABLE_NAME_SCHEMA: Schema = {
   id: "33333333-3333-4333-8333-333333333333",
@@ -46,32 +46,18 @@ function CurrentSchemaName() {
   return <h1>{schema?.name ?? ""}</h1>;
 }
 
-function renderLoadSchemaButton(initialSchema: Schema) {
-  const repository = createFakeSchemaRepository({
-    schemas: [initialSchema],
-    lastSchemaId: initialSchema.id,
-  });
+function renderLoadSchemaButton() {
   render(
-    <LocaleProvider>
-      <NotificationProvider>
-        <SchemaWorkspaceProvider repository={repository} initialSchema={initialSchema}>
-          <NotificationBar />
-          <LoadSchemaButton />
-          <CurrentSchemaName />
-        </SchemaWorkspaceProvider>
-      </NotificationProvider>
-    </LocaleProvider>,
+    <Default>
+      <NotificationBar />
+      <CurrentSchemaName />
+    </Default>,
   );
 }
 
 describe("LoadSchemaButton", () => {
-  const original = createSchema("Blog Schema", {
-    id: "c3a1e96a-9a75-4d3c-b0ad-3d6e1b6a5f01",
-    now: new Date("2026-07-18T09:00:00.000Z"),
-  });
-
   it("shows a confirm dialog naming the file's schema after a valid file is selected", async () => {
-    renderLoadSchemaButton(original);
+    renderLoadSchemaButton();
     const user = userEvent.setup();
     const imported = createSchema("Imported Schema", {
       id: "a2b3c4d5-6e7f-4a8b-9c0d-1e2f3a4b5c6d",
@@ -86,7 +72,7 @@ describe("LoadSchemaButton", () => {
   });
 
   it("replaces the current schema when the load is confirmed", async () => {
-    renderLoadSchemaButton(original);
+    renderLoadSchemaButton();
     const user = userEvent.setup();
     const imported = createSchema("Imported Schema", {
       id: "a2b3c4d5-6e7f-4a8b-9c0d-1e2f3a4b5c6d",
@@ -100,7 +86,7 @@ describe("LoadSchemaButton", () => {
   });
 
   it("leaves the current schema unchanged when the load is cancelled", async () => {
-    renderLoadSchemaButton(original);
+    renderLoadSchemaButton();
     const user = userEvent.setup();
     const imported = createSchema("Imported Schema");
     await user.upload(screen.getByLabelText("Load schema file"), jsonFile(imported));
@@ -112,7 +98,7 @@ describe("LoadSchemaButton", () => {
   });
 
   it("shows an error notification for unparsable file content", async () => {
-    renderLoadSchemaButton(original);
+    renderLoadSchemaButton();
     const user = userEvent.setup();
 
     await user.upload(
@@ -127,7 +113,7 @@ describe("LoadSchemaButton", () => {
   });
 
   it("shows an error notification for JSON that does not match the schema shape", async () => {
-    renderLoadSchemaButton(original);
+    renderLoadSchemaButton();
     const user = userEvent.setup();
 
     await user.upload(screen.getByLabelText("Load schema file"), jsonFile({ foo: "bar" }));
@@ -138,7 +124,7 @@ describe("LoadSchemaButton", () => {
   });
 
   it("shows an error notification for a structurally valid schema that fails integrity validation", async () => {
-    renderLoadSchemaButton(original);
+    renderLoadSchemaButton();
     const user = userEvent.setup();
 
     await user.upload(

@@ -68,7 +68,7 @@ function TableNameForm({
   const t = useTranslations("tableDialog");
   const [name, setName] = useState(initialName);
   const trimmedName = name.trim();
-  const { isEmpty, isInvalidShape, isReserved, isDuplicate } = describeNameValidity(
+  const { isInvalidShape, isReserved, isDuplicate, isInvalid } = describeNameValidity(
     trimmedName,
     existingNames,
     strategy,
@@ -106,7 +106,7 @@ function TableNameForm({
         </button>
         <button
           type="submit"
-          disabled={isEmpty || isInvalidShape || isReserved || isDuplicate}
+          disabled={isInvalid}
           className={dialogActionButton({ variant: "primary" })}
         >
           {submitLabel}

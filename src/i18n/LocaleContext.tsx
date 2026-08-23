@@ -1,5 +1,6 @@
-import { type ReactNode, createContext, useContext, useEffect, useMemo, useState } from "react";
+import { type ReactNode, createContext, useContext, useMemo } from "react";
 import { IntlProvider } from "use-intl";
+import { usePersistedState } from "../components/hooks/usePersistedState";
 import en from "./messages/en";
 import ja from "./messages/ja";
 import { isLocale, type Locale } from "./Locale";
@@ -22,13 +23,11 @@ type LocaleProviderProps = {
 };
 
 export function LocaleProvider({ initialLocale, children }: LocaleProviderProps) {
-  const [locale, setLocale] = useState<Locale>(() => initialLocale ?? readStoredLocale() ?? "en");
+  const [locale, setLocale] = usePersistedState(STORAGE_KEY, "en", initialLocale, {
+    parse: parseLocale,
+  });
 
-  useEffect(() => {
-    window.localStorage.setItem(STORAGE_KEY, locale);
-  }, [locale]);
-
-  const switchValue = useMemo<LocaleSwitchContextValue>(() => ({ setLocale }), []);
+  const switchValue = useMemo<LocaleSwitchContextValue>(() => ({ setLocale }), [setLocale]);
 
   return (
     <LocaleSwitchContext value={switchValue}>
@@ -48,7 +47,6 @@ export function useLocaleSwitch(): LocaleSwitchContextValue {
   return value;
 }
 
-function readStoredLocale(): Locale | null {
-  const stored = window.localStorage.getItem(STORAGE_KEY);
-  return isLocale(stored) ? stored : null;
+function parseLocale(raw: string): Locale | null {
+  return isLocale(raw) ? raw : null;
 }

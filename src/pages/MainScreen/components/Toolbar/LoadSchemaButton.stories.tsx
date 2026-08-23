@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { useState } from "react";
+import { type ReactNode, useState } from "react";
 import type { Schema } from "../../../../domain/schema";
 import { LocaleProvider } from "../../../../i18n/LocaleContext";
 import { createFakeSchemaRepository } from "../../../../test/fakeSchemaRepository";
@@ -7,7 +7,7 @@ import { NotificationProvider } from "../../NotificationContext";
 import { SchemaWorkspaceProvider } from "../../SchemaWorkspaceContext";
 import { LoadSchemaButton } from "./LoadSchemaButton";
 
-const currentSchema: Schema = {
+export const currentSchema: Schema = {
   id: "0b54b945-13c9-4d38-9ba6-b81bbe1cbc21",
   name: "Blog Schema",
   dialect: "sqlite",
@@ -16,7 +16,12 @@ const currentSchema: Schema = {
   updatedAt: new Date("2026-07-01T09:00:00.000Z"),
 };
 
-function LoadSchemaButtonWithProviders() {
+type LoadSchemaButtonWithProvidersProps = {
+  /** Extra probes a test wants rendered alongside the button, inside the same provider tree. */
+  children?: ReactNode;
+};
+
+function LoadSchemaButtonWithProviders({ children }: LoadSchemaButtonWithProvidersProps) {
   const [repository] = useState(() =>
     createFakeSchemaRepository({ schemas: [currentSchema], lastSchemaId: currentSchema.id }),
   );
@@ -25,6 +30,7 @@ function LoadSchemaButtonWithProviders() {
       <NotificationProvider>
         <SchemaWorkspaceProvider repository={repository} initialSchema={currentSchema}>
           <LoadSchemaButton />
+          {children}
         </SchemaWorkspaceProvider>
       </NotificationProvider>
     </LocaleProvider>

@@ -106,10 +106,10 @@ function ColumnForm({
   const [keyMembership, setKeyMembership] = useState(initialKeyMembership);
   const trimmedName = fields.name.trim();
   const {
-    isEmpty: isNameEmpty,
     isInvalidShape: isNameInvalidShape,
     isReserved: isNameReserved,
     isDuplicate: isNameDuplicate,
+    isInvalid: isNameInvalid,
   } = describeNameValidity(trimmedName, existingNames, strategy);
   const columnTypes = strategy.columnTypes;
   // Live against the checkbox above, not the seeded initial value: checking
@@ -325,19 +325,38 @@ function ColumnForm({
         </button>
         <button
           type="submit"
-          disabled={
-            isNameEmpty ||
-            isNameInvalidShape ||
-            isNameReserved ||
-            isNameDuplicate ||
-            (sizeAllowed && !isSizeFormatValid) ||
-            (precisionAllowed && !isPrecisionFormatValid)
-          }
+          disabled={isColumnFormInvalid({
+            isNameInvalid,
+            sizeAllowed,
+            isSizeFormatValid,
+            precisionAllowed,
+            isPrecisionFormatValid,
+          })}
           className={dialogActionButton({ variant: "primary" })}
         >
           {submitLabel}
         </button>
       </div>
     </form>
+  );
+}
+
+function isColumnFormInvalid({
+  isNameInvalid,
+  sizeAllowed,
+  isSizeFormatValid,
+  precisionAllowed,
+  isPrecisionFormatValid,
+}: {
+  isNameInvalid: boolean;
+  sizeAllowed: boolean;
+  isSizeFormatValid: boolean;
+  precisionAllowed: boolean;
+  isPrecisionFormatValid: boolean;
+}): boolean {
+  return (
+    isNameInvalid ||
+    (sizeAllowed && !isSizeFormatValid) ||
+    (precisionAllowed && !isPrecisionFormatValid)
   );
 }

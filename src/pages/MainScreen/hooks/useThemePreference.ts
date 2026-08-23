@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect, useState } from "react";
+import { usePersistedState } from "../../../components/hooks/usePersistedState";
 
 export type Theme = "light" | "dark" | "system";
 
@@ -10,7 +11,9 @@ export function useThemePreference(initialTheme?: Theme): {
   resolvedTheme: "light" | "dark";
   cycleTheme: () => void;
 } {
-  const [theme, setTheme] = useState<Theme>(() => initialTheme ?? readStoredTheme() ?? "system");
+  const [theme, setTheme] = usePersistedState(STORAGE_KEY, "system", initialTheme, {
+    parse: parseTheme,
+  });
   const [osPrefersDark, setOsPrefersDark] = useState(getOsPrefersDark);
 
   useEffect(() => {
@@ -29,10 +32,6 @@ export function useThemePreference(initialTheme?: Theme): {
     document.documentElement.dataset.theme = resolvedTheme;
   }, [resolvedTheme]);
 
-  useEffect(() => {
-    window.localStorage.setItem(STORAGE_KEY, theme);
-  }, [theme]);
-
   function cycleTheme() {
     setTheme((prev) => THEME_CYCLE[(THEME_CYCLE.indexOf(prev) + 1) % THEME_CYCLE.length]);
   }
@@ -40,13 +39,8 @@ export function useThemePreference(initialTheme?: Theme): {
   return { theme, resolvedTheme, cycleTheme };
 }
 
-function isTheme(value: string | null): value is Theme {
-  return value === "light" || value === "dark" || value === "system";
-}
-
-function readStoredTheme(): Theme | null {
-  const stored = window.localStorage.getItem(STORAGE_KEY);
-  return isTheme(stored) ? stored : null;
+function parseTheme(raw: string): Theme | null {
+  return raw === "light" || raw === "dark" || raw === "system" ? raw : null;
 }
 
 function getOsPrefersDark(): boolean {
