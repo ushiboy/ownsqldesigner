@@ -33,9 +33,10 @@ selection at all, giving no indication that a multi-selection was active.
 
 - Any bulk action (rename, delete, add column/key) operating on the
   multi-selection — still out of scope per 0015's own Non-Goals.
-- Keyboard Delete acting on a multi-selection — `useDeleteKeyShortcut`
+- ~~Keyboard Delete acting on a multi-selection — `useDeleteKeyShortcut`
   still ignores selection whenever `selectedTableId` is `null`. Left as a
-  separate follow-up candidate.
+  separate follow-up candidate.~~ Resolved by
+  [0045](0045-multi-table-delete-keyboard-shortcut.md).
 
 ## Design
 

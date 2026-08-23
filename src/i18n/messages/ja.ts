@@ -62,6 +62,9 @@ export default {
     deleteTitle: "テーブルを削除",
     deleteConfirmMessage:
       "「{name}」を削除しますか? すべてのカラムとキーも削除されます。この操作は取り消せません。",
+    deleteTitleMultiple: "テーブルを削除",
+    deleteConfirmMessageMultiple:
+      "選択した{count}件のテーブルを削除しますか? すべてのカラムとキーも削除されます。この操作は取り消せません。",
     fieldLabel: "テーブル名",
   },
   columnDialog: {

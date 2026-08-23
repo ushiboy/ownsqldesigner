@@ -58,13 +58,14 @@ export function DialogHost({
   const tKey = useTranslations("keyDialog");
   const tRelation = useTranslations("relationDialog");
   const tables = useTables();
-  const { selectedTableId, selectRelation } = useSelection();
+  const { selectedTableId, selectedTableIds, selectRelation } = useSelection();
   const {
     createSchema: onCreateSchema,
     renameSchema: onRenameSchema,
     deleteCurrentSchema: onDeleteSchema,
     createTable: onCreateTable,
     removeTable: onRemoveTable,
+    removeTables: onRemoveTables,
     addColumn: onAddColumn,
     updateColumn: onUpdateColumn,
     removeColumn: onRemoveColumn,
@@ -156,11 +157,17 @@ export function DialogHost({
       />
       <ConfirmDialog
         open={activeDialog === "deleteTable"}
-        title={tTable("deleteTitle")}
-        message={tTable("deleteConfirmMessage", { name: selectedTable?.name ?? "" })}
+        title={selectedTableIds.size >= 2 ? tTable("deleteTitleMultiple") : tTable("deleteTitle")}
+        message={
+          selectedTableIds.size >= 2
+            ? tTable("deleteConfirmMessageMultiple", { count: selectedTableIds.size })
+            : tTable("deleteConfirmMessage", { name: selectedTable?.name ?? "" })
+        }
         confirmLabel={tCommon("delete")}
         onConfirm={() => {
-          if (selectedTableId !== null) {
+          if (selectedTableIds.size >= 2) {
+            onRemoveTables([...selectedTableIds]);
+          } else if (selectedTableId !== null) {
             onRemoveTable(selectedTableId);
           }
           closeDialog();

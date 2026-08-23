@@ -1,7 +1,7 @@
 import { addColumn, removeColumn } from "./column";
 import { addForeignKey, addForeignKeyWithNewColumn, removeForeignKey } from "./foreignKey";
 import { addKey } from "./key";
-import { createSchema, createTable, removeTable } from "./table";
+import { createSchema, createTable, removeTable, removeTables } from "./table";
 import {
   POSTS_FOREIGN_KEY_ID,
   POSTS_NEW_COLUMN_ID,
@@ -447,6 +447,14 @@ describe("REQ-021: foreign keys never dangle after table/column deletion", () =>
 
   it("removeTable strips foreign keys on other tables that referenced the removed table", () => {
     const updated = removeTable(withForeignKey, USERS_TABLE_ID, {
+      now: new Date("2026-07-19T09:00:00.000Z"),
+    });
+
+    expect(getTable(updated, POSTS_TABLE_ID).foreignKeys).toEqual([]);
+  });
+
+  it("removeTables strips foreign keys on remaining tables that referenced a removed table", () => {
+    const updated = removeTables(withForeignKey, [USERS_TABLE_ID], {
       now: new Date("2026-07-19T09:00:00.000Z"),
     });
 

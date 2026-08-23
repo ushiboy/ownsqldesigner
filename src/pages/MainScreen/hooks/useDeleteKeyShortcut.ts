@@ -3,7 +3,7 @@ import { type DialogKind, useActiveDialog } from "../ActiveDialogContext";
 import { isTextInputElement } from "./keyboardShortcutGuards";
 
 type DeleteKeyShortcutSelection = {
-  tableId: string | null;
+  hasTableSelection: boolean;
   relationId: string | null;
 };
 
@@ -13,13 +13,18 @@ type DeleteKeyShortcutSelection = {
 // exception. Ignored while a dialog is already open or focus is in a
 // text field, so it doesn't interfere with typing. Relation and table
 // selection are mutually exclusive (see MainScreen), so which dialog to
-// open is unambiguous.
-export function useDeleteKeyShortcut({ tableId, relationId }: DeleteKeyShortcutSelection): void {
+// open is unambiguous. `hasTableSelection` covers both a single selected
+// table and a multi-table selection (2+); DialogHost reads the actual
+// selection back out of SelectionContext to decide which to delete.
+export function useDeleteKeyShortcut({
+  hasTableSelection,
+  relationId,
+}: DeleteKeyShortcutSelection): void {
   const { activeDialog, openDialog } = useActiveDialog();
 
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
-      if (shouldIgnoreKeyboardDelete(activeDialog, tableId, relationId)) {
+      if (shouldIgnoreKeyboardDelete(activeDialog, hasTableSelection, relationId)) {
         return;
       }
       if (isTextInputElement(document.activeElement)) {
@@ -31,13 +36,13 @@ export function useDeleteKeyShortcut({ tableId, relationId }: DeleteKeyShortcutS
     }
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [activeDialog, tableId, relationId, openDialog]);
+  }, [activeDialog, hasTableSelection, relationId, openDialog]);
 }
 
 function shouldIgnoreKeyboardDelete(
   activeDialog: DialogKind | null,
-  tableId: string | null,
+  hasTableSelection: boolean,
   relationId: string | null,
 ): boolean {
-  return activeDialog !== null || (tableId === null && relationId === null);
+  return activeDialog !== null || (!hasTableSelection && relationId === null);
 }

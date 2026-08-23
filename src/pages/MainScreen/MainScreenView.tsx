@@ -134,7 +134,10 @@ export function MainScreenView({
     [tables, selectedTableId],
   );
 
-  useDeleteKeyShortcut({ tableId: selectedTableId, relationId: selectedRelationId });
+  useDeleteKeyShortcut({
+    hasTableSelection: selectedTableIds.size > 0,
+    relationId: selectedRelationId,
+  });
   useUndoRedoShortcut();
   useEscapeClearSelectionShortcut({
     hasTableSelection: selectedTableIds.size > 0,

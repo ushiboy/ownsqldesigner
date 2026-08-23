@@ -62,6 +62,9 @@ export type Messages = {
     deleteTitle: string;
     /** ICU placeholder: {name} */
     deleteConfirmMessage: string;
+    deleteTitleMultiple: string;
+    /** ICU placeholder: {count} */
+    deleteConfirmMessageMultiple: string;
     fieldLabel: string;
   };
   columnDialog: {

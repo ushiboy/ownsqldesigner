@@ -9,6 +9,7 @@ const {
   DarkTheme,
   WithNotification,
   TableSelected,
+  MultipleTablesSelected,
   AddColumnDialogOpenPrimaryKeyAvailable,
   EditPrimaryKeyColumnDialogOpen,
   TableWithRelationSelected,
@@ -66,6 +67,28 @@ describe("MainScreenView", () => {
     await userEvent.keyboard("{Delete}");
 
     expect(screen.getByRole("dialog", { name: "Delete Table" })).toBeInTheDocument();
+  });
+
+  it("opens the delete tables confirmation when Delete is pressed with multiple tables selected", async () => {
+    render(<MultipleTablesSelected />);
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+
+    await userEvent.keyboard("{Delete}");
+
+    expect(screen.getByRole("dialog", { name: "Delete Tables" })).toBeInTheDocument();
+  });
+
+  it("removes every selected table on confirm when multiple tables are selected", async () => {
+    render(<MultipleTablesSelected />);
+    expect(await screen.findByRole("button", { name: "Table users" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Table posts" })).toBeInTheDocument();
+
+    await userEvent.keyboard("{Delete}");
+    await userEvent.click(screen.getByRole("button", { name: "Delete" }));
+
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Table users" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Table posts" })).not.toBeInTheDocument();
   });
 
   it("ignores Delete while another dialog is already open", async () => {

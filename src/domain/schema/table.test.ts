@@ -4,6 +4,7 @@ import {
   moveTable,
   moveTables,
   removeTable,
+  removeTables,
   renameSchema,
   renameTable,
   restoreSchema,
@@ -567,5 +568,55 @@ describe("removeTable", () => {
     });
 
     expect(original.tables).toHaveLength(1);
+  });
+});
+
+describe("removeTables", () => {
+  const original = createTable(
+    createTable(
+      createSchema("Blog Schema", {
+        id: "c3a1e96a-9a75-4d3c-b0ad-3d6e1b6a5f01",
+        now: new Date("2026-07-18T09:00:00.000Z"),
+      }),
+      "posts",
+      { id: "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12", now: new Date("2026-07-18T09:00:00.000Z") },
+    ),
+    "comments",
+    { id: "e5c3fb8c-9c97-4f5e-d2cf-5f8f3d8c7b23", now: new Date("2026-07-18T09:00:00.000Z") },
+  );
+
+  it("removes every matching table and bumps updatedAt once", () => {
+    const updated = removeTables(
+      original,
+      ["d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12", "e5c3fb8c-9c97-4f5e-d2cf-5f8f3d8c7b23"],
+      { now: new Date("2026-07-19T09:00:00.000Z") },
+    );
+
+    expect(updated.tables).toEqual([]);
+    expect(updated.updatedAt).toEqual(new Date("2026-07-19T09:00:00.000Z"));
+  });
+
+  it("leaves tables not named in the batch untouched", () => {
+    const updated = removeTables(original, ["d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12"], {
+      now: new Date("2026-07-19T09:00:00.000Z"),
+    });
+
+    expect(updated.tables.map((table) => table.name)).toEqual(["comments"]);
+  });
+
+  it("is a no-op when no id in the batch matches an existing table", () => {
+    const updated = removeTables(original, ["unknown-id"], {
+      now: new Date("2026-07-19T09:00:00.000Z"),
+    });
+
+    expect(updated).toBe(original);
+  });
+
+  it("does not mutate the input schema", () => {
+    removeTables(original, ["d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12"], {
+      now: new Date("2026-07-19T09:00:00.000Z"),
+    });
+
+    expect(original.tables).toHaveLength(2);
   });
 });

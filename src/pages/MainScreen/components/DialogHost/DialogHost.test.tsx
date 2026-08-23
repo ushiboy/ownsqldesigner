@@ -10,6 +10,7 @@ const {
   DeleteSchemaDialogOpen,
   CreateTableDialogOpen,
   DeleteTableDialogOpen,
+  DeleteMultipleTablesDialogOpen,
   AddColumnDialogOpen,
   EditColumnDialogOpen,
   DeleteColumnDialogOpen,
@@ -56,6 +57,16 @@ describe("DialogHost", () => {
     expect(
       screen.getByText(
         'Delete "users"? All its columns and keys will be removed too. This cannot be undone.',
+      ),
+    ).toBeInTheDocument();
+  });
+
+  it("shows the delete confirmation naming the count when multiple tables are selected", () => {
+    render(<DeleteMultipleTablesDialogOpen />);
+    expect(screen.getByRole("dialog", { name: "Delete Tables" })).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Delete 2 selected tables? All their columns and keys will be removed too. This cannot be undone.",
       ),
     ).toBeInTheDocument();
   });

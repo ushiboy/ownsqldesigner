@@ -43,6 +43,7 @@ export {
   moveTable,
   moveTables,
   removeTable,
+  removeTables,
   renameSchema,
   renameTable,
   restoreSchema,

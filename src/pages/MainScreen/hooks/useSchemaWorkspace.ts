@@ -25,6 +25,7 @@ export type SchemaActions = {
   moveTable: (tableId: string, position: Position) => void;
   moveTables: (moves: { tableId: string; position: Position }[]) => void;
   removeTable: (tableId: string) => void;
+  removeTables: (tableIds: string[]) => void;
   addColumn: (tableId: string, fields: Omit<Column, "id">, id?: string) => void;
   updateColumn: (tableId: string, columnId: string, fields: Omit<Column, "id">) => void;
   removeColumn: (tableId: string, columnId: string) => void;

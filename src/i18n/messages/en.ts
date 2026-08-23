@@ -61,6 +61,9 @@ export default {
     deleteTitle: "Delete Table",
     deleteConfirmMessage:
       'Delete "{name}"? All its columns and keys will be removed too. This cannot be undone.',
+    deleteTitleMultiple: "Delete Tables",
+    deleteConfirmMessageMultiple:
+      "Delete {count} selected tables? All their columns and keys will be removed too. This cannot be undone.",
     fieldLabel: "Table name",
   },
   columnDialog: {

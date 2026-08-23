@@ -1,5 +1,5 @@
 import { DEFAULT_SQL_DIALECT, type SqlDialect } from "../dialect/sqlDialect";
-import { removeForeignKeysReferencingTable } from "./shared";
+import { removeForeignKeysReferencingTables } from "./shared";
 import type { Position, Schema } from "./types";
 import { isTableNameAvailable } from "./validation";
 
@@ -200,14 +200,27 @@ export function removeTable(
   tableId: string,
   options: RemoveTableOptions = {},
 ): Schema {
-  if (!schema.tables.some((table) => table.id === tableId)) {
+  return removeTables(schema, [tableId], options);
+}
+
+type RemoveTablesOptions = {
+  now?: Date;
+};
+
+export function removeTables(
+  schema: Schema,
+  tableIds: readonly string[],
+  options: RemoveTablesOptions = {},
+): Schema {
+  const removedIds = new Set(tableIds);
+  const remaining = schema.tables.filter((table) => !removedIds.has(table.id));
+  if (remaining.length === schema.tables.length) {
     return schema;
   }
   const { now = new Date() } = options;
-  const remaining = schema.tables.filter((table) => table.id !== tableId);
   return {
     ...schema,
-    tables: removeForeignKeysReferencingTable(remaining, tableId),
+    tables: removeForeignKeysReferencingTables(remaining, removedIds),
     updatedAt: now,
   };
 }

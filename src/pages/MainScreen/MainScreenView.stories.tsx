@@ -191,6 +191,13 @@ export const EditPrimaryKeyColumnDialogOpen: Story = {
   },
 };
 
+export const MultipleTablesSelected: Story = {
+  args: {
+    initialSchema: withRelation,
+    initialSelection: { tableIds: [usersTable.id, postsTable.id] },
+  },
+};
+
 export const TableWithRelationSelected: Story = {
   args: {
     initialSchema: withRelation,

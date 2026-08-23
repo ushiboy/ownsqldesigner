@@ -25,6 +25,7 @@ import {
   removeKey,
   removeKeyCascadingForeignKeys,
   removeTable,
+  removeTables,
   renameSchema,
   renameTable,
   restoreSchema,
@@ -50,6 +51,7 @@ export type UndoableSchemaActions = {
   moveTable: (tableId: string, position: Position) => void;
   moveTables: (moves: { tableId: string; position: Position }[]) => void;
   removeTable: (tableId: string) => void;
+  removeTables: (tableIds: string[]) => void;
   addColumn: (tableId: string, fields: Omit<Column, "id">, id?: string) => void;
   updateColumn: (tableId: string, columnId: string, fields: Omit<Column, "id">) => void;
   removeColumn: (tableId: string, columnId: string) => void;
@@ -200,6 +202,9 @@ export function useUndoableSchema(initialSchema?: Schema): UndoableSchema {
     },
     removeTable: (tableId) => {
       commitEdit((prev) => removeTable(prev, tableId));
+    },
+    removeTables: (tableIds) => {
+      commitEdit((prev) => removeTables(prev, tableIds));
     },
     // `id` lets the caller know the new column's id up front, so it can also
     // create the column's PRIMARY KEY key in the same submit (see MainScreenView).

@@ -12,7 +12,7 @@ import { createFakeSchemaRepository } from "../../../../test/fakeSchemaRepositor
 import { ActiveDialogProvider, type DialogKind } from "../../ActiveDialogContext";
 import { NotificationProvider } from "../../NotificationContext";
 import { SchemaWorkspaceProvider } from "../../SchemaWorkspaceContext";
-import { SelectionProvider } from "../../SelectionContext";
+import { type InitialSelection, SelectionProvider } from "../../SelectionContext";
 import { DialogHost } from "./DialogHost";
 
 const usersTable = {
@@ -98,6 +98,7 @@ const withRelation: Schema = { ...blogSchema, tables: [usersTable, postsTable] }
 type SeededDialogHostProps = {
   initialSchema?: Schema;
   initialDialog?: DialogKind | null;
+  initialSelection?: InitialSelection;
   schemaName: string;
   strategy: DialectStrategy;
   selectedTable: typeof usersTable | null;
@@ -117,6 +118,7 @@ type SeededDialogHostProps = {
 function SeededDialogHost({
   initialSchema = blogSchema,
   initialDialog,
+  initialSelection,
   ...props
 }: SeededDialogHostProps) {
   const [repository] = useState(() =>
@@ -127,7 +129,7 @@ function SeededDialogHost({
       <NotificationProvider>
         <ActiveDialogProvider initialDialog={initialDialog}>
           <SchemaWorkspaceProvider repository={repository} initialSchema={initialSchema}>
-            <SelectionProvider>
+            <SelectionProvider initialSelection={initialSelection}>
               <DialogHost {...props} />
             </SelectionProvider>
           </SchemaWorkspaceProvider>
@@ -191,6 +193,14 @@ export const DeleteTableDialogOpen: Story = {
     initialSchema: withUsers,
     initialDialog: "deleteTable",
     selectedTable: usersTable,
+  },
+};
+
+export const DeleteMultipleTablesDialogOpen: Story = {
+  args: {
+    initialSchema: withRelation,
+    initialDialog: "deleteTable",
+    initialSelection: { tableIds: [usersTable.id, postsTable.id] },
   },
 };
 
