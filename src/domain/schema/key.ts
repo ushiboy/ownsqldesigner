@@ -275,11 +275,31 @@ export function keepsColumnReferenceable(existingKey: Key, fields: Omit<Key, "id
   );
 }
 
+/**
+ * Whether some key in `keys` is an INDEX with the exact same column order as
+ * `fields` — `generateDdl`'s `CREATE INDEX` statements need unique names, so
+ * an undetected duplicate here would otherwise only surface as a silently
+ * suffixed name (see 0010's Open Questions). Callers pass the table's other
+ * keys (excluding whichever key `fields` is replacing, if any).
+ */
+export function hasDuplicateIndexColumnSet(keys: Key[], fields: Omit<Key, "id">): boolean {
+  return (
+    fields.type === "INDEX" &&
+    keys.some((key) => key.type === "INDEX" && sameColumnOrder(key.columnIds, fields.columnIds))
+  );
+}
+
+function sameColumnOrder(a: string[], b: string[]): boolean {
+  return a.length === b.length && a.every((value, index) => value === b[index]);
+}
+
 function canAddKey(table: Table | undefined, fields: Omit<Key, "id">): boolean {
   if (table === undefined || fields.columnIds.length === 0) {
     return false;
   }
-  return !hasConflictingPrimaryKey(table, fields.type);
+  return (
+    !hasConflictingPrimaryKey(table, fields.type) && !hasDuplicateIndexColumnSet(table.keys, fields)
+  );
 }
 
 function canUpdateKey(
@@ -292,7 +312,13 @@ function canUpdateKey(
   if (table === undefined || existingKey === undefined || fields.columnIds.length === 0) {
     return false;
   }
-  if (hasConflictingPrimaryKey(table, fields.type, keyId)) {
+  if (
+    hasConflictingPrimaryKey(table, fields.type, keyId) ||
+    hasDuplicateIndexColumnSet(
+      table.keys.filter((key) => key.id !== keyId),
+      fields,
+    )
+  ) {
     return false;
   }
   return (

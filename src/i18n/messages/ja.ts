@@ -108,6 +108,8 @@ export default {
     moveColumnDown: "{column}を下に移動",
     referencedKeyEditBlockedHint:
       "他のテーブルの外部キーがこのキーを参照しています。同じカラムの単一カラムのPRIMARY KEYまたはUNIQUEキーのままにする必要があります。",
+    duplicateIndexHint:
+      "このテーブルの別のINDEXキーが、同じ順序で同じカラムをすでに対象にしています。",
   },
   relationDialog: {
     deleteTitle: "リレーションを削除",

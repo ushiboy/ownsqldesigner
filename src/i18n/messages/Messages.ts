@@ -110,6 +110,7 @@ export type Messages = {
     /** ICU placeholder: {column} */
     moveColumnDown: string;
     referencedKeyEditBlockedHint: string;
+    duplicateIndexHint: string;
   };
   relationDialog: {
     deleteTitle: string;

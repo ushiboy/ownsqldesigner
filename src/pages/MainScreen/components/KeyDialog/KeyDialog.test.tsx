@@ -4,8 +4,14 @@ import { fn } from "storybook/test";
 import { composeStories } from "@storybook/react-vite";
 import * as stories from "./KeyDialog.stories";
 
-const { Add, Edit, AddPrimaryKeyDisabled, EditWithMultipleColumns, EditReferencedKey } =
-  composeStories(stories);
+const {
+  Add,
+  Edit,
+  AddPrimaryKeyDisabled,
+  EditWithMultipleColumns,
+  EditReferencedKey,
+  EditDuplicateIndex,
+} = composeStories(stories);
 
 describe("KeyDialog", () => {
   it("shows the dialog with a disabled submit button while no column is checked", () => {
@@ -167,6 +173,38 @@ describe("KeyDialog", () => {
     expect(
       screen.queryByText(
         "A foreign key on another table references this key. It must stay a single-column PRIMARY KEY or UNIQUE key on the same column.",
+      ),
+    ).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Save" })).toBeEnabled();
+  });
+
+  it("shows a hint and disables Save when an INDEX key duplicates another INDEX key's column order", () => {
+    render(<EditDuplicateIndex />);
+    expect(
+      screen.getByText(
+        "Another INDEX key on this table already covers the same columns in the same order.",
+      ),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Save" })).toBeDisabled();
+  });
+
+  it("does not show the duplicate-index hint once the columns diverge", async () => {
+    render(<EditDuplicateIndex />);
+    await userEvent.click(screen.getByLabelText("id"));
+    expect(
+      screen.queryByText(
+        "Another INDEX key on this table already covers the same columns in the same order.",
+      ),
+    ).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Save" })).toBeEnabled();
+  });
+
+  it("does not show the duplicate-index hint for a non-INDEX type even with the same columns", async () => {
+    render(<EditDuplicateIndex />);
+    await userEvent.selectOptions(screen.getByLabelText("Type"), "UNIQUE");
+    expect(
+      screen.queryByText(
+        "Another INDEX key on this table already covers the same columns in the same order.",
       ),
     ).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Save" })).toBeEnabled();

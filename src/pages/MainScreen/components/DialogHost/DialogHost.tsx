@@ -24,6 +24,7 @@ import { TableNameDialog } from "../TableNameDialog";
 
 const NO_COLUMNS: Column[] = [];
 const NO_NAMES: string[] = [];
+const NO_KEYS: Key[] = [];
 
 type DialogHostProps = {
   schemaName: string;
@@ -107,6 +108,10 @@ export function DialogHost({
     selectedTable !== null &&
     selectedKey !== null &&
     isKeyReferencedByForeignKey(tables, selectedTable.id, selectedKey);
+  const otherKeys = useMemo(
+    () => selectedTable?.keys.filter((key) => key.id !== selectedKey?.id) ?? NO_KEYS,
+    [selectedTable, selectedKey],
+  );
 
   return (
     <>
@@ -232,6 +237,7 @@ export function DialogHost({
         columns={selectedTable?.columns ?? NO_COLUMNS}
         primaryKeyDisabled={primaryKeyDisabled}
         isReferencedByForeignKey={false}
+        existingKeys={otherKeys}
         onSubmit={(fields) => {
           if (selectedTableId !== null) {
             onAddKey(selectedTableId, fields);
@@ -248,6 +254,7 @@ export function DialogHost({
         initialKey={selectedKey}
         primaryKeyDisabled={primaryKeyDisabled}
         isReferencedByForeignKey={isSelectedKeyReferenced}
+        existingKeys={otherKeys}
         onSubmit={(fields) => {
           if (selectedTableId !== null && selectedKey !== null) {
             onUpdateKey(selectedTableId, selectedKey.id, fields);

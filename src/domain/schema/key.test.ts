@@ -5,6 +5,7 @@ import {
   getColumnKeyMembership,
   getColumnKeyMembershipDisabled,
   getReferenceableColumns,
+  hasDuplicateIndexColumnSet,
   hasPrimaryKey,
   isColumnReferencedByForeignKey,
   isKeyReferencedByForeignKey,
@@ -28,7 +29,7 @@ import {
   columnFields,
   getTable,
 } from "./test-fixtures";
-import { schemaSchema } from "./types";
+import { schemaSchema, type Key } from "./types";
 
 const keyFields = {
   type: "UNIQUE" as const,
@@ -97,6 +98,24 @@ describe("addKey", () => {
     );
 
     expect(updated).toBe(withPrimaryKey);
+  });
+
+  it("is a no-op when adding an INDEX key that duplicates another INDEX key's column order", () => {
+    const withIndex = addKey(
+      original,
+      "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12",
+      { type: "INDEX", columnIds: ["f1a2b3c4-5d6e-4f7a-8b9c-0d1e2f3a4b5c"] },
+      { id: "c1d2e3f4-5a6b-4c7d-8e9f-0a1b2c3d4e5f", now: new Date("2026-07-19T09:00:00.000Z") },
+    );
+
+    const updated = addKey(
+      withIndex,
+      "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12",
+      { type: "INDEX", columnIds: ["f1a2b3c4-5d6e-4f7a-8b9c-0d1e2f3a4b5c"] },
+      { now: new Date("2026-07-20T09:00:00.000Z") },
+    );
+
+    expect(updated).toBe(withIndex);
   });
 
   it("does not mutate the input schema", () => {
@@ -232,6 +251,25 @@ describe("updateKey", () => {
 
     expect(updated.tables[0]?.keys[0]?.type).toBe("PRIMARY_KEY");
     expect(updated.updatedAt).toEqual(new Date("2026-07-19T09:00:00.000Z"));
+  });
+
+  it("is a no-op when retyping a key to INDEX with the same column order as another INDEX key", () => {
+    const withSecondIndex = addKey(
+      original,
+      "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12",
+      { type: "INDEX", columnIds: ["f1a2b3c4-5d6e-4f7a-8b9c-0d1e2f3a4b5c"] },
+      { id: "c1d2e3f4-5a6b-4c7d-8e9f-0a1b2c3d4e5f", now: new Date("2026-07-18T09:00:00.000Z") },
+    );
+
+    const updated = updateKey(
+      withSecondIndex,
+      "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12",
+      "b1c2d3e4-5f6a-4b7c-8d9e-0f1a2b3c4d5e",
+      { type: "INDEX", columnIds: ["f1a2b3c4-5d6e-4f7a-8b9c-0d1e2f3a4b5c"] },
+      { now: new Date("2026-07-19T09:00:00.000Z") },
+    );
+
+    expect(updated).toBe(withSecondIndex);
   });
 
   it("does not mutate the input schema", () => {
@@ -980,5 +1018,44 @@ describe("hasPrimaryKey", () => {
     expect(hasPrimaryKey(getTable(withAutoIncrement, "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12"))).toBe(
       true,
     );
+  });
+});
+
+describe("hasDuplicateIndexColumnSet", () => {
+  const existingIndex: Key = { id: "a1", type: "INDEX", columnIds: ["c1", "c2"] };
+  const existingUnique: Key = { id: "a2", type: "UNIQUE", columnIds: ["c1", "c2"] };
+
+  it("is true when an INDEX key already has the exact same column order", () => {
+    expect(
+      hasDuplicateIndexColumnSet([existingIndex], { type: "INDEX", columnIds: ["c1", "c2"] }),
+    ).toBe(true);
+  });
+
+  it("is false when the column order differs", () => {
+    expect(
+      hasDuplicateIndexColumnSet([existingIndex], { type: "INDEX", columnIds: ["c2", "c1"] }),
+    ).toBe(false);
+  });
+
+  it("is false when the column set differs", () => {
+    expect(
+      hasDuplicateIndexColumnSet([existingIndex], { type: "INDEX", columnIds: ["c1", "c3"] }),
+    ).toBe(false);
+  });
+
+  it("is false for a candidate that isn't type INDEX, even with the same columns", () => {
+    expect(
+      hasDuplicateIndexColumnSet([existingIndex], { type: "UNIQUE", columnIds: ["c1", "c2"] }),
+    ).toBe(false);
+  });
+
+  it("is false when only a non-INDEX key shares the same columns", () => {
+    expect(
+      hasDuplicateIndexColumnSet([existingUnique], { type: "INDEX", columnIds: ["c1", "c2"] }),
+    ).toBe(false);
+  });
+
+  it("is false with no existing keys", () => {
+    expect(hasDuplicateIndexColumnSet([], { type: "INDEX", columnIds: ["c1"] })).toBe(false);
   });
 });

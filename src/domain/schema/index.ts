@@ -22,6 +22,7 @@ export {
   getColumnKeyMembershipDisabled,
   getReferenceableColumns,
   hasConflictingPrimaryKey,
+  hasDuplicateIndexColumnSet,
   hasPrimaryKey,
   isColumnReferencedByForeignKey,
   isKeyReferencedByForeignKey,

@@ -5,6 +5,7 @@ import { useTranslations } from "use-intl";
 import { Dialog, dialogActionButton } from "../../../../components/parts/Dialog";
 import {
   type Column,
+  hasDuplicateIndexColumnSet,
   type Key,
   keepsColumnReferenceable,
   KEY_TYPES,
@@ -35,6 +36,7 @@ type KeyDialogProps = {
   initialKey?: Key | null;
   primaryKeyDisabled: boolean;
   isReferencedByForeignKey: boolean;
+  existingKeys: Key[];
   onSubmit: (fields: KeyFields) => void;
   onCancel: () => void;
 };
@@ -47,6 +49,7 @@ export function KeyDialog({
   initialKey,
   primaryKeyDisabled,
   isReferencedByForeignKey,
+  existingKeys,
   onSubmit,
   onCancel,
 }: KeyDialogProps) {
@@ -58,6 +61,7 @@ export function KeyDialog({
         initialKey={initialKey ?? null}
         primaryKeyDisabled={primaryKeyDisabled}
         isReferencedByForeignKey={isReferencedByForeignKey}
+        existingKeys={existingKeys}
         onSubmit={onSubmit}
         onCancel={onCancel}
       />
@@ -71,6 +75,7 @@ type KeyFormProps = {
   initialKey: Key | null;
   primaryKeyDisabled: boolean;
   isReferencedByForeignKey: boolean;
+  existingKeys: Key[];
   onSubmit: (fields: KeyFields) => void;
   onCancel: () => void;
 };
@@ -87,6 +92,7 @@ function KeyForm({
   initialKey,
   primaryKeyDisabled,
   isReferencedByForeignKey,
+  existingKeys,
   onSubmit,
   onCancel,
 }: KeyFormProps) {
@@ -100,6 +106,7 @@ function KeyForm({
     initialKey !== null &&
     columnIds.length > 0 &&
     !keepsColumnReferenceable(initialKey, { type, columnIds });
+  const isDuplicateIndex = hasDuplicateIndexColumnSet(existingKeys, { type, columnIds });
 
   const toggleColumn = (columnId: string, checked: boolean) => {
     setColumnIds((prev) => (checked ? [...prev, columnId] : prev.filter((id) => id !== columnId)));
@@ -177,6 +184,7 @@ function KeyForm({
       {wouldBreakReference && (
         <p className="mt-1 text-[12px] text-body">{t("referencedKeyEditBlockedHint")}</p>
       )}
+      {isDuplicateIndex && <p className="mt-1 text-[12px] text-body">{t("duplicateIndexHint")}</p>}
       <div className="mt-6 flex justify-end gap-2">
         <button
           type="button"
@@ -187,7 +195,7 @@ function KeyForm({
         </button>
         <button
           type="submit"
-          disabled={columnIds.length === 0 || wouldBreakReference}
+          disabled={columnIds.length === 0 || wouldBreakReference || isDuplicateIndex}
           className={dialogActionButton({ variant: "primary" })}
         >
           {submitLabel}

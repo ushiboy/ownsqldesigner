@@ -27,6 +27,18 @@ const compositeKey: Key = {
   columnIds: ["c1c2c3c4-5d6e-4f7a-8b9c-0d1e2f3a4b5c", "c2c2c3c4-5d6e-4f7a-8b9c-0d1e2f3a4b5c"],
 };
 
+const existingIndexKey: Key = {
+  id: "e1c2d3e4-5f6a-4b7c-8d9e-0f1a2b3c4d5e",
+  type: "INDEX",
+  columnIds: ["a2b3c4d5-6e7f-4a8b-9c0d-1e2f3a4b5c6d"],
+};
+
+const duplicateIndexKey: Key = {
+  id: "f1c2d3e4-5f6a-4b7c-8d9e-0f1a2b3c4d5e",
+  type: "INDEX",
+  columnIds: ["a2b3c4d5-6e7f-4a8b-9c0d-1e2f3a4b5c6d"],
+};
+
 const meta = {
   title: "pages/MainScreen/KeyDialog",
   component: KeyDialog,
@@ -34,6 +46,7 @@ const meta = {
     columns,
     primaryKeyDisabled: false,
     isReferencedByForeignKey: false,
+    existingKeys: [],
     onSubmit: fn(),
     onCancel: fn(),
   },
@@ -92,5 +105,15 @@ export const EditReferencedKey: Story = {
     submitLabel: "Save",
     initialKey: key,
     isReferencedByForeignKey: true,
+  },
+};
+
+export const EditDuplicateIndex: Story = {
+  args: {
+    open: true,
+    title: "Edit Key",
+    submitLabel: "Save",
+    initialKey: duplicateIndexKey,
+    existingKeys: [existingIndexKey],
   },
 };

@@ -262,5 +262,9 @@ prevent or reject — a third, simpler category of "show it, don't act on it."
   [0043](0043-default-value-keyword-literal.md): a fixed, SQL-standard
   keyword set (`CURRENT_TIMESTAMP`, `NULL`, `TRUE`, ...) is now emitted
   unquoted; anything else is still a free-form quoted literal.
-- Two `INDEX` keys sharing the same column set produce a suffixed index name
-  (`_2`, `_3`, ...) rather than being prevented at the UI level.
+- ~~Two `INDEX` keys sharing the same column set produce a suffixed index
+  name (`_2`, `_3`, ...) rather than being prevented at the UI level.~~
+  Resolved in
+  [0046](0046-prevent-duplicate-index-column-set.md): `KeyDialog` now blocks
+  Save/Add and shows a hint when an `INDEX` key would exactly duplicate
+  another `INDEX` key's column order, enforced at the domain layer too.

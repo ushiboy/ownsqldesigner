@@ -109,6 +109,8 @@ export default {
     moveColumnDown: "Move {column} down",
     referencedKeyEditBlockedHint:
       "A foreign key on another table references this key. It must stay a single-column PRIMARY KEY or UNIQUE key on the same column.",
+    duplicateIndexHint:
+      "Another INDEX key on this table already covers the same columns in the same order.",
   },
   relationDialog: {
     deleteTitle: "Delete Relation",
