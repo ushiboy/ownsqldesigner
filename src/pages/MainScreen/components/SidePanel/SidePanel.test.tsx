@@ -293,6 +293,12 @@ describe("SidePanel", () => {
     expect(screen.getByText("UNIQUE (email)")).toBeInTheDocument();
   });
 
+  it("sets the full label as a title so a truncated key row is still readable on hover", () => {
+    render(<TableWithKeys />);
+    expect(screen.getByText("PRIMARY KEY (id)")).toHaveAttribute("title", "PRIMARY KEY (id)");
+    expect(screen.getByText("UNIQUE (email)")).toHaveAttribute("title", "UNIQUE (email)");
+  });
+
   it("calls onAddKey when the Add Key button is clicked", async () => {
     const onAddKey = fn();
     render(<TableWithKeys onAddKey={onAddKey} />);

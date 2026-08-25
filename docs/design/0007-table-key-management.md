@@ -123,4 +123,4 @@ A "Keys" section is added to `TableProperties`, structurally identical to the ex
   up/down buttons.
 - Whether `Key` should eventually gain a `name` field once SQL export needs named constraints/indexes — deferred, not a blocker.
 - Whether `addKey`/`updateKey` should defensively filter `columnIds` down to ids that actually exist on the table — not implemented here since `KeyDialog` can only ever offer the table's own columns; revisit if this proves fragile.
-- Whether the "Keys" section's per-row label reads well once a table has many composite keys with long column lists — no truncation is designed here; revisit if it proves visually noisy in practice.
+- ~~Whether the "Keys" section's per-row label reads well once a table has many composite keys with long column lists — no truncation is designed here; revisit if it proves visually noisy in practice.~~ Resolved in [0049](0049-key-row-label-title-tooltip.md): the label already CSS-ellipsizes via `truncate`; a `title` attribute now exposes the full label on hover/focus.

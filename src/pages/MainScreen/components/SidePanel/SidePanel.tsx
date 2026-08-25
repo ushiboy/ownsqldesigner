@@ -374,7 +374,9 @@ function KeyRow({ keyId, label, onEditKey, onDeleteKey }: KeyRowProps) {
   const t = useTranslations("sidePanel");
   return (
     <li className="flex items-center justify-between gap-2">
-      <span className="truncate text-heading">{label}</span>
+      <span title={label} className="truncate text-heading">
+        {label}
+      </span>
       <span className="flex shrink-0 items-center gap-1">
         <button
           type="button"
