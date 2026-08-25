@@ -34,8 +34,13 @@ describe("sqliteDialectStrategy", () => {
     ]);
   });
 
-  it("treats every SQLite column type as sizable", () => {
-    expect(sqliteDialectStrategy.sizableColumnTypes).toEqual(sqliteDialectStrategy.columnTypes);
+  it("treats every SQLite column type except BLOB as sizable", () => {
+    expect(sqliteDialectStrategy.sizableColumnTypes).toEqual([
+      "INTEGER",
+      "TEXT",
+      "REAL",
+      "NUMERIC",
+    ]);
   });
 
   it("treats no SQLite column type as precision-eligible", () => {
@@ -65,12 +70,20 @@ describe("sqliteDialectStrategy", () => {
     expect(normalized.columns[0].autoIncrement).toBe(false);
   });
 
-  it("keeps size for every SQLite column type since all are sizable", () => {
+  it("keeps size for a sizable SQLite column type", () => {
     const normalized = sqliteDialectStrategy.normalizeColumnForDialect({
       ...TABLE,
       columns: [{ ...TABLE.columns[0], type: "TEXT", size: "10" }],
     });
     expect(normalized.columns[0].size).toBe("10");
+  });
+
+  it("clears size for BLOB, since a blob has no length modifier", () => {
+    const normalized = sqliteDialectStrategy.normalizeColumnForDialect({
+      ...TABLE,
+      columns: [{ ...TABLE.columns[0], type: "BLOB", size: "10" }],
+    });
+    expect(normalized.columns[0].size).toBe("");
   });
 
   it("keeps a malformed-looking size unchanged, since SQLite opts out of format validation", () => {

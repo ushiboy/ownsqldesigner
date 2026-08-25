@@ -143,6 +143,15 @@ export const ReservedName: Story = {
   },
 };
 
+export const SqliteBlobSizeNotApplicable: Story = {
+  args: {
+    open: true,
+    title: "Edit Column",
+    submitLabel: "Save",
+    initialColumn: { ...column, type: "BLOB" },
+  },
+};
+
 export const PostgresqlSizeNotApplicable: Story = {
   args: {
     open: true,

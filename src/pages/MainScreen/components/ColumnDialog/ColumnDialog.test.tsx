@@ -13,6 +13,7 @@ const {
   DuplicateName,
   InvalidName,
   ReservedName,
+  SqliteBlobSizeNotApplicable,
   PostgresqlSizeNotApplicable,
   PostgresqlSizeApplicable,
   PostgresqlSizeInvalidFormat,
@@ -325,6 +326,36 @@ describe("ColumnDialog", () => {
       ),
     ).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Save" })).toBeEnabled();
+  });
+
+  it("disables Size and shows a hint for SQLite's BLOB type", () => {
+    render(<SqliteBlobSizeNotApplicable />);
+    expect(screen.getByLabelText("Size")).toBeDisabled();
+    expect(screen.getByText("This column type does not accept a size.")).toBeInTheDocument();
+  });
+
+  it("re-enables Size once BLOB is switched to a sizable SQLite type", async () => {
+    render(<SqliteBlobSizeNotApplicable />);
+    await userEvent.selectOptions(screen.getByLabelText("Type"), "TEXT");
+    expect(screen.getByLabelText("Size")).toBeEnabled();
+  });
+
+  it("clears a stale Size value on submit for SQLite's BLOB type", async () => {
+    const onSubmit = fn();
+    render(<SqliteBlobSizeNotApplicable onSubmit={onSubmit} />);
+    await userEvent.click(screen.getByRole("button", { name: "Save" }));
+
+    expect(onSubmit).toHaveBeenCalledExactlyOnceWith(
+      expect.objectContaining({ size: "" }),
+      expect.anything(),
+    );
+  });
+
+  it("clears a typed Size value immediately when switching to BLOB", async () => {
+    render(<Edit />);
+    await userEvent.type(screen.getByLabelText("Size"), "10");
+    await userEvent.selectOptions(screen.getByLabelText("Type"), "BLOB");
+    expect(screen.getByLabelText("Size")).toHaveValue("");
   });
 
   it("disables Precision and shows a hint for a PostgreSQL type that doesn't accept one", () => {
