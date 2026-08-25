@@ -204,6 +204,16 @@ export const PostgresqlEditAllowsAutoIncrement: Story = {
   },
 };
 
+export const PostgresqlDefaultValueInvalidFormat: Story = {
+  args: {
+    open: true,
+    title: "Edit Column",
+    submitLabel: "Save",
+    strategy: postgresqlDialectStrategy,
+    initialColumn: { ...column, type: "BOOLEAN", defaultValue: "hello" },
+  },
+};
+
 export const PostgresqlDefaultNotApplicableWithAutoIncrement: Story = {
   args: {
     open: true,

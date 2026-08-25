@@ -91,6 +91,7 @@ export type Messages = {
     precisionInvalidFormatHint: string;
     defaultValueLabel: string;
     defaultValueNotApplicableHint: string;
+    defaultValueInvalidFormatHint: string;
     nullableLabel: string;
     autoIncrementLabel: string;
     /** ICU placeholder: {types} */

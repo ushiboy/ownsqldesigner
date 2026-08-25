@@ -89,12 +89,24 @@ describe("sqliteDialectStrategy", () => {
     expect(normalized.columns[0].defaultValue).toBe("0");
   });
 
+  it("keeps a default value that wouldn't format-validate under PostgreSQL, since SQLite opts out", () => {
+    const normalized = sqliteDialectStrategy.normalizeColumnForDialect({
+      ...TABLE,
+      columns: [{ ...TABLE.columns[0], type: "TEXT", defaultValue: "not-a-boolean" }],
+    });
+    expect(normalized.columns[0].defaultValue).toBe("not-a-boolean");
+  });
+
   it("always treats size as valid", () => {
     expect(sqliteDialectStrategy.isSizeValid("TEXT", "abc")).toBe(true);
   });
 
   it("always treats precision as valid", () => {
     expect(sqliteDialectStrategy.isPrecisionValid("TEXT", "abc")).toBe(true);
+  });
+
+  it("always treats a default value as valid", () => {
+    expect(sqliteDialectStrategy.isDefaultValueValid("TEXT", "abc")).toBe(true);
   });
 
   it("delegates isNameTaken to the SQLite rule", () => {

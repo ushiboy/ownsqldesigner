@@ -92,6 +92,7 @@ export default {
     precisionInvalidFormatHint: "精度は0から6までの整数で指定してください。",
     defaultValueLabel: "デフォルト値",
     defaultValueNotApplicableHint: "自動採番のカラムにはデフォルト値を設定できません。",
+    defaultValueInvalidFormatHint: "このデフォルト値はこのカラムの型に対して無効です。",
     nullableLabel: "NULL許可",
     autoIncrementLabel: "自動採番",
     autoIncrementHint: "このカラムがテーブル唯一の{types}型の主キーである場合のみ使用できます。",

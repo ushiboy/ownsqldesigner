@@ -14,6 +14,7 @@ export const sqliteDialectStrategy: DialectStrategy = buildDialectStrategy({
   isAutoIncrementEligible: isSqliteAutoIncrementEligible,
   isSizeValid: () => true,
   isPrecisionValid: () => true,
+  isDefaultValueValid: () => true,
   isNameTaken: isSqliteNameTaken,
   isReservedKeyword: isSqliteReservedKeyword,
   generateDdl: generateSqliteDdl,

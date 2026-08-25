@@ -19,6 +19,7 @@ const {
   PostgresqlPrecisionApplicable,
   PostgresqlPrecisionOutOfRange,
   PostgresqlEditAllowsAutoIncrement,
+  PostgresqlDefaultValueInvalidFormat,
   PostgresqlDefaultNotApplicableWithAutoIncrement,
 } = composeStories(stories);
 
@@ -371,6 +372,30 @@ describe("ColumnDialog", () => {
     render(<PostgresqlPrecisionOutOfRange />);
     await userEvent.clear(screen.getByLabelText("Precision"));
     await userEvent.type(screen.getByLabelText("Precision"), "3");
+    expect(screen.getByRole("button", { name: "Save" })).toBeEnabled();
+  });
+
+  it("disables submit and shows a hint for a default value with an invalid format for the column's type", () => {
+    render(<PostgresqlDefaultValueInvalidFormat />);
+    expect(screen.getByRole("button", { name: "Save" })).toBeDisabled();
+    expect(
+      screen.getByText("This default value is not valid for the column's type."),
+    ).toBeInTheDocument();
+  });
+
+  it("re-enables submit once an invalid-format default value is corrected", async () => {
+    render(<PostgresqlDefaultValueInvalidFormat />);
+    await userEvent.clear(screen.getByLabelText("Default value"));
+    await userEvent.type(screen.getByLabelText("Default value"), "true");
+    expect(screen.getByRole("button", { name: "Save" })).toBeEnabled();
+  });
+
+  it("never shows a default-value invalid-format hint under SQLite", async () => {
+    render(<Edit />);
+    await userEvent.type(screen.getByLabelText("Default value"), "not-a-number");
+    expect(
+      screen.queryByText("This default value is not valid for the column's type."),
+    ).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Save" })).toBeEnabled();
   });
 

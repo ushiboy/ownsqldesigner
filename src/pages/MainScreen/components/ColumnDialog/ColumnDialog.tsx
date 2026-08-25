@@ -127,6 +127,7 @@ function ColumnForm({
   const isSizeFormatValid = strategy.isSizeValid(fields.type, fields.size);
   const isPrecisionFormatValid = strategy.isPrecisionValid(fields.type, fields.precision);
   const defaultValueAllowed = !effectiveAutoIncrement || strategy.allowsDefaultWithAutoIncrement;
+  const isDefaultValueFormatValid = strategy.isDefaultValueValid(fields.type, fields.defaultValue);
 
   const setField = <K extends keyof ColumnFields>(key: K, value: ColumnFields[K]) => {
     setFields((prev) => ({ ...prev, [key]: value }));
@@ -246,6 +247,9 @@ function ColumnForm({
             {!defaultValueAllowed && (
               <p className="mt-1 text-[12px] text-body">{t("defaultValueNotApplicableHint")}</p>
             )}
+            {defaultValueAllowed && !isDefaultValueFormatValid && (
+              <p className="mt-1 text-[12px] text-body">{t("defaultValueInvalidFormatHint")}</p>
+            )}
           </div>
           <label className="flex items-center gap-2 text-[14px]">
             <input
@@ -331,6 +335,8 @@ function ColumnForm({
             isSizeFormatValid,
             precisionAllowed,
             isPrecisionFormatValid,
+            defaultValueAllowed,
+            isDefaultValueFormatValid,
           })}
           className={dialogActionButton({ variant: "primary" })}
         >
@@ -347,16 +353,21 @@ function isColumnFormInvalid({
   isSizeFormatValid,
   precisionAllowed,
   isPrecisionFormatValid,
+  defaultValueAllowed,
+  isDefaultValueFormatValid,
 }: {
   isNameInvalid: boolean;
   sizeAllowed: boolean;
   isSizeFormatValid: boolean;
   precisionAllowed: boolean;
   isPrecisionFormatValid: boolean;
+  defaultValueAllowed: boolean;
+  isDefaultValueFormatValid: boolean;
 }): boolean {
   return (
     isNameInvalid ||
     (sizeAllowed && !isSizeFormatValid) ||
-    (precisionAllowed && !isPrecisionFormatValid)
+    (precisionAllowed && !isPrecisionFormatValid) ||
+    (defaultValueAllowed && !isDefaultValueFormatValid)
   );
 }

@@ -92,6 +92,7 @@ export default {
     precisionInvalidFormatHint: "Precision must be a whole number from 0 to 6.",
     defaultValueLabel: "Default value",
     defaultValueNotApplicableHint: "Auto-increment columns can''t also have a default value.",
+    defaultValueInvalidFormatHint: "This default value is not valid for the column's type.",
     nullableLabel: "Nullable",
     autoIncrementLabel: "Auto increment",
     autoIncrementHint:

@@ -143,6 +143,26 @@ describe("postgresqlDialectStrategy", () => {
     expect(normalized.columns[0].defaultValue).toBe("");
   });
 
+  it("clears a default value with an invalid format for the column's type (0047)", () => {
+    const normalized = postgresqlDialectStrategy.normalizeColumnForDialect({
+      ...TABLE,
+      columns: [
+        { ...TABLE.columns[0], type: "BOOLEAN", autoIncrement: false, defaultValue: "hello" },
+      ],
+    });
+    expect(normalized.columns[0].defaultValue).toBe("");
+  });
+
+  it("keeps a default value with a valid format for the column's type", () => {
+    const normalized = postgresqlDialectStrategy.normalizeColumnForDialect({
+      ...TABLE,
+      columns: [
+        { ...TABLE.columns[0], type: "BOOLEAN", autoIncrement: false, defaultValue: "true" },
+      ],
+    });
+    expect(normalized.columns[0].defaultValue).toBe("true");
+  });
+
   it("delegates isSizeValid to the PostgreSQL rule", () => {
     expect(postgresqlDialectStrategy.isSizeValid("VARCHAR", "255")).toBe(true);
     expect(postgresqlDialectStrategy.isSizeValid("VARCHAR", "abc")).toBe(false);
@@ -151,6 +171,11 @@ describe("postgresqlDialectStrategy", () => {
   it("delegates isPrecisionValid to the PostgreSQL rule", () => {
     expect(postgresqlDialectStrategy.isPrecisionValid("TIMESTAMP", "3")).toBe(true);
     expect(postgresqlDialectStrategy.isPrecisionValid("TIMESTAMP", "7")).toBe(false);
+  });
+
+  it("delegates isDefaultValueValid to the PostgreSQL rule", () => {
+    expect(postgresqlDialectStrategy.isDefaultValueValid("BOOLEAN", "true")).toBe(true);
+    expect(postgresqlDialectStrategy.isDefaultValueValid("BOOLEAN", "hello")).toBe(false);
   });
 
   it("delegates isNameTaken to the PostgreSQL rule", () => {
