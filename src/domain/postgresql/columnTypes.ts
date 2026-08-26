@@ -14,6 +14,7 @@ export const POSTGRESQL_COLUMN_TYPES = [
   "TIMESTAMP",
   "UUID",
   "JSONB",
+  "BYTEA",
 ] as const;
 
 /** The subset of `POSTGRESQL_COLUMN_TYPES` that accepts a size/length modifier. */

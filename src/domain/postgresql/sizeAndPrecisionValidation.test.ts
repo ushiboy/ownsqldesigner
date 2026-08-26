@@ -34,6 +34,7 @@ describe("isPostgresqlSizeValid", () => {
   it("treats any value as valid for a non-sizable type", () => {
     expect(isPostgresqlSizeValid("BOOLEAN", "5")).toBe(true);
     expect(isPostgresqlSizeValid("BOOLEAN", "abc")).toBe(true);
+    expect(isPostgresqlSizeValid("BYTEA", "5")).toBe(true);
   });
 });
 

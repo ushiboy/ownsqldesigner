@@ -41,6 +41,7 @@ describe("postgresqlDialectStrategy", () => {
       "TIMESTAMP",
       "UUID",
       "JSONB",
+      "BYTEA",
     ]);
   });
 

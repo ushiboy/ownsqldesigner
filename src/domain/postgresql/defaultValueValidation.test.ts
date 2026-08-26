@@ -37,5 +37,6 @@ describe("isPostgresqlDefaultValueValid", () => {
     expect(isPostgresqlDefaultValueValid("VARCHAR", "anything")).toBe(true);
     expect(isPostgresqlDefaultValueValid("TIMESTAMP", "not-a-real-date")).toBe(true);
     expect(isPostgresqlDefaultValueValid("UUID", "abc")).toBe(true);
+    expect(isPostgresqlDefaultValueValid("BYTEA", "anything")).toBe(true);
   });
 });
