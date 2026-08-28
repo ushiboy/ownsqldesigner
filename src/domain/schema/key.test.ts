@@ -82,6 +82,34 @@ describe("addKey", () => {
     expect(updated).toBe(original);
   });
 
+  it("drops columnIds that don't exist on the table", () => {
+    const updated = addKey(
+      original,
+      "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12",
+      { type: "UNIQUE", columnIds: ["f1a2b3c4-5d6e-4f7a-8b9c-0d1e2f3a4b5c", "unknown-column-id"] },
+      { id: "b1c2d3e4-5f6a-4b7c-8d9e-0f1a2b3c4d5e", now: new Date("2026-07-19T09:00:00.000Z") },
+    );
+
+    expect(updated.tables[0]?.keys).toEqual([
+      {
+        id: "b1c2d3e4-5f6a-4b7c-8d9e-0f1a2b3c4d5e",
+        type: "UNIQUE",
+        columnIds: ["f1a2b3c4-5d6e-4f7a-8b9c-0d1e2f3a4b5c"],
+      },
+    ]);
+  });
+
+  it("is a no-op when columnIds only contains ids that don't exist on the table", () => {
+    const updated = addKey(
+      original,
+      "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12",
+      { type: "UNIQUE", columnIds: ["unknown-column-id"] },
+      { now: new Date("2026-07-19T09:00:00.000Z") },
+    );
+
+    expect(updated).toBe(original);
+  });
+
   it("is a no-op when adding a second PRIMARY_KEY", () => {
     const withPrimaryKey = addKey(
       original,
@@ -213,6 +241,36 @@ describe("updateKey", () => {
     expect(updated).toBe(original);
   });
 
+  it("drops columnIds that don't exist on the table", () => {
+    const updated = updateKey(
+      original,
+      "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12",
+      "b1c2d3e4-5f6a-4b7c-8d9e-0f1a2b3c4d5e",
+      { type: "UNIQUE", columnIds: ["f1a2b3c4-5d6e-4f7a-8b9c-0d1e2f3a4b5c", "unknown-column-id"] },
+      { now: new Date("2026-07-19T09:00:00.000Z") },
+    );
+
+    expect(updated.tables[0]?.keys).toEqual([
+      {
+        id: "b1c2d3e4-5f6a-4b7c-8d9e-0f1a2b3c4d5e",
+        type: "UNIQUE",
+        columnIds: ["f1a2b3c4-5d6e-4f7a-8b9c-0d1e2f3a4b5c"],
+      },
+    ]);
+  });
+
+  it("is a no-op when columnIds only contains ids that don't exist on the table", () => {
+    const updated = updateKey(
+      original,
+      "d4b2fa7b-8b86-4e4d-c1be-4e7f2c7b6a12",
+      "b1c2d3e4-5f6a-4b7c-8d9e-0f1a2b3c4d5e",
+      { type: "UNIQUE", columnIds: ["unknown-column-id"] },
+      { now: new Date("2026-07-19T09:00:00.000Z") },
+    );
+
+    expect(updated).toBe(original);
+  });
+
   it("is a no-op when changing to PRIMARY_KEY while a different key already is one", () => {
     const withPrimaryKey = addKey(
       original,
@@ -322,6 +380,28 @@ describe("updateKey", () => {
     });
 
     expect(updated).toBe(withFk);
+  });
+
+  it("allows updating a referenced key when a nonexistent columnId is dropped by sanitization, keeping it a sole valid column", () => {
+    const withFk = addForeignKey(
+      buildTwoTableSchema(),
+      POSTS_TABLE_ID,
+      {
+        columnId: POSTS_USER_ID_COLUMN_ID,
+        referencedTableId: USERS_TABLE_ID,
+        referencedColumnId: USERS_ID_COLUMN_ID,
+      },
+      { id: POSTS_FOREIGN_KEY_ID, now: new Date("2026-07-18T09:00:00.000Z") },
+    );
+
+    const updated = updateKey(withFk, USERS_TABLE_ID, USERS_ID_KEY_ID, {
+      type: "UNIQUE",
+      columnIds: [USERS_ID_COLUMN_ID, "unknown-column-id"],
+    });
+
+    expect(getTable(updated, USERS_TABLE_ID).keys).toEqual([
+      { id: USERS_ID_KEY_ID, type: "UNIQUE", columnIds: [USERS_ID_COLUMN_ID] },
+    ]);
   });
 
   it("allows toggling a referenced key between PRIMARY_KEY and UNIQUE on the same column", () => {

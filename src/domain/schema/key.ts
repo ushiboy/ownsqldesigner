@@ -23,7 +23,8 @@ export function addKey(
   options: AddKeyOptions = {},
 ): Schema {
   const targetTable = schema.tables.find((table) => table.id === tableId);
-  if (!canAddKey(targetTable, fields)) {
+  const sanitizedFields = sanitizeKeyColumnIds(targetTable, fields);
+  if (!canAddKey(targetTable, sanitizedFields)) {
     return schema;
   }
   const { id = crypto.randomUUID(), now = new Date() } = options;
@@ -32,7 +33,10 @@ export function addKey(
     ...schema,
     tables: schema.tables.map((table) =>
       table.id === tableId
-        ? strategy.normalizeColumnForDialect({ ...table, keys: [...table.keys, { id, ...fields }] })
+        ? strategy.normalizeColumnForDialect({
+            ...table,
+            keys: [...table.keys, { id, ...sanitizedFields }],
+          })
         : table,
     ),
     updatedAt: now,
@@ -51,7 +55,8 @@ export function updateKey(
   options: UpdateKeyOptions = {},
 ): Schema {
   const targetTable = schema.tables.find((table) => table.id === tableId);
-  if (!canUpdateKey(schema.tables, targetTable, keyId, fields)) {
+  const sanitizedFields = sanitizeKeyColumnIds(targetTable, fields);
+  if (!canUpdateKey(schema.tables, targetTable, keyId, sanitizedFields)) {
     return schema;
   }
   const { now = new Date() } = options;
@@ -62,7 +67,9 @@ export function updateKey(
       table.id === tableId
         ? strategy.normalizeColumnForDialect({
             ...table,
-            keys: table.keys.map((key) => (key.id === keyId ? { id: keyId, ...fields } : key)),
+            keys: table.keys.map((key) =>
+              key.id === keyId ? { id: keyId, ...sanitizedFields } : key,
+            ),
           })
         : table,
     ),
@@ -291,6 +298,14 @@ export function hasDuplicateIndexColumnSet(keys: Key[], fields: Omit<Key, "id">)
 
 function sameColumnOrder(a: string[], b: string[]): boolean {
   return a.length === b.length && a.every((value, index) => value === b[index]);
+}
+
+/** Drops `columnIds` that no longer exist on `table` before validating/persisting a key. */
+function sanitizeKeyColumnIds(table: Table | undefined, fields: Omit<Key, "id">): Omit<Key, "id"> {
+  if (table === undefined) {
+    return fields;
+  }
+  return { ...fields, columnIds: fields.columnIds.filter((id) => hasColumn(table, id)) };
 }
 
 function canAddKey(table: Table | undefined, fields: Omit<Key, "id">): boolean {
