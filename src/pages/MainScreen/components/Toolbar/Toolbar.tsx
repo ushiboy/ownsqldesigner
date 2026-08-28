@@ -81,10 +81,17 @@ export function Toolbar({
   snapToGrid,
   onToggleSnapToGrid,
 }: ToolbarProps) {
-  const { isOpen: isMenuOpen, wrapperRef: menuWrapperRef, toggle, close } = useToolbarMenu();
+  const {
+    isOpen: isMenuOpen,
+    wrapperRef: menuWrapperRef,
+    triggerRef: menuTriggerRef,
+    toggle,
+    close,
+  } = useToolbarMenu();
   const {
     isOpen: isLocaleMenuOpen,
     wrapperRef: localeMenuWrapperRef,
+    triggerRef: localeMenuTriggerRef,
     toggle: toggleLocaleMenu,
     close: closeLocaleMenu,
   } = useToolbarMenu();
@@ -103,6 +110,7 @@ export function Toolbar({
           type="button"
           aria-haspopup="menu"
           aria-expanded={isMenuOpen}
+          ref={menuTriggerRef}
           onClick={toggle}
           className={toolButton()}
         >
@@ -208,6 +216,7 @@ export function Toolbar({
             aria-haspopup="menu"
             aria-expanded={isLocaleMenuOpen}
             aria-label={t("localeAriaLabel", { locale })}
+            ref={localeMenuTriggerRef}
             onClick={toggleLocaleMenu}
             className={toolButton()}
           >

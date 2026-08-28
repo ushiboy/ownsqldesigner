@@ -170,7 +170,8 @@ trade.
 
 ## Open Questions
 
-- Whether the dropdown gets full APG arrow-key navigation or stays
-  click/Escape-only (carried over from 0002).
+- ~~Whether the dropdown gets full APG arrow-key navigation or stays
+  click/Escape-only (carried over from 0002).~~ Resolved by
+  [0052](0052-menu-roving-focus-keyboard-navigation.md).
 - Save-failure UX (quota exceeded, private mode) remains undesigned; the
   notification-bar plumbing added here is the likely surface.

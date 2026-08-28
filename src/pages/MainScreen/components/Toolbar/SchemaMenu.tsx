@@ -1,6 +1,7 @@
 import { LuCheck } from "react-icons/lu";
 import { useTranslations } from "use-intl";
 import { useEscapeKey } from "../../../../components/hooks/useEscapeKey";
+import { useMenuRovingFocus } from "../../../../components/hooks/useMenuRovingFocus";
 import type { SchemaSummary } from "../../../../domain/schema";
 import { useActiveDialog } from "../../ActiveDialogContext";
 import { menuBox, menuItem } from "./dropdownMenu";
@@ -22,10 +23,24 @@ export function SchemaMenu({
   const t = useTranslations("schemaMenu");
 
   useEscapeKey(onClose);
+  const { getItemTabIndex, registerItemRef, onMenuKeyDown } = useMenuRovingFocus({
+    itemCount: savedSchemas.length + 1,
+    initialIndex: Math.max(
+      0,
+      savedSchemas.findIndex((schema) => schema.id === currentSchemaId),
+    ),
+    onClose,
+  });
 
   return (
-    <div role="menu" aria-label={t("ariaLabel")} className={menuBox()}>
-      {savedSchemas.map((schema) => {
+    <div
+      role="menu"
+      aria-label={t("ariaLabel")}
+      tabIndex={-1}
+      onKeyDown={onMenuKeyDown}
+      className={menuBox()}
+    >
+      {savedSchemas.map((schema, index) => {
         const isCurrent = schema.id === currentSchemaId;
         return (
           <button
@@ -33,6 +48,8 @@ export function SchemaMenu({
             type="button"
             role="menuitem"
             aria-current={isCurrent || undefined}
+            ref={registerItemRef(index)}
+            tabIndex={getItemTabIndex(index)}
             onClick={() => {
               onClose();
               onSelectSchema(schema.id);
@@ -52,6 +69,8 @@ export function SchemaMenu({
       <button
         type="button"
         role="menuitem"
+        ref={registerItemRef(savedSchemas.length)}
+        tabIndex={getItemTabIndex(savedSchemas.length)}
         onClick={() => {
           onClose();
           openDialog("createSchema");

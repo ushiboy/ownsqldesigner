@@ -4,6 +4,7 @@ import type { RefObject } from "react";
 type UseToolbarMenuResult = {
   isOpen: boolean;
   wrapperRef: RefObject<HTMLDivElement | null>;
+  triggerRef: RefObject<HTMLButtonElement | null>;
   toggle: () => void;
   close: () => void;
 };
@@ -11,6 +12,7 @@ type UseToolbarMenuResult = {
 export function useToolbarMenu(): UseToolbarMenuResult {
   const [isOpen, setIsOpen] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
 
   // Close the menu on any pointer press outside the trigger and the menu.
   useEffect(() => {
@@ -30,7 +32,11 @@ export function useToolbarMenu(): UseToolbarMenuResult {
   return {
     isOpen,
     wrapperRef,
+    triggerRef,
     toggle: () => setIsOpen((prev) => !prev),
-    close: () => setIsOpen(false),
+    close: () => {
+      setIsOpen(false);
+      triggerRef.current?.focus();
+    },
   };
 }

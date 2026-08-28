@@ -182,5 +182,6 @@ doc activates selection.
 
 - Multi-tab use can race on the last-edited pointer and on documents;
   out of scope for now.
-- Whether the dropdown menu gets full APG arrow-key navigation or stays
-  click/Escape-only.
+- ~~Whether the dropdown menu gets full APG arrow-key navigation or stays
+  click/Escape-only.~~ Resolved by
+  [0052](0052-menu-roving-focus-keyboard-navigation.md).

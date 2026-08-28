@@ -71,4 +71,22 @@ describe("useToolbarMenu", () => {
 
     expect(result.current.isOpen).toBe(false);
   });
+
+  it("moves focus to the trigger when closed via close()", () => {
+    const { result } = renderHook(() => useToolbarMenu());
+    const trigger = document.createElement("button");
+    document.body.appendChild(trigger);
+    result.current.triggerRef.current = trigger;
+
+    act(() => {
+      result.current.toggle();
+    });
+    act(() => {
+      result.current.close();
+    });
+
+    expect(document.activeElement).toBe(trigger);
+
+    document.body.removeChild(trigger);
+  });
 });

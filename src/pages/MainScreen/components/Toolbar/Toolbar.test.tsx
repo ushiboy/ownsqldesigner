@@ -239,12 +239,44 @@ describe("Toolbar", () => {
     );
   });
 
-  it("calls onSelectSchema with the id and closes the menu when a schema is clicked", async () => {
+  it("focuses the current schema when the menu opens", async () => {
+    await openMenu();
+    expect(screen.getByRole("menuitem", { name: "Blog Schema" })).toHaveFocus();
+  });
+
+  it("moves focus between schema menu items with ArrowDown/ArrowUp, wrapping at the ends", async () => {
+    const user = await openMenu();
+    await user.keyboard("{ArrowDown}");
+    expect(screen.getByRole("menuitem", { name: "Shop Schema" })).toHaveFocus();
+    await user.keyboard("{ArrowDown}");
+    expect(screen.getByRole("menuitem", { name: "+ New Schema" })).toHaveFocus();
+    await user.keyboard("{ArrowDown}");
+    expect(screen.getByRole("menuitem", { name: "Blog Schema" })).toHaveFocus();
+    await user.keyboard("{ArrowUp}");
+    expect(screen.getByRole("menuitem", { name: "+ New Schema" })).toHaveFocus();
+  });
+
+  it("jumps to the first/last schema menu item with Home/End", async () => {
+    const user = await openMenu();
+    await user.keyboard("{End}");
+    expect(screen.getByRole("menuitem", { name: "+ New Schema" })).toHaveFocus();
+    await user.keyboard("{Home}");
+    expect(screen.getByRole("menuitem", { name: "Blog Schema" })).toHaveFocus();
+  });
+
+  it("closes the schema menu on Tab", async () => {
+    const user = await openMenu();
+    await user.keyboard("{Tab}");
+    expect(screen.queryByRole("menu")).not.toBeInTheDocument();
+  });
+
+  it("calls onSelectSchema with the id, closes the menu, and returns focus to the trigger when a schema is clicked", async () => {
     const onSelectSchema = fn();
     const user = await openMenu({ onSelectSchema });
     await user.click(screen.getByRole("menuitem", { name: "Shop Schema" }));
     expect(onSelectSchema).toHaveBeenCalledExactlyOnceWith("3f2b5c0a-88d1-4f4a-9ce6-64f19f0f9be3");
     expect(screen.queryByRole("menu")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Blog Schema" })).toHaveFocus();
   });
 
   it("closes the menu when + New Schema is clicked", async () => {
@@ -253,16 +285,18 @@ describe("Toolbar", () => {
     expect(screen.queryByRole("menu")).not.toBeInTheDocument();
   });
 
-  it("closes the menu when Escape is pressed", async () => {
+  it("closes the menu and returns focus to the trigger when Escape is pressed", async () => {
     const user = await openMenu();
     await user.keyboard("{Escape}");
     expect(screen.queryByRole("menu")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Blog Schema" })).toHaveFocus();
   });
 
-  it("closes the menu when clicking outside of it", async () => {
+  it("closes the menu when clicking outside of it, without forcing focus back to the trigger", async () => {
     const user = await openMenu();
     await user.click(document.body);
     expect(screen.queryByRole("menu")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Blog Schema" })).not.toHaveFocus();
   });
 
   it("calls onToggleSidePanel when the side panel toggle is clicked", async () => {
@@ -401,7 +435,48 @@ describe("Toolbar", () => {
     expect(screen.getByRole("menuitem", { name: "日本語" })).not.toHaveAttribute("aria-current");
   });
 
-  it("switches the UI language and closes the menu when a language is selected", async () => {
+  it("focuses the current language when the locale menu opens", async () => {
+    render(<Default />);
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: "Language: en" }));
+
+    expect(screen.getByRole("menuitem", { name: "English" })).toHaveFocus();
+  });
+
+  it("moves focus between locale menu items with ArrowDown/ArrowUp, wrapping at the ends", async () => {
+    render(<Default />);
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: "Language: en" }));
+
+    await user.keyboard("{ArrowDown}");
+    expect(screen.getByRole("menuitem", { name: "日本語" })).toHaveFocus();
+    await user.keyboard("{ArrowDown}");
+    expect(screen.getByRole("menuitem", { name: "English" })).toHaveFocus();
+    await user.keyboard("{ArrowUp}");
+    expect(screen.getByRole("menuitem", { name: "日本語" })).toHaveFocus();
+  });
+
+  it("jumps to the first/last locale menu item with Home/End", async () => {
+    render(<Default />);
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: "Language: en" }));
+
+    await user.keyboard("{End}");
+    expect(screen.getByRole("menuitem", { name: "日本語" })).toHaveFocus();
+    await user.keyboard("{Home}");
+    expect(screen.getByRole("menuitem", { name: "English" })).toHaveFocus();
+  });
+
+  it("closes the locale menu on Tab", async () => {
+    render(<Default />);
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: "Language: en" }));
+    await user.keyboard("{Tab}");
+
+    expect(screen.queryByRole("menu")).not.toBeInTheDocument();
+  });
+
+  it("switches the UI language, closes the menu, and returns focus to the trigger when a language is selected", async () => {
     render(<Default />);
     const user = userEvent.setup();
     await user.click(screen.getByRole("button", { name: "Language: en" }));
@@ -410,23 +485,26 @@ describe("Toolbar", () => {
     expect(screen.queryByRole("menu")).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "言語: ja" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "スキーマ名を変更" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "言語: ja" })).toHaveFocus();
   });
 
-  it("closes the locale menu when Escape is pressed", async () => {
+  it("closes the locale menu and returns focus to the trigger when Escape is pressed", async () => {
     render(<Default />);
     const user = userEvent.setup();
     await user.click(screen.getByRole("button", { name: "Language: en" }));
     await user.keyboard("{Escape}");
 
     expect(screen.queryByRole("menu")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Language: en" })).toHaveFocus();
   });
 
-  it("closes the locale menu when clicking outside of it", async () => {
+  it("closes the locale menu when clicking outside of it, without forcing focus back to the trigger", async () => {
     render(<Default />);
     const user = userEvent.setup();
     await user.click(screen.getByRole("button", { name: "Language: en" }));
     await user.click(document.body);
 
     expect(screen.queryByRole("menu")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Language: en" })).not.toHaveFocus();
   });
 });

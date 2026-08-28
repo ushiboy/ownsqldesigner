@@ -26,6 +26,10 @@ Choose the testing style by the kind of code (see [Component Design](component-d
 - Use `describe("<ComponentOrFunctionName>", ...)` with behavior-phrased `it("...")` blocks.
 - Within a test file, put shared helper functions (fixture builders, etc.) before the `describe` block(s) that use them, ordered by their own internal dependencies — then the specs. This is the reverse of [Code Organization](code-organization.md)'s rule for regular source files (helpers go at the bottom there): a test file reads top-to-bottom as setup followed by scenarios, not public API followed by implementation.
 
+### Hooks with mount-time ref-dependent behavior
+
+A hook that manages DOM refs supplied by the caller through a callback ref (e.g. a roving-focus hook registering multiple item refs) and runs a mount-time effect that reads those refs (e.g. focusing an element on mount) cannot be exercised with `renderHook` alone: the test can only reach the hook's ref-registration function after the hook has already mounted, so there is no way to attach a real DOM ref before the initial effect runs. For these hooks, colocate a minimal, non-exported harness component in the test file and test via `render()` instead — do not fall back to `renderHook` at the cost of losing coverage of the mount-time behavior itself.
+
 ### UI components and pages
 
 - Create `<Name>.stories.tsx` as a visual catalog of the component's representative states for Storybook.

@@ -78,12 +78,12 @@ The Phase column gives a rough implementation order: Phase 1 = core MVP, Phase 2
 
 ### UI / UX
 
-| ID      | Requirement                                                                                                                                                                                            | Phase |
-| ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----- |
-| REQ-029 | Dark mode (theme switching) ([0018](design/0018-dark-mode-toggle.md))                                                                                                                                  | 2     |
-| REQ-030 | Japanese / English UI switching (i18n) ([0019](design/0019-i18n-locale-switching.md))                                                                                                                  | 2     |
-| REQ-031 | Keyboard shortcuts (delete, undo/redo, confirm/cancel, ...) ([0017](design/0017-keyboard-shortcuts.md), [0032](design/0032-escape-clears-canvas-selection.md))                                         | 2     |
-| REQ-032 | Persist settings (snap, FK naming pattern, display toggles); choose a schema's dialect at creation time ([0025](design/0025-fk-naming-pattern-setting.md), [0035](design/0035-dialect-selector-ui.md)) | 3     |
+| ID      | Requirement                                                                                                                                                                                                                  | Phase |
+| ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----- |
+| REQ-029 | Dark mode (theme switching) ([0018](design/0018-dark-mode-toggle.md))                                                                                                                                                        | 2     |
+| REQ-030 | Japanese / English UI switching (i18n) ([0019](design/0019-i18n-locale-switching.md))                                                                                                                                        | 2     |
+| REQ-031 | Keyboard shortcuts (delete, undo/redo, confirm/cancel, ...) ([0017](design/0017-keyboard-shortcuts.md), [0032](design/0032-escape-clears-canvas-selection.md), [0052](design/0052-menu-roving-focus-keyboard-navigation.md)) | 2     |
+| REQ-032 | Persist settings (snap, FK naming pattern, display toggles); choose a schema's dialect at creation time ([0025](design/0025-fk-naming-pattern-setting.md), [0035](design/0035-dialect-selector-ui.md))                       | 3     |
 
 ## Non-Goals
 
