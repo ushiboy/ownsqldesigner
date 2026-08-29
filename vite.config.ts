@@ -7,6 +7,9 @@ import tailwindcss from "@tailwindcss/vite";
 
 // https://vite.dev/config/
 export default defineConfig({
+  // Only the GitHub Pages deploy workflow sets GITHUB_PAGES, so local dev,
+  // `pnpm build` and CI's e2e job (which also runs `vite build`) keep base "/".
+  base: process.env.GITHUB_PAGES ? "/ownsqldesigner/" : "/",
   plugins: [react(), babel({ presets: [reactCompilerPreset()] }), tailwindcss()],
   resolve: {
     alias: {
