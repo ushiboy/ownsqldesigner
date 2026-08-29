@@ -284,6 +284,13 @@ export const ExportSqlDialogOpen: Story = {
   },
 };
 
+export const ExportMermaidDialogOpen: Story = {
+  args: {
+    initialSchema: withUsers,
+    initialDialog: "exportMermaid",
+  },
+};
+
 export const DeleteRelationDialogOpen: Story = {
   args: {
     initialSchema: withRelation,

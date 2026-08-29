@@ -76,6 +76,7 @@ The Phase column gives a rough implementation order: Phase 1 = core MVP, Phase 2
 | REQ-035 | Create a new blank schema ([0002](design/0002-schema-persistence-and-creation.md))                                                                                                                                                               | 1     |
 | REQ-036 | Delete saved schemas from browser storage ([0003](design/0003-schema-selection-rename-delete.md))                                                                                                                                                | 1     |
 | REQ-037 | Rename saved schemas in browser storage ([0003](design/0003-schema-selection-rename-delete.md))                                                                                                                                                  | 2     |
+| REQ-041 | Export the schema as Mermaid ER diagram code, with copy/download and a live preview ([0055](design/0055-export-mermaid-er-diagram.md))                                                                                                           | 3     |
 
 ### UI / UX
 

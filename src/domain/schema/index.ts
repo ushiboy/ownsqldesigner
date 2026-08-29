@@ -7,6 +7,7 @@ export {
   updateColumn,
 } from "./column";
 export { createTableWithDefaultColumns } from "./createTableWithDefaultColumns";
+export { generateMermaidErDiagram } from "./generateMermaidErDiagram";
 export {
   defaultColumnTemplateSchema,
   defaultColumnTemplatesSettingsSchema,

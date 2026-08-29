@@ -175,6 +175,9 @@ export function Toolbar({
         <button type="button" onClick={() => openDialog("exportSql")} className={toolButton()}>
           {t("exportSql")}
         </button>
+        <button type="button" onClick={() => openDialog("exportMermaid")} className={toolButton()}>
+          {t("exportMermaid")}
+        </button>
         <button
           type="button"
           disabled={!canDownloadSchema}

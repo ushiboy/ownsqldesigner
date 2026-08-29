@@ -22,6 +22,7 @@ export type Messages = {
     autoAlignAriaLabel: string;
     addTable: string;
     exportSql: string;
+    exportMermaid: string;
     downloadJson: string;
     /** ICU placeholder: {theme} */
     themeAriaLabel: string;
@@ -155,6 +156,20 @@ export type Messages = {
     downloadSql: string;
     copyToClipboard: string;
     copied: string;
+    close: string;
+  };
+  exportMermaid: {
+    title: string;
+    codeTab: string;
+    previewTab: string;
+    generatedCodeAriaLabel: string;
+    noTablesMessage: string;
+    downloadMermaid: string;
+    copyToClipboard: string;
+    copied: string;
+    previewLoadingMessage: string;
+    previewErrorMessage: string;
+    previewImageAlt: string;
     close: string;
   };
   notificationBar: {

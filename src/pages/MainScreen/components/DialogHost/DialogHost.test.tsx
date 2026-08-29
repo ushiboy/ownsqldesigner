@@ -20,6 +20,7 @@ const {
   DeleteKeyDialogOpen,
   DeleteReferencedKeyDialogOpen,
   ExportSqlDialogOpen,
+  ExportMermaidDialogOpen,
   DeleteRelationDialogOpen,
 } = composeStories(stories);
 
@@ -138,6 +139,14 @@ describe("DialogHost", () => {
     expect(screen.getByRole("dialog", { name: "Export SQL" })).toBeInTheDocument();
     expect(screen.getByLabelText("Generated SQL")).toHaveValue(
       "CREATE TABLE users (\n  email TEXT NOT NULL,\n  id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL\n);",
+    );
+  });
+
+  it("shows the export Mermaid dialog with the generated diagram code while activeDialog is exportMermaid", () => {
+    render(<ExportMermaidDialogOpen />);
+    expect(screen.getByRole("dialog", { name: "Export Mermaid" })).toBeInTheDocument();
+    expect(screen.getByLabelText("Generated Mermaid code")).toHaveValue(
+      'erDiagram\n  users {\n    TEXT email "not null"\n    INTEGER id PK "not null"\n  }',
     );
   });
 

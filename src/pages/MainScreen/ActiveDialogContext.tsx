@@ -13,7 +13,8 @@ export type DialogKind =
   | "editKey"
   | "deleteKey"
   | "deleteRelation"
-  | "exportSql";
+  | "exportSql"
+  | "exportMermaid";
 
 type ActiveDialogContextValue = {
   /** null while no dialog is open; overlapping dialogs are unrepresentable. */

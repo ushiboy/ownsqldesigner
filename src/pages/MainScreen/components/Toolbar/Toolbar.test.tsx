@@ -167,6 +167,7 @@ describe("Toolbar", () => {
     expect(screen.getByRole("button", { name: "Redo" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Add Table" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Export SQL" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Export Mermaid" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Download JSON" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Load JSON" })).toBeInTheDocument();
   });

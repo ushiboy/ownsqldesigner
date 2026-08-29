@@ -3,6 +3,7 @@ import { useTranslations } from "use-intl";
 import { ColumnDialog } from "../../../../components/parts/ColumnDialog";
 import type { DialectStrategy } from "../../../../domain/dialect";
 import {
+  generateMermaidErDiagram,
   hasPrimaryKey,
   isKeyReferencedByForeignKey,
   type Column,
@@ -17,6 +18,7 @@ import { useActiveDialog } from "../../ActiveDialogContext";
 import { useSchemaActions, useTables } from "../../SchemaWorkspaceContext";
 import { useSelection } from "../../SelectionContext";
 import { ConfirmDialog } from "../ConfirmDialog";
+import { ExportMermaidDialog } from "../ExportMermaidDialog";
 import { ExportSqlDialog } from "../ExportSqlDialog";
 import { KeyDialog } from "../KeyDialog";
 import { SchemaNameDialog } from "../SchemaNameDialog";
@@ -93,6 +95,10 @@ export function DialogHost({
       activeDialog === "exportSql"
         ? tables.filter((table) => !hasPrimaryKey(table)).map((table) => table.name)
         : NO_NAMES,
+    [activeDialog, tables],
+  );
+  const mermaidCode = useMemo(
+    () => (activeDialog === "exportMermaid" ? generateMermaidErDiagram(tables) : ""),
     [activeDialog, tables],
   );
   const tableNames = useMemo(() => tables.map((table) => table.name), [tables]);
@@ -321,6 +327,12 @@ export function DialogHost({
         open={activeDialog === "exportSql"}
         ddl={ddl}
         tablesWithoutPrimaryKey={tablesWithoutPrimaryKey}
+        schemaName={schemaName}
+        onClose={closeDialog}
+      />
+      <ExportMermaidDialog
+        open={activeDialog === "exportMermaid"}
+        code={mermaidCode}
         schemaName={schemaName}
         onClose={closeDialog}
       />

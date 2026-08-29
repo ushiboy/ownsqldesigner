@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { fn } from "storybook/test";
 import { composeStories } from "@storybook/react-vite";
 import { saveAs } from "file-saver";
+import { mockClipboard } from "../../../../test/domMocks";
 import * as stories from "./ExportSqlDialog.stories";
 
 vi.mock("file-saver", () => ({
@@ -10,16 +11,6 @@ vi.mock("file-saver", () => ({
 }));
 
 const { Open, Empty, WithWarning } = composeStories(stories);
-
-// jsdom does not implement the Clipboard API.
-function mockClipboard() {
-  const writeText = fn().mockResolvedValue(undefined);
-  Object.defineProperty(navigator, "clipboard", {
-    value: { writeText },
-    configurable: true,
-  });
-  return writeText;
-}
 
 describe("ExportSqlDialog", () => {
   beforeEach(() => {
