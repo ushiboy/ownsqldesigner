@@ -1,8 +1,10 @@
 import { useMemo, useState } from "react";
+import { useDefaultColumnTemplates } from "../../components/hooks/useDefaultColumnTemplates";
 import { useFkNamingPattern } from "../../components/hooks/useFkNamingPattern";
 import {
   EMPTY_COLUMN_KEY_MEMBERSHIP,
   EMPTY_COLUMN_KEY_MEMBERSHIP_DISABLED,
+  type DefaultColumnTemplatesSettings,
   type FkNamingPattern,
   type ForeignKey,
   getColumnKeyMembership,
@@ -41,6 +43,7 @@ export type MainScreenSeed = {
   initialShowColumnDetails?: boolean;
   initialSnapToGrid?: boolean;
   initialFkNamingPattern?: FkNamingPattern;
+  initialDefaultColumnTemplates?: DefaultColumnTemplatesSettings;
 };
 
 type MainScreenProps = MainScreenSeed & {
@@ -60,6 +63,7 @@ function MainScreen({
   initialShowColumnDetails,
   initialSnapToGrid,
   initialFkNamingPattern,
+  initialDefaultColumnTemplates,
 }: MainScreenProps) {
   return (
     <LocaleProvider initialLocale={initialLocale}>
@@ -74,6 +78,7 @@ function MainScreen({
                   initialShowColumnDetails={initialShowColumnDetails}
                   initialSnapToGrid={initialSnapToGrid}
                   initialFkNamingPattern={initialFkNamingPattern}
+                  initialDefaultColumnTemplates={initialDefaultColumnTemplates}
                 />
               </CanvasApiProvider>
             </SelectionProvider>
@@ -92,6 +97,7 @@ type MainScreenContentProps = {
   initialShowColumnDetails?: boolean;
   initialSnapToGrid?: boolean;
   initialFkNamingPattern?: FkNamingPattern;
+  initialDefaultColumnTemplates?: DefaultColumnTemplatesSettings;
 };
 
 function MainScreenContent({
@@ -100,6 +106,7 @@ function MainScreenContent({
   initialShowColumnDetails,
   initialSnapToGrid,
   initialFkNamingPattern,
+  initialDefaultColumnTemplates,
 }: MainScreenContentProps) {
   const [isSidePanelOpen, setIsSidePanelOpen] = useState(initialSidePanelOpen ?? true);
   const { theme, resolvedTheme, cycleTheme } = useThemePreference(initialTheme);
@@ -107,6 +114,7 @@ function MainScreenContent({
     useColumnDetailsVisibility(initialShowColumnDetails);
   const { snapToGrid, toggleSnapToGrid } = useSnapToGrid(initialSnapToGrid);
   const { fkNamingPattern } = useFkNamingPattern(initialFkNamingPattern);
+  const { defaultColumnTemplates } = useDefaultColumnTemplates(initialDefaultColumnTemplates);
   const { selectedTableId, selectedColumnId, selectedKeyId, selectedRelationId } = useSelection();
 
   const tables = useTables();
@@ -163,6 +171,7 @@ function MainScreenContent({
       snapToGrid={snapToGrid}
       onToggleSnapToGrid={toggleSnapToGrid}
       fkNamingPattern={fkNamingPattern}
+      defaultColumnTemplates={defaultColumnTemplates}
     />
   );
 }

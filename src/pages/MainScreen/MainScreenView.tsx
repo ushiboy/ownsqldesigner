@@ -1,14 +1,16 @@
 import { useMemo, useState } from "react";
 import { format } from "date-fns";
 import { DEFAULT_SQL_DIALECT, getDialectStrategy } from "../../domain/dialect";
-import type {
-  Column,
-  ColumnKeyMembership,
-  ColumnKeyMembershipDisabled,
-  FkNamingPattern,
-  ForeignKey,
-  Key,
-  Table,
+import {
+  getDefaultColumnTemplatesForDialect,
+  type Column,
+  type ColumnKeyMembership,
+  type ColumnKeyMembershipDisabled,
+  type DefaultColumnTemplatesSettings,
+  type FkNamingPattern,
+  type ForeignKey,
+  type Key,
+  type Table,
 } from "../../domain/schema";
 import { useActiveDialog } from "./ActiveDialogContext";
 import { Canvas } from "./components/Canvas";
@@ -52,6 +54,7 @@ type MainScreenViewProps = {
   snapToGrid: boolean;
   onToggleSnapToGrid: () => void;
   fkNamingPattern: FkNamingPattern;
+  defaultColumnTemplates: DefaultColumnTemplatesSettings;
   colorMode: "light" | "dark";
 };
 
@@ -74,6 +77,7 @@ export function MainScreenView({
   snapToGrid,
   onToggleSnapToGrid,
   fkNamingPattern,
+  defaultColumnTemplates,
   colorMode,
 }: MainScreenViewProps) {
   const { openDialog } = useActiveDialog();
@@ -123,9 +127,11 @@ export function MainScreenView({
     );
 
   const schemaName = currentSchema?.name ?? NO_VALUE;
-  const strategy = useMemo(
-    () => getDialectStrategy(currentSchema?.dialect ?? DEFAULT_SQL_DIALECT),
-    [currentSchema?.dialect],
+  const dialect = currentSchema?.dialect ?? DEFAULT_SQL_DIALECT;
+  const strategy = useMemo(() => getDialectStrategy(dialect), [dialect]);
+  const defaultColumnsForDialect = useMemo(
+    () => getDefaultColumnTemplatesForDialect(defaultColumnTemplates, dialect),
+    [defaultColumnTemplates, dialect],
   );
   const createdDate =
     currentSchema === null ? NO_VALUE : format(currentSchema.createdAt, "yyyy-MM-dd");
@@ -188,7 +194,7 @@ export function MainScreenView({
           schemaName={schemaName}
           tableCount={tables.length}
           createdDate={createdDate}
-          dialect={currentSchema?.dialect ?? DEFAULT_SQL_DIALECT}
+          dialect={dialect}
           selectedTable={selectedTable}
           selectedTableCount={selectedTableIds.size}
           strategy={strategy}
@@ -232,6 +238,7 @@ export function MainScreenView({
       <DialogHost
         schemaName={schemaName}
         strategy={strategy}
+        defaultColumnTemplates={defaultColumnsForDialect}
         selectedTable={selectedTable}
         selectedColumn={selectedColumn}
         selectedKey={selectedKey}

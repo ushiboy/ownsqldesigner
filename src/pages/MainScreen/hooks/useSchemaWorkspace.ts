@@ -2,6 +2,7 @@ import type { SqlDialect } from "../../../domain/dialect";
 import type {
   Column,
   ColumnKeyMembership,
+  DefaultColumnTemplate,
   FkNamingPattern,
   ForeignKey,
   Key,
@@ -19,7 +20,7 @@ export type SchemaActions = {
   loadSchemaFromFile: (schema: Schema) => void;
   renameSchema: (name: string) => void;
   deleteCurrentSchema: () => void;
-  createTable: (name: string) => void;
+  createTable: (name: string, defaultColumnTemplates?: DefaultColumnTemplate[]) => void;
   renameTable: (tableId: string, name: string) => void;
   updateTableComment: (tableId: string, comment: string) => void;
   moveTable: (tableId: string, position: Position) => void;

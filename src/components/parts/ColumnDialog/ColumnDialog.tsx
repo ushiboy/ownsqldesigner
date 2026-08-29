@@ -1,15 +1,15 @@
 import { useState } from "react";
 import { tv } from "tailwind-variants";
 import { useTranslations } from "use-intl";
-import { Dialog, dialogActionButton } from "../../../../components/parts/Dialog";
-import type { DialectStrategy } from "../../../../domain/dialect";
+import { Dialog, dialogActionButton } from "../Dialog";
+import type { DialectStrategy } from "../../../domain/dialect";
 import {
   type Column,
   type ColumnKeyMembership,
   type ColumnKeyMembershipDisabled,
   describeNameValidity,
   KEY_TYPES,
-} from "../../../../domain/schema";
+} from "../../../domain/schema";
 
 const fieldInput = tv({
   base: "mt-1 w-full rounded-md border border-edge bg-surface px-2.5 py-1.5 text-[14px] text-heading focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",

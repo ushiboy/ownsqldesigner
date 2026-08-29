@@ -178,5 +178,8 @@ export default {
     namingPatternTableColumnExample: "例: users_id",
     namingPatternTableIdLabel: "テーブル名 + 「id」",
     namingPatternTableIdExample: "例: users_id",
+    defaultColumnsCategoryHeading: "デフォルトカラム",
+    defaultColumnsDialectLegend: "Dialect",
+    defaultColumnsEmptyHint: "このdialectにはデフォルトカラムが設定されていません。",
   },
 } satisfies Messages;

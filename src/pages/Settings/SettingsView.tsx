@@ -1,14 +1,22 @@
 import { Link } from "react-router";
 import { useTranslations } from "use-intl";
-import type { FkNamingPattern } from "../../domain/schema";
+import type { DefaultColumnTemplatesSettings, FkNamingPattern } from "../../domain/schema";
+import { DefaultColumnTemplatesEditor } from "./components/DefaultColumnTemplatesEditor";
 import { RadioOption } from "./components/RadioOption";
 
 type SettingsViewProps = {
   fkNamingPattern: FkNamingPattern;
   onChangeFkNamingPattern: (pattern: FkNamingPattern) => void;
+  defaultColumnTemplates: DefaultColumnTemplatesSettings;
+  onChangeDefaultColumnTemplates: (settings: DefaultColumnTemplatesSettings) => void;
 };
 
-export function SettingsView({ fkNamingPattern, onChangeFkNamingPattern }: SettingsViewProps) {
+export function SettingsView({
+  fkNamingPattern,
+  onChangeFkNamingPattern,
+  defaultColumnTemplates,
+  onChangeDefaultColumnTemplates,
+}: SettingsViewProps) {
   const t = useTranslations("settings");
 
   return (
@@ -36,6 +44,15 @@ export function SettingsView({ fkNamingPattern, onChangeFkNamingPattern }: Setti
             onChange={() => onChangeFkNamingPattern("tableId")}
           />
         </fieldset>
+      </section>
+      <section className="mt-8">
+        <h2 className="text-[16px] text-heading">{t("defaultColumnsCategoryHeading")}</h2>
+        <div className="mt-3">
+          <DefaultColumnTemplatesEditor
+            settings={defaultColumnTemplates}
+            onChange={onChangeDefaultColumnTemplates}
+          />
+        </div>
       </section>
     </div>
   );

@@ -4,6 +4,7 @@ import type { DialectStrategy } from "../../../../domain/dialect";
 import {
   EMPTY_COLUMN_KEY_MEMBERSHIP,
   EMPTY_COLUMN_KEY_MEMBERSHIP_DISABLED,
+  type DefaultColumnTemplate,
   type Schema,
 } from "../../../../domain/schema";
 import { sqliteDialectStrategy } from "../../../../domain/sqlite/sqliteDialectStrategy";
@@ -101,6 +102,7 @@ type SeededDialogHostProps = {
   initialSelection?: InitialSelection;
   schemaName: string;
   strategy: DialectStrategy;
+  defaultColumnTemplates: DefaultColumnTemplate[];
   selectedTable: typeof usersTable | null;
   selectedColumn: (typeof usersTable.columns)[number] | null;
   selectedKey: (typeof usersTable.keys)[number] | null;
@@ -147,6 +149,7 @@ const meta = {
     initialDialog: null,
     schemaName: "Blog Schema",
     strategy: sqliteDialectStrategy,
+    defaultColumnTemplates: [],
     selectedTable: null,
     selectedColumn: null,
     selectedKey: null,

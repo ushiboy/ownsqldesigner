@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { useTranslations } from "use-intl";
+import { ColumnDialog } from "../../../../components/parts/ColumnDialog";
 import type { DialectStrategy } from "../../../../domain/dialect";
 import {
   hasPrimaryKey,
@@ -7,6 +8,7 @@ import {
   type Column,
   type ColumnKeyMembership,
   type ColumnKeyMembershipDisabled,
+  type DefaultColumnTemplate,
   type ForeignKey,
   type Key,
   type Table,
@@ -14,7 +16,6 @@ import {
 import { useActiveDialog } from "../../ActiveDialogContext";
 import { useSchemaActions, useTables } from "../../SchemaWorkspaceContext";
 import { useSelection } from "../../SelectionContext";
-import { ColumnDialog } from "../ColumnDialog";
 import { ConfirmDialog } from "../ConfirmDialog";
 import { ExportSqlDialog } from "../ExportSqlDialog";
 import { KeyDialog } from "../KeyDialog";
@@ -29,6 +30,7 @@ const NO_KEYS: Key[] = [];
 type DialogHostProps = {
   schemaName: string;
   strategy: DialectStrategy;
+  defaultColumnTemplates: DefaultColumnTemplate[];
   selectedTable: Table | null;
   selectedColumn: Column | null;
   selectedKey: Key | null;
@@ -42,6 +44,7 @@ type DialogHostProps = {
 export function DialogHost({
   schemaName,
   strategy,
+  defaultColumnTemplates,
   selectedTable,
   selectedColumn,
   selectedKey,
@@ -155,7 +158,7 @@ export function DialogHost({
         strategy={strategy}
         existingNames={tableNames}
         onSubmit={(name) => {
-          onCreateTable(name);
+          onCreateTable(name, defaultColumnTemplates);
           closeDialog();
         }}
         onCancel={closeDialog}

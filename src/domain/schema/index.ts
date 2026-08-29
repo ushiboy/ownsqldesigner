@@ -6,6 +6,16 @@ export {
   removeColumn,
   updateColumn,
 } from "./column";
+export { createTableWithDefaultColumns } from "./createTableWithDefaultColumns";
+export {
+  defaultColumnTemplateSchema,
+  defaultColumnTemplatesSettingsSchema,
+  EMPTY_DEFAULT_COLUMN_TEMPLATES_SETTINGS,
+  getDefaultColumnTemplateKeyMembershipDisabled,
+  getDefaultColumnTemplatesForDialect,
+  type DefaultColumnTemplate,
+  type DefaultColumnTemplatesSettings,
+} from "./defaultColumnTemplate";
 export {
   addForeignKey,
   addForeignKeyWithNewColumn,

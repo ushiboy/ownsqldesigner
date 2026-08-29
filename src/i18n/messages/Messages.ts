@@ -186,5 +186,8 @@ export type Messages = {
     namingPatternTableColumnExample: string;
     namingPatternTableIdLabel: string;
     namingPatternTableIdExample: string;
+    defaultColumnsCategoryHeading: string;
+    defaultColumnsDialectLegend: string;
+    defaultColumnsEmptyHint: string;
   };
 };

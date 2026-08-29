@@ -4,10 +4,10 @@ import type {
   Column,
   ColumnKeyMembership,
   ColumnKeyMembershipDisabled,
-} from "../../../../domain/schema";
-import { postgresqlDialectStrategy } from "../../../../domain/postgresql/postgresqlDialectStrategy";
-import { sqliteDialectStrategy } from "../../../../domain/sqlite/sqliteDialectStrategy";
-import { LocaleProvider } from "../../../../i18n/LocaleContext";
+} from "../../../domain/schema";
+import { postgresqlDialectStrategy } from "../../../domain/postgresql/postgresqlDialectStrategy";
+import { sqliteDialectStrategy } from "../../../domain/sqlite/sqliteDialectStrategy";
+import { LocaleProvider } from "../../../i18n/LocaleContext";
 import { ColumnDialog } from "./ColumnDialog";
 
 const NO_KEY_MEMBERSHIP: ColumnKeyMembership = { PRIMARY_KEY: false, UNIQUE: false, INDEX: false };
@@ -42,7 +42,7 @@ const primaryKeyColumn: Column = {
 };
 
 const meta = {
-  title: "pages/MainScreen/ColumnDialog",
+  title: "components/parts/ColumnDialog",
   component: ColumnDialog,
   args: {
     strategy: sqliteDialectStrategy,

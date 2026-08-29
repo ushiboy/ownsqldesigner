@@ -177,5 +177,8 @@ export default {
     namingPatternTableColumnExample: "e.g. users_id",
     namingPatternTableIdLabel: 'Table name + "id"',
     namingPatternTableIdExample: "e.g. users_id",
+    defaultColumnsCategoryHeading: "Default Columns",
+    defaultColumnsDialectLegend: "Dialect",
+    defaultColumnsEmptyHint: "No default columns configured for this dialect.",
   },
 } satisfies Messages;

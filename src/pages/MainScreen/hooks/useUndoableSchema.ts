@@ -3,6 +3,7 @@ import type { SqlDialect } from "../../../domain/dialect";
 import {
   type Column,
   type ColumnKeyMembership,
+  type DefaultColumnTemplate,
   type FkNamingPattern,
   type ForeignKey,
   type Key,
@@ -14,7 +15,7 @@ import {
   addForeignKeyWithNewColumn,
   addKey,
   createSchema,
-  createTable,
+  createTableWithDefaultColumns,
   importSchema,
   moveColumnDown,
   moveColumnUp,
@@ -45,7 +46,7 @@ export type UndoableSchemaActions = {
   createSchema: (name: string, dialect?: SqlDialect) => void;
   loadSchemaFromFile: (schema: Schema) => void;
   renameSchema: (name: string) => void;
-  createTable: (name: string) => void;
+  createTable: (name: string, defaultColumnTemplates?: DefaultColumnTemplate[]) => void;
   renameTable: (tableId: string, name: string) => void;
   updateTableComment: (tableId: string, comment: string) => void;
   moveTable: (tableId: string, position: Position) => void;
@@ -163,8 +164,8 @@ export function useUndoableSchema(initialSchema?: Schema): UndoableSchema {
         updater: (prev) => (prev.name === name ? prev : renameSchema(prev, name)),
       });
     },
-    createTable: (name) => {
-      commitEdit((prev) => createTable(prev, name));
+    createTable: (name, defaultColumnTemplates = []) => {
+      commitEdit((prev) => createTableWithDefaultColumns(prev, name, defaultColumnTemplates));
     },
     renameTable: (tableId, name) => {
       commitEdit((prev) => {
