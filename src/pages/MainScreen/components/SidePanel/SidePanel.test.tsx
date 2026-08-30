@@ -31,6 +31,7 @@ const closedProps = {
   onUpdateTableName: () => {},
   onUpdateTableComment: () => {},
   onDeleteTable: () => {},
+  onDeleteTables: () => {},
   onAddColumn: () => {},
   onEditColumn: () => {},
   onDeleteColumn: () => {},
@@ -83,6 +84,13 @@ describe("SidePanel", () => {
     render(<MultipleTablesSelected />);
     expect(screen.getByRole("heading", { name: "2 tables selected" })).toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "Schema" })).not.toBeInTheDocument();
+  });
+
+  it("calls onDeleteTables when the delete selected tables button is clicked", async () => {
+    const onDeleteTables = fn();
+    render(<MultipleTablesSelected onDeleteTables={onDeleteTables} />);
+    await userEvent.click(screen.getByRole("button", { name: "Delete Selected Tables" }));
+    expect(onDeleteTables).toHaveBeenCalledOnce();
   });
 
   it("shows the PostgreSQL dialect label when the schema is a PostgreSQL schema", () => {

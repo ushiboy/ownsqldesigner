@@ -128,6 +128,7 @@ export type Messages = {
     multipleTablesSelectedHeading: string;
     tableHeading: string;
     deleteTableAriaLabel: string;
+    deleteSelectedTables: string;
     columnsHeading: string;
     addColumn: string;
     /** ICU placeholder: {name} */

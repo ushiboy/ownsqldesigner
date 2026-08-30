@@ -30,6 +30,10 @@ const iconButton = tv({
   base: "inline-flex items-center rounded-md p-1 text-body transition-colors hover:bg-accent-bg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:pointer-events-none disabled:opacity-40",
 });
 
+const sectionActionButton = tv({
+  base: "mt-3 inline-flex items-center gap-1 rounded-md px-2 py-1 text-[13px] text-heading transition-colors hover:bg-accent-bg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
+});
+
 /** A pre-computed, cross-table label — SidePanel only ever sees the selected table. */
 export type RelationSummary = {
   id: string;
@@ -54,6 +58,7 @@ type SidePanelProps = {
   onUpdateTableName: (tableId: string, name: string) => void;
   onUpdateTableComment: (tableId: string, comment: string) => void;
   onDeleteTable: () => void;
+  onDeleteTables: () => void;
   onAddColumn: () => void;
   onEditColumn: (columnId: string) => void;
   onDeleteColumn: (columnId: string) => void;
@@ -79,6 +84,7 @@ export function SidePanel({
   onUpdateTableName,
   onUpdateTableComment,
   onDeleteTable,
+  onDeleteTables,
   onAddColumn,
   onEditColumn,
   onDeleteColumn,
@@ -100,7 +106,7 @@ export function SidePanel({
       <div className="h-full w-80 overflow-y-auto border-l border-edge p-4">
         {selectedTable === null ? (
           selectedTableCount >= 2 ? (
-            <MultipleTablesSelected count={selectedTableCount} />
+            <MultipleTablesSelected count={selectedTableCount} onDeleteTables={onDeleteTables} />
           ) : (
             <SchemaSummary
               schemaName={schemaName}
@@ -164,16 +170,21 @@ function SchemaSummary({ schemaName, tableCount, createdDate, dialect }: SchemaS
 
 type MultipleTablesSelectedProps = {
   count: number;
+  onDeleteTables: () => void;
 };
 
-function MultipleTablesSelected({ count }: MultipleTablesSelectedProps) {
+function MultipleTablesSelected({ count, onDeleteTables }: MultipleTablesSelectedProps) {
   const t = useTranslations("sidePanel");
-  return <h2 className="text-[16px]">{t("multipleTablesSelectedHeading", { count })}</h2>;
+  return (
+    <>
+      <h2 className="text-[16px]">{t("multipleTablesSelectedHeading", { count })}</h2>
+      <button type="button" onClick={onDeleteTables} className={sectionActionButton()}>
+        <LuTrash2 aria-hidden="true" className="size-4" />
+        {t("deleteSelectedTables")}
+      </button>
+    </>
+  );
 }
-
-const sectionActionButton = tv({
-  base: "mt-3 inline-flex items-center gap-1 rounded-md px-2 py-1 text-[13px] text-heading transition-colors hover:bg-accent-bg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
-});
 
 type TablePropertiesProps = {
   table: Table;

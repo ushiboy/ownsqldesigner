@@ -203,6 +203,7 @@ export function MainScreenView({
           onUpdateTableName={onUpdateTableName}
           onUpdateTableComment={onUpdateTableComment}
           onDeleteTable={() => openDialog("deleteTable")}
+          onDeleteTables={() => openDialog("deleteTable")}
           onAddColumn={() => {
             selectColumn(null);
             openDialog("addColumn");

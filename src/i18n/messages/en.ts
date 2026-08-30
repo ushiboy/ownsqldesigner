@@ -126,6 +126,7 @@ export default {
     multipleTablesSelectedHeading: "{count} tables selected",
     tableHeading: "Table",
     deleteTableAriaLabel: "Delete table",
+    deleteSelectedTables: "Delete Selected Tables",
     columnsHeading: "Columns",
     addColumn: "Add Column",
     editColumnAriaLabel: "Edit column {name}",

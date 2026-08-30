@@ -125,6 +125,7 @@ export default {
     multipleTablesSelectedHeading: "{count} 件のテーブルを選択中",
     tableHeading: "テーブル",
     deleteTableAriaLabel: "テーブルを削除",
+    deleteSelectedTables: "選択したテーブルを削除",
     columnsHeading: "カラム",
     addColumn: "カラムを追加",
     editColumnAriaLabel: "カラム {name} を編集",
