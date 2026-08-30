@@ -2,6 +2,8 @@
 
 A SPA for designing database schemas (E-R diagrams) visually in the browser and exporting them as SQL (DDL). No server required — editing, persistence, and export all happen entirely in the browser.
 
+🔗 [Live demo](https://ushiboy.github.io/ownsqldesigner/)
+
 ## Features
 
 - Visual schema editing on a pannable canvas: place, drag, and delete table nodes
@@ -9,7 +11,10 @@ A SPA for designing database schemas (E-R diagrams) visually in the browser and 
 - Keys and relations: PRIMARY KEY / UNIQUE / INDEX (including composite keys) and foreign-key relations with auto-routed connectors
 - Integrity validation with clear feedback when an edit is rejected
 - Save, list, and load named schemas in browser storage
-- SQL (DDL) export — SQLite dialect initially, designed so new dialects can be added without rewriting core features
+- SQL (DDL) export for SQLite and PostgreSQL, designed so new dialects can be added without rewriting core features
+- Export the schema as a Mermaid ER diagram, with copy/download and a live preview
+- Undo/redo and keyboard shortcuts
+- Dark mode and Japanese/English UI switching
 
 See [docs/requirements.md](docs/requirements.md) for the full feature list and implementation phases.
 
@@ -18,7 +23,9 @@ See [docs/requirements.md](docs/requirements.md) for the full feature list and i
 - [React 19](https://react.dev/) + [TypeScript](https://www.typescriptlang.org/) + [Vite](https://vite.dev/)
 - [Tailwind CSS](https://tailwindcss.com/) (with tailwind-variants)
 - [React Router](https://reactrouter.com/)
-- Tooling: [oxfmt](https://oxc.rs/) (format), [oxlint](https://oxc.rs/) (lint), [Vitest](https://vitest.dev/) (test), [Storybook](https://storybook.js.org/)
+- [@xyflow/react](https://reactflow.dev/) (React Flow) for the canvas, [dagre](https://github.com/dagrejs/dagre) for auto-align
+- [Mermaid](https://mermaid.js.org/) for ER diagram export, [Zod](https://zod.dev/) for validation, [use-intl](https://use-intl.dev/) for i18n
+- Tooling: [oxfmt](https://oxc.rs/) (format), [oxlint](https://oxc.rs/) (lint), [Vitest](https://vitest.dev/) (test), [Playwright](https://playwright.dev/) (E2E test), [Storybook](https://storybook.js.org/)
 
 ## Getting Started
 
@@ -38,6 +45,7 @@ pnpm dev
 | Preview      | `pnpm preview`    |
 | Test         | `pnpm test`       |
 | Test (watch) | `pnpm test:watch` |
+| E2E test     | `pnpm test:e2e`   |
 | Typecheck    | `pnpm typecheck`  |
 | Lint         | `pnpm lint`       |
 | Format       | `pnpm format`     |
