@@ -55,7 +55,6 @@ type TableNameFormProps = {
   onCancel: () => void;
 };
 
-// Mounted only while the dialog is open, so the input state resets each time.
 function TableNameForm({
   submitLabel,
   initialName,

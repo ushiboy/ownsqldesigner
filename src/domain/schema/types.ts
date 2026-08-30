@@ -10,8 +10,7 @@ export type Position = z.infer<typeof positionSchema>;
 export const columnSchema = z.object({
   id: z.uuid(),
   name: z.string().min(1),
-  // The allowed values are owned by the schema's dialect strategy, not a
-  // fixed global enum (see src/domain/dialect).
+  // Per-dialect datatype set, not a fixed global enum (REQ-011).
   type: z.string().min(1),
   // Free-form; validity against the schema's dialect (sizable types, etc.)
   // is enforced by DialectStrategy.normalizeColumnForDialect, not by this schema.

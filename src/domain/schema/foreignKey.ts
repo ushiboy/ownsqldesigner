@@ -42,13 +42,7 @@ type AddForeignKeyWithNewColumnOptions = {
   namingPattern?: FkNamingPattern;
 };
 
-/**
- * Creates a new child column on `childTableId` and a foreign key referencing
- * `referencedColumnId` in one step (REQ-016). The new column's name is
- * derived from the referenced table/column and auto-suffixed on collision
- * (see docs/design/0012-foreign-key-child-column-generation.md); its type
- * copies the referenced column's type.
- */
+// REQ-016; child column name generation (0012).
 export function addForeignKeyWithNewColumn(
   schema: Schema,
   childTableId: string,
@@ -100,7 +94,7 @@ export function addForeignKeyWithNewColumn(
   );
 }
 
-/** Builds the pre-collision-check name for a generated child column, per the selected pattern (see docs/design/0025). */
+// 0025
 function buildForeignKeyChildColumnName(
   pattern: FkNamingPattern,
   referencedTable: Table,

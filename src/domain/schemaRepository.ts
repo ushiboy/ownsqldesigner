@@ -1,10 +1,7 @@
 import type { Schema, SchemaSummary } from "./schema";
 
-/**
- * Storage-agnostic persistence boundary for schema documents.
- * Promise-based even over synchronous backends so the implementation
- * can be swapped (e.g. for IndexedDB) without touching callers.
- */
+// Storage-agnostic persistence boundary for schema documents; Promise-based
+// even over synchronous backends (0002).
 export type SchemaRepository = {
   list(): Promise<SchemaSummary[]>;
   load(id: string): Promise<Schema | null>;

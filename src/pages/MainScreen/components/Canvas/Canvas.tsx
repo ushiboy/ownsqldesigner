@@ -129,18 +129,14 @@ export function Canvas({
         edges={edges}
         nodeTypes={nodeTypes}
         colorMode={colorMode}
-        // Table deletion goes through the page's own useDeleteKeyShortcut
-        // and a confirm dialog; React Flow's built-in Backspace handling is
-        // disabled so it doesn't also act on this locally-synced `nodes`
-        // state (used only to animate in-progress drags) and cause a
-        // flicker before the confirm flow runs.
+        // Disabled: React Flow's own Backspace handling would race with
+        // useDeleteKeyShortcut's confirm dialog and flicker the
+        // locally-synced `nodes` state first.
         deleteKeyCode={null}
-        // One modifier for both click-accumulate and rubber-band, matching
-        // REQ-004's "Shift+click". Table selection itself is not read from
-        // onNodeClick/onPaneClick below — React Flow's own selection engine
-        // already implements click/shift-click/box-select, and it reports
-        // every resulting selection through onSelectionChange.
+        // REQ-004
         multiSelectionKeyCode="Shift"
+        // The only place table selection is tracked — onNodeClick/onPaneClick
+        // below intentionally don't set it themselves.
         onSelectionChange={({ nodes: selectedNodes }) => {
           onTableSelectionChange(selectedNodes.map((node) => node.id));
         }}

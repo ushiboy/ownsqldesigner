@@ -23,7 +23,6 @@ export function useDownloadSchemaFile(): UseDownloadSchemaFileResult {
   };
 }
 
-// Sanitizes characters that are unsafe in filenames on common filesystems.
 function jsonFileName(schemaName: string): string {
   return `${schemaName.replace(/[\\/:*?"<>|]+/g, "_")}.json`;
 }

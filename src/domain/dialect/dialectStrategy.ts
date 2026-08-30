@@ -1,15 +1,10 @@
 import type { Column, Table } from "../schema/types";
 
-/** Per-dialect behavior for the pieces of the domain that vary by SQL engine. */
 export type DialectStrategy = {
   readonly columnTypes: readonly string[];
-  /** Column types that accept a size/length modifier (e.g. `VARCHAR(255)`). */
   readonly sizableColumnTypes: readonly string[];
-  /** Column types that accept a fractional-seconds precision modifier (e.g. `TIMESTAMP(3)`). */
   readonly precisionColumnTypes: readonly string[];
-  /** Column types an auto-increment column may have (e.g. `INTEGER`, `BIGINT`). */
   readonly autoIncrementEligibleColumnTypes: readonly string[];
-  /** Whether an auto-increment column may also declare an explicit default value. */
   readonly allowsDefaultWithAutoIncrement: boolean;
   isAutoIncrementEligible(column: Column, pkColumnId: string | undefined): boolean;
   /** Whether `value` is a valid `size` modifier for a column of `type` (0039). */
@@ -18,7 +13,6 @@ export type DialectStrategy = {
   isPrecisionValid(type: string, value: string): boolean;
   /** Whether `value` is a valid `defaultValue` literal for a column of `type` (0047). */
   isDefaultValueValid(type: string, value: string): boolean;
-  /** Re-derives `autoIncrement`, `size`, `precision`, and `defaultValue` validity for every column in `table`. */
   normalizeColumnForDialect(table: Table): Table;
   isNameTaken(name: string, existingNames: string[]): boolean;
   isReservedKeyword(name: string): boolean;
@@ -26,7 +20,6 @@ export type DialectStrategy = {
   generateDdl(tables: Table[]): string;
 };
 
-/** The atomic per-dialect rules a concrete dialect module supplies; the rest is generic. */
 export type DialectStrategyConfig = {
   columnTypes: readonly string[];
   sizableColumnTypes: readonly string[];
@@ -42,11 +35,7 @@ export type DialectStrategyConfig = {
   generateDdl(tables: Table[]): string;
 };
 
-/**
- * Derives the full `DialectStrategy` from a dialect's atomic rules, so each
- * dialect module only supplies a predicate/comparator, not the generic
- * table-normalization or duplicate-scan algorithms that wrap them.
- */
+// Derives the full `DialectStrategy` from a dialect's atomic rules (0026).
 export function buildDialectStrategy(config: DialectStrategyConfig): DialectStrategy {
   return {
     columnTypes: config.columnTypes,

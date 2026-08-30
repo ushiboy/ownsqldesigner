@@ -41,7 +41,6 @@ type ExportSqlContentProps = {
   onClose: () => void;
 };
 
-// Mounted only while the dialog is open, so the "Copied" state resets each time.
 function ExportSqlContent({
   ddl,
   tablesWithoutPrimaryKey,
@@ -110,7 +109,6 @@ function ExportSqlContent({
   );
 }
 
-// Sanitizes characters that are unsafe in filenames on common filesystems.
 function sqlFileName(schemaName: string): string {
   return `${schemaName.replace(/[\\/:*?"<>|]+/g, "_")}.sql`;
 }

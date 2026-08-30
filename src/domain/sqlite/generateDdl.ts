@@ -27,9 +27,7 @@ function generateColumnDefinition(column: Column): string {
 }
 
 function generatePrimaryKeyConstraint(table: Table): string[] {
-  // AUTOINCREMENT is rendered inline on the column instead (see
-  // generateColumnDefinition); REQ-033's normalizeColumnForDialect invariant
-  // guarantees it only ever applies to a sole INTEGER PK column.
+  // AUTOINCREMENT is rendered inline instead (REQ-033).
   if (table.columns.some((column) => column.autoIncrement)) {
     return [];
   }

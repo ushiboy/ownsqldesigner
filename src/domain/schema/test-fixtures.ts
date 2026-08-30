@@ -42,7 +42,6 @@ export function getTable(schema: Schema, tableId: string): Table {
   return table;
 }
 
-/** Replaces the matching table with a shallow-merged copy, for building deliberately-broken fixtures. */
 export function withTable(schema: Schema, tableId: string, overrides: Partial<Table>): Schema {
   return {
     ...schema,

@@ -18,7 +18,6 @@ export function isSchemaIntegrityValid(schema: Schema): boolean {
   );
 }
 
-/** Parses an untrusted file's contents into a `Schema`, or `null` on any parse/shape/integrity failure. */
 export function parseSchemaFile(raw: string): Schema | null {
   let json: unknown;
   try {

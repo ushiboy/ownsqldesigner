@@ -26,8 +26,6 @@ export function useSchemaPersistence(
   const [savedSchemas, setSavedSchemas] = useState<SchemaSummary[]>([]);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const t = useTranslations("notifications");
-  // Failures surface through the notification context; each successful
-  // operation clears any stale message.
   const { notify, dismissNotification } = useNotification();
   // A stable handle to the latest `notify`: the autosave effect below keys
   // off `currentSchema` only, so it must not re-run just because some
@@ -44,9 +42,7 @@ export function useSchemaPersistence(
     tRef.current = t;
   }, [t]);
 
-  // Startup restore: the last-edited schema, or a fresh blank one on the
-  // first visit (or when the last-edited pointer dangles). A seeded
-  // workspace skips it, so the seed survives past the first tick.
+  // A seeded workspace skips restore, so the seed survives past the first tick.
   useEffect(() => {
     if (seededSchema !== undefined) {
       return;
@@ -64,7 +60,6 @@ export function useSchemaPersistence(
     };
   }, [repository, seededSchema, replaceSchema]);
 
-  // The single auto-save path: every mutation flows through currentSchema.
   useEffect(() => {
     if (currentSchema === null) {
       return;
@@ -140,9 +135,6 @@ export function useSchemaPersistence(
   };
 }
 
-// The most-recently-updated remaining schema, mirroring startup-restore
-// semantics; a blank default schema when none remain (or the successor
-// entry fails to load).
 async function loadSuccessor(
   repository: SchemaRepository,
   summaries: SchemaSummary[],

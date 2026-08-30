@@ -8,12 +8,8 @@ type AddColumnOptions = {
   now?: Date;
   /**
    * Whether to re-derive `autoIncrement`/`size`/`precision`/`defaultValue`
-   * validity via `normalizeColumnForDialect` (default `true`). A caller that
-   * creates a column and assigns its PRIMARY KEY in a separate, later call
-   * (so a same-submit auto-increment PK can reference this column's not-yet-
-   * created id) must pass `false` — normalizing here would clear
-   * `autoIncrement` before the key exists, and the later key-assignment
-   * can't restore it (see docs/design/0036's Alternatives Considered).
+   * validity via `normalizeColumnForDialect` (default `true`). Pass `false`
+   * when assigning this column's PRIMARY KEY in a separate, later call (0036).
    */
   normalize?: boolean;
 };
@@ -45,14 +41,7 @@ export function addColumn(
 
 type UpdateColumnOptions = {
   now?: Date;
-  /**
-   * Whether to re-derive `autoIncrement`/`size`/`precision`/`defaultValue`
-   * validity via `normalizeColumnForDialect` (default `true`). A caller that
-   * updates a column and assigns its PRIMARY KEY in a separate, later call
-   * must pass `false` — normalizing here would clear a same-submit
-   * `autoIncrement` flag before the key exists, and the later key-assignment
-   * can't restore it. Same rationale as `AddColumnOptions.normalize`.
-   */
+  /** Same as `AddColumnOptions.normalize` (0036). */
   normalize?: boolean;
 };
 
@@ -151,7 +140,6 @@ export function formatColumnType(column: Pick<Column, "type" | "size" | "precisi
   return modifier === "" ? column.type : `${column.type}(${modifier})`;
 }
 
-/** Suffixes `baseName` with `_2`, `_3`, ... until it doesn't collide with an existing column. */
 export function uniqueColumnName(
   table: Table,
   baseName: string,
@@ -217,13 +205,7 @@ function removeColumnFromKeys(keys: Key[], columnId: string): Key[] {
     .filter((key) => key.columnIds.length > 0);
 }
 
-/**
- * Cascades a type change (REQ-017) to every FK child column reachable from
- * `columnId`, transitively through further FK chains. A column is only
- * enqueued once its type actually flips to `type`, so a column already at
- * `type` is never reprocessed — this doubles as cycle protection without a
- * separate visited-set.
- */
+// REQ-017
 function propagateColumnTypeChange(
   tables: Table[],
   columnId: string,

@@ -37,9 +37,7 @@ import {
 } from "../../../domain/schema";
 import { useNotification } from "../NotificationContext";
 
-// Bounds the undo/redo stacks so a long editing session can't grow them
-// without limit. Exported so tests can exercise the cap without duplicating
-// the number.
+// Exported so tests can exercise the cap without duplicating the number.
 export const HISTORY_LIMIT = 100;
 
 export type UndoableSchemaActions = {

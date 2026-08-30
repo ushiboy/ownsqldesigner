@@ -2,7 +2,6 @@ import { getDialectStrategy } from "../dialect";
 import { hasColumn, removeForeignKeysReferencingColumn } from "./shared";
 import { KEY_TYPES, type Column, type Key, type KeyType, type Schema, type Table } from "./types";
 
-/** Whether each key type is a single-column key solely owned by `columnId` (`null` for a not-yet-created column). */
 export type ColumnKeyMembership = Record<KeyType, boolean>;
 
 export const EMPTY_COLUMN_KEY_MEMBERSHIP: ColumnKeyMembership = {
@@ -108,12 +107,7 @@ export function removeKey(
   };
 }
 
-/**
- * Removes `keyId` together with any other table's foreign key that
- * references it — the explicit-confirmation counterpart to `removeKey`'s
- * no-op guard, used by the SidePanel "delete key" flow once the user has
- * confirmed the cascading relation removal (see 0030).
- */
+// 0030
 export function removeKeyCascadingForeignKeys(
   schema: Schema,
   tableId: string,
@@ -135,7 +129,6 @@ export function removeKeyCascadingForeignKeys(
   return removeKey(withoutReferencingForeignKeys, tableId, keyId, options);
 }
 
-/** Whether the table already has a PRIMARY KEY key other than `excludeKeyId`. */
 export function hasConflictingPrimaryKey(
   table: Table,
   type: KeyType,
@@ -147,7 +140,6 @@ export function hasConflictingPrimaryKey(
   );
 }
 
-/** Whether the table has a primary key, inline (autoIncrement) or as a PRIMARY_KEY key. */
 export function hasPrimaryKey(table: Table): boolean {
   return (
     table.keys.some((key) => key.type === "PRIMARY_KEY") ||
@@ -159,12 +151,8 @@ type SetColumnKeyMembershipOptions = {
   now?: Date;
 };
 
-/**
- * Reconciles a column's single-column PRIMARY KEY / UNIQUE / INDEX membership
- * in one bumped-updatedAt step — the domain-level counterpart of the
- * ColumnDialog's combined key checkboxes (see 0007's "Alternatives Considered").
- * Composite (multi-column) keys are untouched; use addKey/updateKey/removeKey directly for those.
- */
+// Single-column PRIMARY KEY/UNIQUE/INDEX only; composite keys go through
+// addKey/updateKey/removeKey directly (0007).
 export function setColumnKeyMembership(
   schema: Schema,
   tableId: string,
@@ -195,7 +183,6 @@ export function getColumnKeyMembership(table: Table, columnId: string | null): C
   };
 }
 
-/** Why a `ColumnDialog` key-membership checkbox is disabled, or `null` if it isn't. */
 export type KeyMembershipDisabledReason =
   | "CONFLICTING_PRIMARY_KEY"
   | "PART_OF_COMPOSITE_KEY"
@@ -247,7 +234,6 @@ export function getReferenceableColumns(table: Table): Column[] {
   return table.columns.filter((column) => isReferenceableColumn(table, column.id));
 }
 
-/** Whether some table's foreign key currently targets `columnId` on `tableId`. */
 export function isColumnReferencedByForeignKey(
   tables: Table[],
   tableId: string,
@@ -260,11 +246,6 @@ export function isColumnReferencedByForeignKey(
   );
 }
 
-/**
- * Whether removing/retyping `key` would break an existing foreign key that
- * targets it — only single-column PRIMARY_KEY/UNIQUE keys can be FK targets
- * (see `isReferenceableColumn`), so any other key is never "referenced".
- */
 export function isKeyReferencedByForeignKey(tables: Table[], tableId: string, key: Key): boolean {
   return (
     (key.type === "PRIMARY_KEY" || key.type === "UNIQUE") &&
@@ -273,7 +254,6 @@ export function isKeyReferencedByForeignKey(tables: Table[], tableId: string, ke
   );
 }
 
-/** Whether updating `existingKey` to `fields` keeps it a sole PRIMARY_KEY/UNIQUE key on the same column. */
 export function keepsColumnReferenceable(existingKey: Key, fields: Omit<Key, "id">): boolean {
   return (
     (fields.type === "PRIMARY_KEY" || fields.type === "UNIQUE") &&
@@ -282,13 +262,9 @@ export function keepsColumnReferenceable(existingKey: Key, fields: Omit<Key, "id
   );
 }
 
-/**
- * Whether some key in `keys` is an INDEX with the exact same column order as
- * `fields` — `generateDdl`'s `CREATE INDEX` statements need unique names, so
- * an undetected duplicate here would otherwise only surface as a silently
- * suffixed name (see 0010's Open Questions). Callers pass the table's other
- * keys (excluding whichever key `fields` is replacing, if any).
- */
+// Undetected here, a duplicate INDEX definition would otherwise only surface
+// as a silently suffixed name in `generateDdl`'s output (see 0010's Open
+// Questions).
 export function hasDuplicateIndexColumnSet(keys: Key[], fields: Omit<Key, "id">): boolean {
   return (
     fields.type === "INDEX" &&
@@ -300,7 +276,6 @@ function sameColumnOrder(a: string[], b: string[]): boolean {
   return a.length === b.length && a.every((value, index) => value === b[index]);
 }
 
-/** Drops `columnIds` that no longer exist on `table` before validating/persisting a key. */
 function sanitizeKeyColumnIds(table: Table | undefined, fields: Omit<Key, "id">): Omit<Key, "id"> {
   if (table === undefined) {
     return fields;
@@ -376,7 +351,6 @@ function isMemberOfCompositeKeyOfType(table: Table, columnId: string, type: KeyT
   );
 }
 
-/** Whether `columnId`'s sole `type` key (if any) is currently targeted by another table's foreign key. */
 function isSoleKeyReferenced(
   table: Table,
   columnId: string | null,

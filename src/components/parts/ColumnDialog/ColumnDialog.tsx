@@ -89,7 +89,6 @@ const BLANK_COLUMN: ColumnFields = {
   comment: "",
 };
 
-// Mounted only while the dialog is open, so form state resets each time.
 function ColumnForm({
   submitLabel,
   initialColumn,

@@ -48,8 +48,6 @@ type DialogPanelProps = {
   children: ReactNode;
 };
 
-// Mounted only while the dialog is open, so the Escape listener and any
-// state in the content reset each time.
 function DialogPanel({ title, onClose, size, children }: DialogPanelProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
 

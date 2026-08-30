@@ -89,7 +89,6 @@ export function DialogHost({
     () => (activeDialog === "exportSql" ? strategy.generateDdl(tables) : ""),
     [activeDialog, strategy, tables],
   );
-  // Same "only while the export dialog is open" scoping as `ddl` above.
   const tablesWithoutPrimaryKey = useMemo(
     () =>
       activeDialog === "exportSql"

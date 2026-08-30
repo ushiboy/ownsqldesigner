@@ -1,6 +1,5 @@
 import type { Column, ForeignKey, Key, Table } from "../schema/types";
 
-/** The atomic per-dialect rules `generateDdl`'s shared skeleton needs — column syntax and PRIMARY KEY placement vary by dialect, the rest doesn't. */
 export type GenerateDdlConfig = {
   /** Renders one column's full definition line, including any dialect-specific auto-increment/identity syntax. */
   generateColumnDefinition(column: Column): string;
@@ -8,12 +7,8 @@ export type GenerateDdlConfig = {
   generatePrimaryKeyConstraint(table: Table): string[];
 };
 
-/**
- * Generic CREATE TABLE / CREATE INDEX DDL generation shared by every SQL
- * dialect strategy; only `GenerateDdlConfig`'s two hooks vary per dialect
- * (see docs/design/0026's `buildDialectStrategy`, which factors out
- * dialect-independent algorithms the same way).
- */
+// Shared by every SQL dialect strategy; only `GenerateDdlConfig`'s two hooks
+// vary per dialect (0026).
 export function generateDdl(tables: Table[], config: GenerateDdlConfig): string {
   const tablesById = new Map(tables.map((table) => [table.id, table]));
   const usedIndexNames = new Set<string>();
@@ -24,7 +19,6 @@ export function generateDdl(tables: Table[], config: GenerateDdlConfig): string 
   return statements.join("\n\n");
 }
 
-/** Resolves `columnIds` to names, for a dialect's own `generatePrimaryKeyConstraint`. */
 export function columnNamesFor(table: Table, columnIds: string[]): string[] {
   return columnIds.map((columnId) => findColumnName(table, columnId));
 }

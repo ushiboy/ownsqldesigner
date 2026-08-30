@@ -43,10 +43,7 @@ const columnHandle = tv({
 })();
 
 export function TableNode({ data, selected }: NodeProps<TableNodeType>) {
-  // REQ-016: while a drag from a key handle is in progress, every table
-  // (including the one the drag started from — self-reference is allowed)
-  // is a valid drop target, so highlight all of them to make the gesture's
-  // destination obvious without requiring a hover tooltip to discover it.
+  // REQ-016
   const isDropTarget = useConnection(isKeyColumnDragInProgress);
   const t = useTranslations("tableNode");
 

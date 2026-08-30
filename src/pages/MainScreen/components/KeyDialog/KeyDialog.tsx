@@ -85,7 +85,6 @@ const BLANK_KEY: KeyFields = {
   columnIds: [],
 };
 
-// Mounted only while the dialog is open, so form state resets each time.
 function KeyForm({
   submitLabel,
   columns,

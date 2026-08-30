@@ -54,7 +54,6 @@ type SchemaNameFormProps = {
   onCancel: () => void;
 };
 
-// Mounted only while the dialog is open, so the input state resets each time.
 function SchemaNameForm({
   submitLabel,
   initialName,
