@@ -24,6 +24,7 @@ export default {
     redo: "やり直す",
     autoAlignAriaLabel: "テーブルを自動整列",
     addTable: "テーブルを追加",
+    exportImportMenuLabel: "エクスポート/インポート",
     exportSql: "SQLを出力",
     exportMermaid: "Mermaidを出力",
     downloadJson: "JSONをダウンロード",
@@ -40,6 +41,9 @@ export default {
   },
   localeMenu: {
     ariaLabel: "言語",
+  },
+  exportImportMenu: {
+    ariaLabel: "エクスポート/インポート",
   },
   loadSchema: {
     buttonLabel: "JSONを読み込む",

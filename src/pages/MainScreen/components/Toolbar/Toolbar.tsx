@@ -15,6 +15,7 @@ import {
   LuType,
   LuUndo2,
 } from "react-icons/lu";
+import { useRef } from "react";
 import { Link } from "react-router";
 import { tv } from "tailwind-variants";
 import { useLocale, useTranslations } from "use-intl";
@@ -24,7 +25,8 @@ import { useActiveDialog } from "../../ActiveDialogContext";
 import { useCanvasApiRef } from "../../CanvasApiContext";
 import { useUndoRedo } from "../../hooks/useUndoRedo";
 import type { Theme } from "../../hooks/useThemePreference";
-import { LoadSchemaButton } from "./LoadSchemaButton";
+import { ExportImportMenu } from "./ExportImportMenu";
+import { LoadSchemaHandler, type LoadSchemaHandle } from "./LoadSchemaHandler";
 import { LocaleMenu } from "./LocaleMenu";
 import { SchemaMenu } from "./SchemaMenu";
 import { useToolbarMenu } from "./useToolbarMenu";
@@ -95,9 +97,17 @@ export function Toolbar({
     toggle: toggleLocaleMenu,
     close: closeLocaleMenu,
   } = useToolbarMenu();
+  const {
+    isOpen: isExportImportMenuOpen,
+    wrapperRef: exportImportMenuWrapperRef,
+    triggerRef: exportImportMenuTriggerRef,
+    toggle: toggleExportImportMenu,
+    close: closeExportImportMenu,
+  } = useToolbarMenu();
   const { openDialog } = useActiveDialog();
   const { undo, redo, canUndo, canRedo } = useUndoRedo();
   const canvasApiRef = useCanvasApiRef();
+  const loadSchemaHandleRef = useRef<LoadSchemaHandle>(null);
   const locale = useLocale();
   const t = useTranslations("toolbar");
   const { setLocale } = useLocaleSwitch();
@@ -172,21 +182,29 @@ export function Toolbar({
           <LuPlus aria-hidden="true" className="size-4" />
           {t("addTable")}
         </button>
-        <button type="button" onClick={() => openDialog("exportSql")} className={toolButton()}>
-          {t("exportSql")}
-        </button>
-        <button type="button" onClick={() => openDialog("exportMermaid")} className={toolButton()}>
-          {t("exportMermaid")}
-        </button>
-        <button
-          type="button"
-          disabled={!canDownloadSchema}
-          onClick={onDownloadSchema}
-          className={toolButton()}
-        >
-          {t("downloadJson")}
-        </button>
-        <LoadSchemaButton />
+        <div ref={exportImportMenuWrapperRef} className="relative">
+          <button
+            type="button"
+            aria-haspopup="menu"
+            aria-expanded={isExportImportMenuOpen}
+            ref={exportImportMenuTriggerRef}
+            onClick={toggleExportImportMenu}
+            className={toolButton()}
+          >
+            {t("exportImportMenuLabel")} <LuChevronDown aria-hidden="true" className="size-4" />
+          </button>
+          {isExportImportMenuOpen && (
+            <ExportImportMenu
+              canDownloadSchema={canDownloadSchema}
+              onDownloadSchema={onDownloadSchema}
+              onOpenLoadSchema={() => loadSchemaHandleRef.current?.openFilePicker()}
+              onClose={closeExportImportMenu}
+            />
+          )}
+        </div>
+        {/* Stays mounted outside the menu's conditional — unmounting before the OS
+            file picker resolves silently drops the selection (invisible to jsdom tests). */}
+        <LoadSchemaHandler ref={loadSchemaHandleRef} />
         <button
           type="button"
           aria-label={t("themeAriaLabel", { theme })}

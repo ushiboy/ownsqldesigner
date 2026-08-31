@@ -21,6 +21,7 @@ export type Messages = {
     redo: string;
     autoAlignAriaLabel: string;
     addTable: string;
+    exportImportMenuLabel: string;
     exportSql: string;
     exportMermaid: string;
     downloadJson: string;
@@ -38,6 +39,9 @@ export type Messages = {
     newSchema: string;
   };
   localeMenu: {
+    ariaLabel: string;
+  };
+  exportImportMenu: {
     ariaLabel: string;
   };
   loadSchema: {

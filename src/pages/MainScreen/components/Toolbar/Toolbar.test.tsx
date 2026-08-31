@@ -147,6 +147,14 @@ async function openMenu(props?: Partial<ComponentProps<typeof Default>>) {
   return user;
 }
 
+/** Renders Default and opens the Export/Import dropdown menu by clicking its trigger. */
+async function openExportImportMenu(props?: Partial<ComponentProps<typeof Default>>) {
+  render(<Default {...props} />);
+  const user = userEvent.setup();
+  await user.click(screen.getByRole("button", { name: "Export/Import" }));
+  return user;
+}
+
 describe("Toolbar", () => {
   beforeEach(() => {
     localStorage.clear();
@@ -166,10 +174,7 @@ describe("Toolbar", () => {
     expect(screen.getByRole("button", { name: "Undo" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Redo" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Add Table" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Export SQL" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Export Mermaid" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Download JSON" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Load JSON" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Export/Import" })).toBeInTheDocument();
   });
 
   it("renders a link to the settings page", () => {
@@ -196,20 +201,6 @@ describe("Toolbar", () => {
 
     expect(screen.getByRole("button", { name: "Undo" })).toBeDisabled();
     expect(screen.getByRole("button", { name: "Redo" })).toBeEnabled();
-  });
-
-  it("calls onDownloadSchema when the download button is clicked", async () => {
-    const onDownloadSchema = fn();
-    render(<Default onDownloadSchema={onDownloadSchema} />);
-    const user = userEvent.setup();
-    await user.click(screen.getByRole("button", { name: "Download JSON" }));
-
-    expect(onDownloadSchema).toHaveBeenCalledOnce();
-  });
-
-  it("disables the download button when canDownloadSchema is false", () => {
-    render(<Default canDownloadSchema={false} />);
-    expect(screen.getByRole("button", { name: "Download JSON" })).toBeDisabled();
   });
 
   it("does not show the schema menu before the trigger is clicked", () => {
@@ -298,6 +289,101 @@ describe("Toolbar", () => {
     await user.click(document.body);
     expect(screen.queryByRole("menu")).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Blog Schema" })).not.toHaveFocus();
+  });
+
+  it("does not show the export/import menu before the trigger is clicked", () => {
+    render(<Default />);
+    expect(screen.queryByRole("menu", { name: "Export/Import" })).not.toBeInTheDocument();
+  });
+
+  it("opens the export/import menu listing all four actions", async () => {
+    await openExportImportMenu();
+    expect(screen.getByRole("menu", { name: "Export/Import" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Export/Import" })).toHaveAttribute(
+      "aria-expanded",
+      "true",
+    );
+    expect(screen.getByRole("menuitem", { name: "Export SQL" })).toBeEnabled();
+    expect(screen.getByRole("menuitem", { name: "Export Mermaid" })).toBeEnabled();
+    expect(screen.getByRole("menuitem", { name: "Download JSON" })).toBeEnabled();
+    expect(screen.getByRole("menuitem", { name: "Load JSON" })).toBeEnabled();
+  });
+
+  it("disables Download JSON in the export/import menu when canDownloadSchema is false", async () => {
+    await openExportImportMenu({ canDownloadSchema: false });
+    expect(screen.getByRole("menuitem", { name: "Download JSON" })).toBeDisabled();
+  });
+
+  it("focuses the first item when the export/import menu opens", async () => {
+    await openExportImportMenu();
+    expect(screen.getByRole("menuitem", { name: "Export SQL" })).toHaveFocus();
+  });
+
+  it("moves focus between export/import menu items with ArrowDown/ArrowUp, wrapping at the ends", async () => {
+    const user = await openExportImportMenu();
+    await user.keyboard("{ArrowDown}");
+    expect(screen.getByRole("menuitem", { name: "Export Mermaid" })).toHaveFocus();
+    await user.keyboard("{ArrowDown}");
+    expect(screen.getByRole("menuitem", { name: "Download JSON" })).toHaveFocus();
+    await user.keyboard("{ArrowDown}");
+    expect(screen.getByRole("menuitem", { name: "Load JSON" })).toHaveFocus();
+    await user.keyboard("{ArrowDown}");
+    expect(screen.getByRole("menuitem", { name: "Export SQL" })).toHaveFocus();
+    await user.keyboard("{ArrowUp}");
+    expect(screen.getByRole("menuitem", { name: "Load JSON" })).toHaveFocus();
+  });
+
+  it("jumps to the first/last export/import menu item with Home/End", async () => {
+    const user = await openExportImportMenu();
+    await user.keyboard("{End}");
+    expect(screen.getByRole("menuitem", { name: "Load JSON" })).toHaveFocus();
+    await user.keyboard("{Home}");
+    expect(screen.getByRole("menuitem", { name: "Export SQL" })).toHaveFocus();
+  });
+
+  it("closes the export/import menu on Tab", async () => {
+    const user = await openExportImportMenu();
+    await user.keyboard("{Tab}");
+    expect(screen.queryByRole("menu")).not.toBeInTheDocument();
+  });
+
+  it("calls onDownloadSchema and closes the menu when Download JSON is clicked", async () => {
+    const onDownloadSchema = fn();
+    const user = await openExportImportMenu({ onDownloadSchema });
+    await user.click(screen.getByRole("menuitem", { name: "Download JSON" }));
+
+    expect(onDownloadSchema).toHaveBeenCalledOnce();
+    expect(screen.queryByRole("menu")).not.toBeInTheDocument();
+  });
+
+  it("closes the export/import menu and returns focus to the trigger when Export SQL is clicked", async () => {
+    const user = await openExportImportMenu();
+    await user.click(screen.getByRole("menuitem", { name: "Export SQL" }));
+    expect(screen.queryByRole("menu")).not.toBeInTheDocument();
+  });
+
+  it("triggers the hidden file input and closes the menu when Load JSON is clicked", async () => {
+    const clickSpy = vi.spyOn(HTMLInputElement.prototype, "click").mockImplementation(() => {});
+    const user = await openExportImportMenu();
+    await user.click(screen.getByRole("menuitem", { name: "Load JSON" }));
+
+    expect(clickSpy).toHaveBeenCalledOnce();
+    expect(screen.queryByRole("menu")).not.toBeInTheDocument();
+    clickSpy.mockRestore();
+  });
+
+  it("closes the export/import menu and returns focus to the trigger when Escape is pressed", async () => {
+    const user = await openExportImportMenu();
+    await user.keyboard("{Escape}");
+    expect(screen.queryByRole("menu")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Export/Import" })).toHaveFocus();
+  });
+
+  it("closes the export/import menu when clicking outside of it, without forcing focus back to the trigger", async () => {
+    const user = await openExportImportMenu();
+    await user.click(document.body);
+    expect(screen.queryByRole("menu")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Export/Import" })).not.toHaveFocus();
   });
 
   it("calls onToggleSidePanel when the side panel toggle is clicked", async () => {

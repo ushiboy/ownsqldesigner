@@ -1,21 +1,33 @@
-import { useRef, useState } from "react";
-import { tv } from "tailwind-variants";
+import { useImperativeHandle, useRef, useState } from "react";
+import type { Ref } from "react";
 import { useTranslations } from "use-intl";
 import { parseSchemaFile, type Schema } from "../../../../domain/schema";
 import { useNotification } from "../../NotificationContext";
 import { useSchemaActions } from "../../SchemaWorkspaceContext";
 import { ConfirmDialog } from "../ConfirmDialog";
 
-const toolButton = tv({
-  base: "inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-[14px] text-heading transition-colors hover:bg-accent-bg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
-});
+export type LoadSchemaHandle = {
+  openFilePicker: () => void;
+};
 
-export function LoadSchemaButton() {
+type LoadSchemaHandlerProps = {
+  ref: Ref<LoadSchemaHandle>;
+};
+
+export function LoadSchemaHandler({ ref }: LoadSchemaHandlerProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [pendingSchema, setPendingSchema] = useState<Schema | null>(null);
   const { notify, dismissNotification } = useNotification();
   const { loadSchemaFromFile } = useSchemaActions();
   const t = useTranslations("loadSchema");
+
+  useImperativeHandle(
+    ref,
+    () => ({
+      openFilePicker: () => inputRef.current?.click(),
+    }),
+    [],
+  );
 
   async function handleFileChange(file: File) {
     const parsed = parseSchemaFile(await file.text());
@@ -29,9 +41,6 @@ export function LoadSchemaButton() {
 
   return (
     <>
-      <button type="button" onClick={() => inputRef.current?.click()} className={toolButton()}>
-        {t("buttonLabel")}
-      </button>
       <input
         ref={inputRef}
         type="file"

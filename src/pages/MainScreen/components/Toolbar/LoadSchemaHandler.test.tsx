@@ -4,7 +4,7 @@ import userEvent from "@testing-library/user-event";
 import { createSchema, type Schema } from "../../../../domain/schema";
 import { useCurrentSchema } from "../../SchemaWorkspaceContext";
 import { NotificationBar } from "../NotificationBar";
-import * as stories from "./LoadSchemaButton.stories";
+import * as stories from "./LoadSchemaHandler.stories";
 
 const { Default } = composeStories(stories);
 
@@ -46,7 +46,7 @@ function CurrentSchemaName() {
   return <h1>{schema?.name ?? ""}</h1>;
 }
 
-function renderLoadSchemaButton() {
+function renderLoadSchemaHandler() {
   render(
     <Default>
       <NotificationBar />
@@ -55,9 +55,9 @@ function renderLoadSchemaButton() {
   );
 }
 
-describe("LoadSchemaButton", () => {
+describe("LoadSchemaHandler", () => {
   it("shows a confirm dialog naming the file's schema after a valid file is selected", async () => {
-    renderLoadSchemaButton();
+    renderLoadSchemaHandler();
     const user = userEvent.setup();
     const imported = createSchema("Imported Schema", {
       id: "a2b3c4d5-6e7f-4a8b-9c0d-1e2f3a4b5c6d",
@@ -72,7 +72,7 @@ describe("LoadSchemaButton", () => {
   });
 
   it("replaces the current schema when the load is confirmed", async () => {
-    renderLoadSchemaButton();
+    renderLoadSchemaHandler();
     const user = userEvent.setup();
     const imported = createSchema("Imported Schema", {
       id: "a2b3c4d5-6e7f-4a8b-9c0d-1e2f3a4b5c6d",
@@ -86,7 +86,7 @@ describe("LoadSchemaButton", () => {
   });
 
   it("leaves the current schema unchanged when the load is cancelled", async () => {
-    renderLoadSchemaButton();
+    renderLoadSchemaHandler();
     const user = userEvent.setup();
     const imported = createSchema("Imported Schema");
     await user.upload(screen.getByLabelText("Load schema file"), jsonFile(imported));
@@ -98,7 +98,7 @@ describe("LoadSchemaButton", () => {
   });
 
   it("shows an error notification for unparsable file content", async () => {
-    renderLoadSchemaButton();
+    renderLoadSchemaHandler();
     const user = userEvent.setup();
 
     await user.upload(
@@ -113,7 +113,7 @@ describe("LoadSchemaButton", () => {
   });
 
   it("shows an error notification for JSON that does not match the schema shape", async () => {
-    renderLoadSchemaButton();
+    renderLoadSchemaHandler();
     const user = userEvent.setup();
 
     await user.upload(screen.getByLabelText("Load schema file"), jsonFile({ foo: "bar" }));
@@ -124,7 +124,7 @@ describe("LoadSchemaButton", () => {
   });
 
   it("shows an error notification for a structurally valid schema that fails integrity validation", async () => {
-    renderLoadSchemaButton();
+    renderLoadSchemaHandler();
     const user = userEvent.setup();
 
     await user.upload(

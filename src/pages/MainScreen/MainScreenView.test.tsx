@@ -136,11 +136,12 @@ describe("MainScreenView", () => {
     expect(within(sidePanel).queryByText("PRIMARY KEY (id)")).not.toBeInTheDocument();
   });
 
-  it("opens the export SQL dialog when the Export SQL toolbar button is clicked", async () => {
+  it("opens the export SQL dialog when the Export SQL toolbar menu item is clicked", async () => {
     render(<Default />);
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
 
-    await userEvent.click(screen.getByRole("button", { name: "Export SQL" }));
+    await userEvent.click(screen.getByRole("button", { name: "Export/Import" }));
+    await userEvent.click(screen.getByRole("menuitem", { name: "Export SQL" }));
 
     expect(screen.getByRole("dialog", { name: "Export SQL" })).toBeInTheDocument();
   });

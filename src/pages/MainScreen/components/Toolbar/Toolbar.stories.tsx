@@ -34,7 +34,7 @@ const currentSchema: Schema = {
   updatedAt: savedSchemas[0].updatedAt,
 };
 
-// A stable fake repository, so LoadSchemaButton's context providers don't
+// A stable fake repository, so LoadSchemaHandler's context providers don't
 // see a new repository identity on every re-render.
 function ToolbarWithProviders(props: ComponentProps<typeof Toolbar>) {
   const [repository] = useState(() =>

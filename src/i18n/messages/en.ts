@@ -24,6 +24,7 @@ export default {
     redo: "Redo",
     autoAlignAriaLabel: "Auto-align tables",
     addTable: "Add Table",
+    exportImportMenuLabel: "Export/Import",
     exportSql: "Export SQL",
     exportMermaid: "Export Mermaid",
     downloadJson: "Download JSON",
@@ -40,6 +41,9 @@ export default {
   },
   localeMenu: {
     ariaLabel: "Languages",
+  },
+  exportImportMenu: {
+    ariaLabel: "Export/Import",
   },
   loadSchema: {
     buttonLabel: "Load JSON",

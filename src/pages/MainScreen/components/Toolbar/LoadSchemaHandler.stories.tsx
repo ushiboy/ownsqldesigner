@@ -5,7 +5,7 @@ import { LocaleProvider } from "../../../../i18n/LocaleContext";
 import { createFakeSchemaRepository } from "../../../../test/fakeSchemaRepository";
 import { NotificationProvider } from "../../NotificationContext";
 import { SchemaWorkspaceProvider } from "../../SchemaWorkspaceContext";
-import { LoadSchemaButton } from "./LoadSchemaButton";
+import { LoadSchemaHandler } from "./LoadSchemaHandler";
 
 export const currentSchema: Schema = {
   id: "0b54b945-13c9-4d38-9ba6-b81bbe1cbc21",
@@ -16,12 +16,12 @@ export const currentSchema: Schema = {
   updatedAt: new Date("2026-07-01T09:00:00.000Z"),
 };
 
-type LoadSchemaButtonWithProvidersProps = {
-  /** Extra probes a test wants rendered alongside the button, inside the same provider tree. */
+type LoadSchemaHandlerWithProvidersProps = {
+  /** Extra probes a test wants rendered alongside the handler, inside the same provider tree. */
   children?: ReactNode;
 };
 
-function LoadSchemaButtonWithProviders({ children }: LoadSchemaButtonWithProvidersProps) {
+function LoadSchemaHandlerWithProviders({ children }: LoadSchemaHandlerWithProvidersProps) {
   const [repository] = useState(() =>
     createFakeSchemaRepository({ schemas: [currentSchema], lastSchemaId: currentSchema.id }),
   );
@@ -29,7 +29,7 @@ function LoadSchemaButtonWithProviders({ children }: LoadSchemaButtonWithProvide
     <LocaleProvider>
       <NotificationProvider>
         <SchemaWorkspaceProvider repository={repository} initialSchema={currentSchema}>
-          <LoadSchemaButton />
+          <LoadSchemaHandler ref={null} />
           {children}
         </SchemaWorkspaceProvider>
       </NotificationProvider>
@@ -38,9 +38,9 @@ function LoadSchemaButtonWithProviders({ children }: LoadSchemaButtonWithProvide
 }
 
 const meta = {
-  title: "pages/MainScreen/components/Toolbar/LoadSchemaButton",
-  component: LoadSchemaButtonWithProviders,
-} satisfies Meta<typeof LoadSchemaButtonWithProviders>;
+  title: "pages/MainScreen/components/Toolbar/LoadSchemaHandler",
+  component: LoadSchemaHandlerWithProviders,
+} satisfies Meta<typeof LoadSchemaHandlerWithProviders>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
