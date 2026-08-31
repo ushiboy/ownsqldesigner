@@ -53,6 +53,7 @@ Each doc starts with a metadata block and tracks its lifecycle through a status:
 - If testing or driving the feature turns up a follow-up fix or refinement to the same doc's Goals/Non-Goals while it's still the same round of work (not yet implemented-and-moved-on-from), fold it into the current doc instead of starting a new sequentially-numbered one — update its Context to say what was found and why, and its Design/Non-Goals to match. Only split into a new doc (see below) once the original has genuinely shipped and a later, separate piece of work revisits it.
 - When the design changes significantly later, write a new doc and mark the old one `Superseded` instead of rewriting history.
 - When a doc covers a feature, add a link to it from the Features list in `docs/requirements.md`.
+- If the change also resolves (fully or partially) an `Open Questions` or `Non-Goals` bullet in an older, unrelated doc, strike through that bullet and link to the new doc in the same change — don't leave the older doc's text to go stale.
 
 ## Example
 

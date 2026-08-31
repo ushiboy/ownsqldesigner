@@ -2,7 +2,7 @@
 
 - **Status**: Implemented
 - **Created**: 2026-07-30
-- **Updated**: 2026-08-22
+- **Updated**: 2026-08-31
 
 ## Context
 
@@ -165,10 +165,12 @@ correctness fix.
 
 ## Open Questions
 
-- Whether/when to build full N-selection support in the side panel and
-  dialogs (bulk rename, bulk delete). Currently, 2+ selected tables behave
-  identically to "nothing selected" in the side panel and in keyboard
-  Delete.
+- ~~Whether/when to build full N-selection support in the side panel and
+  dialogs for bulk delete.~~ Resolved by
+  [0045](0045-multi-table-delete-keyboard-shortcut.md) (keyboard shortcut)
+  and [0056](0056-side-panel-bulk-delete-button.md) (side panel button).
+  Bulk rename, and bulk column/key add on a multi-selection, are still
+  open — see [0056](0056-side-panel-bulk-delete-button.md)'s Non-Goals.
 - ~~Whether a "N tables selected" side-panel affordance (distinguishing
   multi-selected from empty) is worth adding as a small follow-up
   polish.~~ Resolved by
