@@ -4,6 +4,12 @@ A SPA for designing database schemas (E-R diagrams) visually in the browser and 
 
 🔗 [Live demo](https://ushiboy.github.io/ownsqldesigner/)
 
+## Inspiration
+
+This project is a homage to [wwwsqldesigner](https://github.com/ondras/wwwsqldesigner), a web-based ER diagram tool that has been a great source of inspiration.
+It is a simple experiment to explore what a similar tool might look like with a modern tech stack.
+Huge respect and thanks to the original creators!
+
 ## Features
 
 - Visual schema editing on a pannable canvas: place, drag, and delete table nodes
