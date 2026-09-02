@@ -1,0 +1,24 @@
+services:
+  postgres:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_USER: sqlverify
+      POSTGRES_PASSWORD: sqlverify
+      POSTGRES_DB: sqlverify
+    ports:
+      - "55432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sqlverify -d sqlverify"]
+      interval: 2s
+      timeout: 2s
+      retries: 15
+    tmpfs:
+      - /var/lib/postgresql/data
+
+  runner:
+    build: .
+    volumes:
+      - ./.output:/work:ro
+    depends_on:
+      postgres:
+        condition: service_healthy

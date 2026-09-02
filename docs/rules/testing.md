@@ -67,6 +67,16 @@ Canvas drag, rubber-band multi-select, and foreign-key connection drawing are js
 - **Before pushing**: also run `CI=true pnpm test:e2e` at least once for any change touching canvas interactions, selection state, or dialog/keyboard-shortcut timing. Per `playwright.config.ts`, plain `pnpm test:e2e` serves the Vite dev server while `CI=true` builds and serves the production bundle instead — the same target real CI runs against. The two aren't equivalent: a state update that lags a render cycle behind a DOM change (e.g. React Flow's own `.selected` class landing before the app's own selection state catches up via `onSelectionChange`) can have enough slack to never lose the race against the dev server's timing, yet lose it against the production build's — so a spec can pass locally every time and still flake in CI. Reproduce a suspected timing-only CI failure locally with `CI=true pnpm test:e2e -g "<test name>"` rather than debugging blind from CI logs.
 - **Out of scope today** (deliberate, not forgotten): a multi-browser matrix, and keyboard-shortcut/zoom coverage (no app-specific real-browser risk) — see 0027's Non-Goals. CI wiring is done — see [0028](../design/0028-ci-github-actions.md).
 
+## SQL DDL Verification
+
+`src/domain/dialect/`, `src/domain/sqlite/generateDdl.ts`, and
+`src/domain/postgresql/generateDdl.ts` are unit-tested only as string
+output. Whether that output actually applies against a real SQLite/
+PostgreSQL engine is checked by a separate, Docker-based tool in
+`sql-verify/` — see [0058](../design/0058-local-sql-ddl-verification.md).
+Run it manually with `pnpm verify:sql` after changing DDL generation; it is
+local-only, not part of `pnpm test` or CI.
+
 ## Example
 
 `Home.test.tsx` — renders via `composeStories`, all assertions live here:

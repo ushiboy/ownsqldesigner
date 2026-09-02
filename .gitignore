@@ -19,6 +19,9 @@ storybook-static
 /blob-report/
 /playwright/.cache/
 
+# SQL DDL verification (0058)
+/sql-verify/.output/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
